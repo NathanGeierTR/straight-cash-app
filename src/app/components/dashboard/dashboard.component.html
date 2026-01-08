@@ -1,0 +1,79 @@
+<div class="dashboard-container">
+  <div class="dashboard-grid">
+
+    <!-- AI Priority Summary Section (NEW - at top) -->
+    <div class="widget ai-priority-widget">
+      <app-ai-priority-summary></app-ai-priority-summary>
+    </div>
+    
+    <!-- Sprint Calendar Section -->
+    <div class="widget sprint-calendar-widget">
+      <app-sprint-calendar></app-sprint-calendar>
+    </div>
+
+    <!-- Outlook Calendar Section -->
+    <div class="widget outlook-calendar-widget">
+      <app-outlook-calendar></app-outlook-calendar>
+    </div>
+
+    <!-- Azure DevOps Work Items Section -->
+    <div class="widget ado-widget">
+      <app-ado-work-items></app-ado-work-items>
+    </div>
+
+    <!-- Task Tracker Section -->
+    <div class="widget task-tracker-widget">
+      <app-task-tracker></app-task-tracker>
+    </div>
+
+    <!-- Coworker Timezones Section -->
+    <div class="widget coworker-timezones-widget">
+      <app-coworker-timezones></app-coworker-timezones>
+    </div>
+
+    <!-- GitHub AI Chat Section -->
+    <div class="widget github-ai-widget">
+      <app-github-ai-chat></app-github-ai-chat>
+    </div>
+
+    <!-- News Ticker Widget Section -->
+    <div class="widget news-ticker-widget">
+      <h2 class="widget-title">News ticker</h2>
+      <app-news-ticker-widget></app-news-ticker-widget>
+    </div>
+
+  </div>
+
+  <!-- Sliding Chat Drawer -->
+  <div class="chat-drawer" [class.open]="isChatDrawerOpen">
+    <!-- Tab Trigger -->
+    <button type="button" class="drawer-tab" (click)="toggleChatDrawer()">
+      <svg width="30" height="30" viewBox="10 10 90 80" xmlns="http://www.w3.org/2000/svg">  
+        <!-- Large sparkle -->  
+        <path d="M 50 10 Q 45 45 10 50 Q 45 55 50 90 Q 55 55 90 50 Q 55 45 50 10 Z" fill="var(--saf-color-brand-orange-200)"/>
+            
+        <!-- Medium sparkle -->  
+        <path d="M 85 15 Q 83 25 73 27 Q 83 29 85 39 Q 87 29 97 27 Q 87 25 85 15 Z" fill="var(--saf-color-brand-orange-300)"/>
+            
+        <!-- Small sparkle -->  
+        <path d="M 85 65 Q 83 75 73 77 Q 83 79 85 89 Q 87 79 97 77 Q 87 75 85 65 Z" fill="var(--saf-color-brand-orange-300)"/>  
+      </svg> 
+    </button>
+    
+    <!-- Drawer Content -->
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <span class="drawer-title">
+          <i class="fas fa-robot"></i>
+          Open Arena chat
+        </span>
+        <button class="close-btn" (click)="toggleChatDrawer()" title="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <app-open-arena-chat></app-open-arena-chat>
+      </div>
+    </div>
+  </div>
+</div>

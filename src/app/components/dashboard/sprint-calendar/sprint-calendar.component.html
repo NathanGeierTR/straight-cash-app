@@ -1,0 +1,62 @@
+<div class="sprint-calendar">
+  <div class="widget-header">
+    <h2 class="widget-title">
+        <i class="fas fa-calendar-alt"></i>
+        <ng-container *ngIf="currentSprint">Current sprint: {{ currentSprint.number }}</ng-container>
+        <ng-container *ngIf="!currentSprint">Sprint Calendar</ng-container>
+    </h2>
+    <div class="sprint-info">
+      
+      <p class="sprint-dates" *ngIf="currentSprint && !loading && !error">
+        {{ monthName }}: {{ currentSprint.startDate | date:'MMM d' }} - {{ currentSprint.endDate | date:'MMM d' }}
+      </p>
+      <p class="sprint-loading" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i> Loading sprint data...
+      </p>
+      <p class="sprint-error" *ngIf="error && !loading">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </p>
+      <p class="sprint-waiting" *ngIf="!currentSprint && !error && !loading">
+        <i class="fas fa-clock"></i> Waiting for sprint data from ADO widget...
+      </p>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid">
+    <div class="calendar-header">
+      <div class="day-header">S</div>
+      <div class="day-header">M</div>
+      <div class="day-header">T</div>
+      <div class="day-header">W</div>
+      <div class="day-header">T</div>
+      <div class="day-header">F</div>
+      <div class="day-header">S</div>
+    </div>
+    
+    <div class="calendar-body">
+      <div 
+        *ngFor="let day of calendarDays"
+        class="calendar-day"
+        [class.today]="day.isToday"
+        [class.weekend]="day.isWeekend"
+        [class.in-sprint]="day.isInSprint"
+        [class.other-month]="!day.isCurrentMonth">
+        
+        <div class="day-number">{{ day.date.getDate() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <span class="legend-indicator today-indicator"></span>
+      <span class="legend-label">Today</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-indicator sprint-indicator"></span>
+      <span class="legend-label">Current sprint</span>
+    </div>
+  </div>
+</div>

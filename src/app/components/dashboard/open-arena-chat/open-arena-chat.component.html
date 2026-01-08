@@ -1,0 +1,33 @@
+<div class="open-arena-chat">
+  <div class="widget-content">
+    <div class="iframe-container" *ngIf="!showFallback">
+      <iframe 
+        [src]="iframeUrl | safe: 'resourceUrl'"
+        frameborder="0"
+        class="chat-iframe"
+        title="Open Arena Chat"
+        sandbox="allow-same-origin allow-scripts allow-forms"
+      ></iframe>
+    </div>
+    
+    <div class="iframe-fallback" *ngIf="showFallback">
+      <div class="fallback-content">
+        <i class="fas fa-external-link-alt fallback-icon"></i>
+        <h3>External Link Access</h3>
+        <p>If the embedded view doesn't load properly, you can open the content in a new tab where it will work without restrictions.</p>
+        <h4 style="margin-bottom: 20px;">
+          <i class="fas fa-check"></i>
+          Check that Zscaler is connected
+        </h4>
+        <button class="open-external-btn" (click)="openInNewTab()">
+          <i class="fas fa-external-link-alt"></i>
+          Open in New Tab
+        </button>
+        <button class="refresh-btn" (click)="refreshIframe()">
+          <i class="fas fa-sync-alt"></i>
+          Try Iframe Again
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

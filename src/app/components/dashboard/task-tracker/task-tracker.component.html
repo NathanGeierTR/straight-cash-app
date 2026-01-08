@@ -1,0 +1,209 @@
+<div class="task-tracker">
+  <!-- Task Overview -->
+  <div class="task-overview">
+    <div class="overview-header">
+      <h3>My Tasks</h3>
+      <button class="btn-add-task" (click)="toggleNewTaskForm()">
+        {{ showNewTaskForm ? '✕ Cancel' : '+ New Task' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- New Task Form -->
+  <div class="new-task-form" *ngIf="showNewTaskForm">
+    <h4>Create New Task</h4>
+    <form (ngSubmit)="addTask()">
+      <div class="form-group">
+        <label for="taskTitle">Title *</label>
+        <input
+          id="taskTitle"
+          type="text"
+          [(ngModel)]="newTask.title"
+          name="title"
+          placeholder="Enter task title"
+          required
+          class="form-input">
+      </div>
+      <div class="form-group">
+        <label for="taskDescription">Description</label>
+        <textarea
+          id="taskDescription"
+          [(ngModel)]="newTask.description"
+          name="description"
+          placeholder="Enter task description"
+          rows="3"
+          class="form-input"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="taskPriority">Priority</label>
+          <select id="taskPriority" [(ngModel)]="newTask.priority" name="priority" class="form-input">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="taskDueDate">Due Date</label>
+          <input
+            id="taskDueDate"
+            type="date"
+            [(ngModel)]="newTask.dueDate"
+            name="dueDate"
+            class="form-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="taskTags">Tags (comma-separated)</label>
+        <input
+          id="taskTags"
+          type="text"
+          [(ngModel)]="newTask.tags"
+          name="tags"
+          placeholder="work, urgent, personal"
+          class="form-input">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">Create Task</button>
+        <button type="button" class="btn-cancel" (click)="toggleNewTaskForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Task List -->
+  <div class="task-list">
+    <div 
+      *ngFor="let task of filteredTasks; trackBy: trackByTaskId" 
+      class="task-card"
+      [class.overdue]="isOverdue(task)"
+      [class.completed]="task.completed"
+      [class.editing]="isEditing(task.id)">
+      
+      <!-- Edit Mode -->
+      <div class="edit-task-form" *ngIf="isEditing(task.id)">
+        <h4>Edit Task</h4>
+        <form (ngSubmit)="saveTaskEdit()">
+          <div class="form-group">
+            <label [for]="'editTitle-' + task.id">Title *</label>
+            <input
+              [id]="'editTitle-' + task.id"
+              type="text"
+              [(ngModel)]="editForm.title"
+              name="title"
+              placeholder="Enter task title"
+              required
+              class="form-input">
+          </div>
+          <div class="form-group">
+            <label [for]="'editDescription-' + task.id">Description</label>
+            <textarea
+              [id]="'editDescription-' + task.id"
+              [(ngModel)]="editForm.description"
+              name="description"
+              placeholder="Enter task description"
+              rows="3"
+              class="form-input"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'editPriority-' + task.id">Priority</label>
+              <select [id]="'editPriority-' + task.id" [(ngModel)]="editForm.priority" name="priority" class="form-input">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label [for]="'editDueDate-' + task.id">Due Date</label>
+              <input
+                [id]="'editDueDate-' + task.id"
+                type="date"
+                [(ngModel)]="editForm.dueDate"
+                name="dueDate"
+                class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label [for]="'editTags-' + task.id">Tags (comma-separated)</label>
+            <input
+              [id]="'editTags-' + task.id"
+              type="text"
+              [(ngModel)]="editForm.tags"
+              name="tags"
+              placeholder="work, urgent, personal"
+              class="form-input">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-submit">Save Changes</button>
+            <button type="button" class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View Mode -->
+      <div class="task-view" *ngIf="!isEditing(task.id)">
+        <!-- Task Header -->
+        <div class="task-header">
+          <div class="task-checkbox">
+            <input 
+              type="checkbox" 
+              [checked]="task.completed"
+              (change)="toggleTaskCompletion(task)"
+              [id]="'task-' + task.id">
+            <label [for]="'task-' + task.id"></label>
+          </div>
+          <div class="task-title-section">
+            <h5 class="task-title" [class.completed]="task.completed">{{ task.title }}</h5>
+            <div class="task-meta" *ngIf="task.dueDate">
+              <span class="due-date" [class.overdue]="isOverdue(task)">
+                📅 {{ formatDate(task.dueDate) }}
+                <span *ngIf="!task.completed && task.dueDate" class="days-until">
+                  ({{ getDaysUntilDue(task) > 0 ? getDaysUntilDue(task) + ' days' : 'Today' }})
+                </span>
+              </span>
+            </div>
+          </div>
+          <div class="task-actions">
+            <span class="priority-badge" [ngClass]="getPriorityClass(task.priority || 'medium')">
+              {{ task.priority || 'medium' }}
+            </span>
+            <button class="btn-edit" (click)="startEditTask(task)" title="Edit task">
+              ✏️
+            </button>
+            <button class="btn-delete" (click)="deleteTask(task.id)" title="Delete task">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <!-- Task Description -->
+        <div class="task-description" *ngIf="task.description" [innerHTML]="convertUrlsToLinks(task.description)">
+        </div>
+
+        <!-- Task Tags -->
+        <div class="task-tags" *ngIf="task.tags && task.tags.length > 0">
+          <span *ngFor="let tag of task.tags" class="tag">{{ tag }}</span>
+        </div>
+
+        <!-- Task Footer -->
+        <div class="task-footer">
+          <div class="task-dates">
+            <span class="created-date">
+              Created: {{ formatDate(task.createdAt) }}
+            </span>
+            <span class="completed-date" *ngIf="task.completed && task.completedAt">
+              • Completed: {{ formatDate(task.completedAt) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredTasks.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h4>No tasks found</h4>
+      <p>Try adjusting your filters or check back later for new tasks.</p>
+    </div>
+  </div>
+</div>

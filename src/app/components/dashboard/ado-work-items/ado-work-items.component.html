@@ -1,0 +1,633 @@
+<div class="ado-work-items">
+  <div class="widget-header">
+    <h2 class="widget-title">
+        <img src="assets/azure.svg" alt="Azure DevOps Logo" class="ado-logo">
+        ADO items
+    </h2>
+    <span class="multi-project-badge" *ngIf="projects.length > 1">
+        <i class="fas fa-layer-group"></i>
+        <ng-container *ngIf="projects.length > 0">
+          {{ getEnabledProjectCount() }} projects
+        </ng-container>
+    </span>
+    <span class="mock-indicator" *ngIf="usingMockData">
+        <i class="fas fa-flask"></i>
+        Demo Data
+    </span>
+  </div>
+  <div class="widget-toolbar">
+    <div class="widget-actions">
+      <button 
+        type="button" 
+        class="btn-primary"
+        (click)="showProjectConfig = !showProjectConfig"
+        [class.active]="showProjectConfig"
+        title="Manage Multiple ADO Projects">
+        <ng-container *ngIf="!showProjectConfig">
+          <i class="fas fa-pencil"></i>
+          <span class="btn-label">Edit projects</span>
+        </ng-container>
+        <ng-container *ngIf="showProjectConfig">
+          <i class="fas fa-circle-arrow-left"></i>
+          <span class="btn-label">Exit project editing</span>
+        </ng-container>
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-secondary"
+        (click)="showFilterOptions = !showFilterOptions"
+        [class.active]="showFilterOptions"
+        title="Filter Options">
+        <i class="fas fa-filter"></i>
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-secondary"
+        (click)="showDisplayOptions = !showDisplayOptions"
+        [class.active]="showDisplayOptions"
+        title="Display Options">
+        <i class="fas fa-eye"></i>
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-secondary"
+        (click)="showConfig = !showConfig"
+        [class.active]="showConfig"
+        title="Configuration">
+        <i class="fas fa-cog"></i>
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-primary" 
+        (click)="refreshData()"
+        [disabled]="loading">
+        <i class="fas fa-sync" [class.fa-spin]="loading"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Loading work items...</p>
+  </div>
+
+  <!-- Work Items List -->
+  <div class="work-items-list" *ngIf="(isConfigured || usingMockData) && !showConfig && !loading">
+    <!-- Multi-Project Configuration Panel -->
+    <div class="project-config-panel" *ngIf="showProjectConfig">
+      <h4>Project Management</h4>
+      <p class="panel-description">Manage multiple Azure DevOps projects to view work items from different sources</p>
+      
+      <div class="multi-project-notice">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Current Status:</strong> Multi-project support is active. Work items from the first enabled project will be displayed.
+        </div>
+      </div>
+      
+      <!-- Existing Projects -->
+      <div class="projects-list" *ngIf="projects.length > 0">
+        <h5>Configured Projects ({{ projects.length }})</h5>
+        <div class="project-item" *ngFor="let project of projects; let i = index">
+          <div class="project-header">
+            <div class="project-toggle">
+              <input type="checkbox" 
+                    [checked]="project.enabled" 
+                    (change)="toggleProject(i)"
+                    [id]="'project-toggle-' + i">
+              <label [for]="'project-toggle-' + i" class="checkbox-label"></label>
+            </div>
+            
+            <div class="project-info">
+              <strong>{{ project.name }}</strong>
+              <small>{{ project.organization }}/{{ project.project }}</small>
+              <span class="project-status" [class.enabled]="project.enabled" [class.disabled]="!project.enabled">
+                {{ project.enabled ? 'Active' : 'Disabled' }}
+              </span>
+            </div>
+            
+            <div class="project-actions">
+              <button type="button" 
+                      class="btn-icon" 
+                      (click)="editProject(project, i)"
+                      title="Edit Project">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" 
+                      class="btn-icon btn-danger" 
+                      (click)="deleteProject(i)"
+                      title="Delete Project">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Edit Form -->
+          <div class="project-edit-form" *ngIf="editingProjectIndex === i && editingProject">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Display Name:</label>
+                <input type="text" 
+                      [(ngModel)]="editingProject.name" 
+                      placeholder="Project Display Name"
+                      class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Organization:</label>
+                <input type="text" 
+                      [(ngModel)]="editingProject.organization" 
+                      placeholder="your-organization"
+                      class="form-control">
+              </div>
+              
+              <div class="form-group">
+                <label>Project:</label>
+                <input type="text" 
+                      [(ngModel)]="editingProject.project" 
+                      placeholder="project-name"
+                      class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Personal Access Token:</label>
+                <input type="password" 
+                      [(ngModel)]="editingProject.personalAccessToken" 
+                      placeholder="Enter PAT"
+                      class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn-primary" (click)="saveEditedProject()">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+              <button type="button" class="btn-secondary" (click)="cancelEdit()">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add New Project -->
+      <div class="add-project-section">
+        <h5>
+          <i class="fas fa-plus-circle"></i>
+          Add New Project
+        </h5>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Display Name *:</label>
+            <input type="text" 
+                  [(ngModel)]="newProject.name" 
+                  placeholder="e.g., 'Legal Tracker', 'Marketing Tools'"
+                  class="form-control">
+            <small>Choose a friendly name to identify this project</small>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Organization *:</label>
+            <input type="text" 
+                  [(ngModel)]="newProject.organization" 
+                  placeholder="your-organization"
+                  class="form-control">
+            <small>From your Azure DevOps URL: https://dev.azure.com/<strong>your-organization</strong></small>
+          </div>
+          
+          <div class="form-group">
+            <label>Project *:</label>
+            <input type="text" 
+                  [(ngModel)]="newProject.project" 
+                  placeholder="project-name"
+                  class="form-control">
+            <small>The exact project name in Azure DevOps</small>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Personal Access Token *:</label>
+            <input type="password" 
+                  [(ngModel)]="newProject.personalAccessToken" 
+                  placeholder="Enter PAT for this project"
+                  class="form-control">
+            <small>Each project can have its own PAT with appropriate permissions</small>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" 
+                  class="btn-primary" 
+                  (click)="addProject()"
+                  [disabled]="!newProject.name || !newProject.organization || !newProject.project || !newProject.personalAccessToken">
+            <i class="fas fa-plus"></i>
+            Add Project
+          </button>
+          <button type="button" 
+                  class="btn-secondary" 
+                  (click)="resetNewProjectForm()"
+                  *ngIf="newProject.name || newProject.organization || newProject.project || newProject.personalAccessToken">
+            <i class="fas fa-eraser"></i>
+            Clear Form
+          </button>
+        </div>
+      </div>
+      
+      <div class="panel-actions">
+        <button type="button" class="btn-secondary" (click)="showProjectConfig = false">
+          <i class="fas fa-times"></i>
+          Close
+        </button>
+        <button type="button" class="btn-primary" (click)="loadWorkItems()" *ngIf="getEnabledProjectCount() > 0">
+          <i class="fas fa-sync"></i>
+          Refresh All Projects ({{ getEnabledProjectCount() }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Configuration Panel -->
+    <div class="config-panel" *ngIf="showConfig">
+      <h4>Azure DevOps Configuration</h4>
+      
+      <div class="cors-warning">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Important:</strong> Due to CORS restrictions, you need to restart the dev server with proxy configuration.
+          <br>Run: <code>npm start</code> (proxy is now configured automatically)
+        </div>
+      </div>
+      
+      <div class="config-form">
+        <div class="form-group">
+          <label for="organization">Organization:</label>
+          <input 
+            id="organization"
+            type="text" 
+            [(ngModel)]="organization" 
+            placeholder="your-organization"
+            class="form-control">
+          <small>e.g., 'microsoft' from https://dev.azure.com/microsoft</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="project">Project:</label>
+          <input 
+            id="project"
+            type="text" 
+            [(ngModel)]="project" 
+            placeholder="your-project-name"
+            class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label for="pat">Personal Access Token:</label>
+          <input 
+            id="pat"
+            type="password" 
+            [(ngModel)]="personalAccessToken" 
+            placeholder="Enter your PAT"
+            class="form-control">
+          <small>
+            <strong>Required Scopes:</strong> Work Items (Read), Project and Team (Read)<br>
+            <a href="https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate" target="_blank">
+              How to create a Personal Access Token
+            </a>
+          </small>
+        </div>
+
+        <div class="pat-validation" *ngIf="personalAccessToken">
+          <div class="validation-item">
+            <i class="fas fa-check-circle" [class.valid]="personalAccessToken.length > 30" [class.invalid]="personalAccessToken.length <= 30"></i>
+            <span>Token length: {{ personalAccessToken.length }} characters (should be 52+)</span>
+          </div>
+          <div class="validation-item">
+            <i class="fas fa-info-circle"></i>
+            <span>Token format appears {{ personalAccessToken.length >= 52 ? 'correct' : 'too short' }}</span>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn-secondary" 
+            (click)="testConnection()"
+            [disabled]="!organization || !project || !personalAccessToken || testingConnection">
+            <i class="fas fa-plug" [class.fa-spin]="testingConnection"></i>
+            {{ testingConnection ? 'Testing...' : 'Test Connection' }}
+          </button>
+
+          <button 
+            type="button" 
+            class="btn-primary" 
+            (click)="saveConfiguration()"
+            [disabled]="!organization || !project || !personalAccessToken">
+            Save Configuration
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn-secondary" 
+            (click)="clearConfiguration()" 
+            *ngIf="isConfigured">
+            Clear
+          </button>
+        </div>
+
+        <div class="connection-test-result" *ngIf="connectionTestResult">
+          <div class="test-result" 
+              [class.success]="connectionTestResult.includes('✓')"
+              [class.error]="!connectionTestResult.includes('✓')">
+            <i class="fas" 
+              [class.fa-check-circle]="connectionTestResult.includes('✓')"
+              [class.fa-exclamation-triangle]="!connectionTestResult.includes('✓')"></i>
+            {{ connectionTestResult }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Options Panel -->
+    <div class="filter-options-panel" *ngIf="showFilterOptions">
+      <h4>Filter Options</h4>
+      <p class="panel-description">Choose which work item states to hide</p>
+      
+      <div class="options-grid">
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="filterOptions.hideDone" (change)="saveFilterOptions()">
+          <span>Hide "Done" items</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="filterOptions.hideRemoved" (change)="saveFilterOptions()">
+          <span>Hide "Removed" items</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="filterOptions.hideClosed" (change)="saveFilterOptions()">
+          <span>Hide "Closed" items</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="filterOptions.hideResolved" (change)="saveFilterOptions()">
+          <span>Hide "Resolved" items</span>
+        </label>
+      </div>
+      
+      <div class="filter-summary">
+        <small>Showing {{ filteredWorkItems.length }} of {{ workItems.length }} items</small>
+      </div>
+      
+      <div class="panel-actions">
+        <button type="button" class="btn-secondary" (click)="showFilterOptions = false">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Display Options Panel -->
+    <div class="display-options-panel" *ngIf="showDisplayOptions">
+      <h4>Display Options</h4>
+      <p class="panel-description">Choose which information to show in work item cards</p>
+      
+      <div class="options-grid">
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showWorkItemType" (change)="saveDisplayOptions()">
+          <span>Work Item Type</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showId" (change)="saveDisplayOptions()">
+          <span>ID Number</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showTitle" (change)="saveDisplayOptions()">
+          <span>Title</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showState" (change)="saveDisplayOptions()">
+          <span>State</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showAssignee" (change)="saveDisplayOptions()">
+          <span>Assignee</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showStoryPoints" (change)="saveDisplayOptions()">
+          <span>Story Points</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showPriority" (change)="saveDisplayOptions()">
+          <span>Priority</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showIteration" (change)="saveDisplayOptions()">
+          <span>Iteration</span>
+        </label>
+        
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showDates" (change)="saveDisplayOptions()">
+          <span>Dates</span>
+        </label>
+      </div>
+      
+      <div class="panel-actions">
+        <button type="button" class="btn-secondary" (click)="showDisplayOptions = false">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+      <div class="error-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="error-text">
+          <strong>Connection Error:</strong> {{ error }}
+          
+          <div class="cors-help" *ngIf="error.includes('CORS') || error.includes('blocked')">
+            <h5>CORS Issue Detected</h5>
+            <p>Azure DevOps API doesn't allow direct browser access. Try these solutions:</p>
+            <ol>
+              <li><strong>Restart with Proxy:</strong> Stop the dev server and run <code>npm start</code> again</li>
+              <li><strong>Use Browser Extension:</strong> Install "CORS Unblock" extension (development only)</li>
+              <li><strong>Backend Proxy:</strong> Route requests through your own backend service</li>
+            </ol>
+          </div>
+
+          <div class="auth-help" *ngIf="error.includes('401') || error.includes('Unauthorized')">
+            <h5>Authentication Issue Detected</h5>
+            <p>Your Personal Access Token may be invalid or expired. Please check:</p>
+            <ol>
+              <li><strong>Token Validity:</strong> Ensure your PAT hasn't expired</li>
+              <li><strong>Permissions:</strong> PAT needs "Work Items (Read)" scope</li>
+              <li><strong>Organization Access:</strong> Token must have access to the specified organization</li>
+              <li><strong>Basic Auth Format:</strong> We're using the correct :token format</li>
+            </ol>
+          </div>
+
+          <div class="query-help" *ngIf="error.includes('400') || error.includes('Bad Request') || error.includes('query syntax')">
+            <h5>Query Syntax Issue Detected</h5>
+            <p>There's an issue with the work item query. This might be due to:</p>
+            <ol>
+              <li><strong>Project Name:</strong> Double-check your project name is exactly correct</li>
+              <li><strong>Field Availability:</strong> Some custom fields may not exist in your project</li>
+              <li><strong>Process Template:</strong> Your project may use different field names</li>
+              <li><strong>Permissions:</strong> Query permissions may be restricted</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Not Configured State -->
+    <div class="empty-state" *ngIf="!isConfigured && !showConfig">
+      <div class="empty-icon">
+        <i class="fas fa-folder-plus"></i>
+      </div>
+      <h4>Configure Azure DevOps Projects</h4>
+      <p>Connect multiple Azure DevOps projects to view and manage work items from different sources in one central dashboard.</p>
+      
+      <div class="configuration-options">
+        <button type="button" class="btn-primary" (click)="showProjectConfig = true">
+          <i class="fas fa-folder-open"></i>
+          Add ADO Projects
+        </button>
+        <span class="option-separator">or</span>
+        <button type="button" class="btn-secondary" (click)="showConfig = true">
+          <i class="fas fa-cog"></i>
+          Quick Setup
+        </button>
+      </div>
+
+      <div class="feature-highlights">
+        <div class="feature-item">
+          <i class="fas fa-layer-group"></i>
+          <span>Multiple Projects</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-filter"></i>
+          <span>Smart Filtering</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-sync-alt"></i>
+          <span>Real-time Updates</span>
+        </div>
+      </div>
+    </div>
+    <ng-container *ngIf="!showProjectConfig && !loading">
+      <div class="work-item" 
+          *ngFor="let workItem of filteredWorkItems; trackBy: trackByWorkItemId"
+          (click)="openWorkItem(workItem)">
+        <div class="work-item-content">
+          <div class="work-item-header">
+            <div class="work-item-type-and-id">
+              <div class="work-item-type" *ngIf="displayOptions.showWorkItemType">
+                <i class="work-item-icon" 
+                  [ngClass]="getWorkItemTypeIcon(workItem.fields['System.WorkItemType'])"
+                  [style.color]="getWorkItemTypeColor(workItem.fields['System.WorkItemType'])"></i>
+                <span class="type-name">{{ workItem.fields['System.WorkItemType'] }}</span>
+              </div>
+              <div class="work-item-id" *ngIf="displayOptions.showId">#{{ getWorkItemId(workItem) }}</div>
+            </div>
+            <div class="work-item-project" *ngIf="hasProjectInfo(workItem)">
+              <i class="fas fa-folder"></i>
+              <span>{{ getWorkItemProjectInfo(workItem)?.name }}</span>
+            </div>
+          </div>
+
+          <div class="work-item-title" *ngIf="displayOptions.showTitle">
+            <div class="work-item-state" *ngIf="displayOptions.showState">
+              <span class="state-badge" 
+                    [style.background-color]="getStateColor(workItem.fields['System.State'])">
+                {{ workItem.fields['System.State'] }}
+              </span>
+            </div>
+            <span>
+              {{ workItem.fields['System.Title'] }}
+            </span>
+            <div class="work-item-dates" *ngIf="displayOptions.showDates">
+              <div class="date-info">
+                <small><i class="fas fa-calendar-plus"></i> Created: {{ workItem.fields['System.CreatedDate'] | date:'short' }}</small>
+                <small><i class="fas fa-calendar-edit"></i> Updated: {{ workItem.fields['System.ChangedDate'] | date:'short' }}</small>
+              </div>
+            </div>
+            
+            <!-- <div class="work-item-meta">
+              <div class="assignee" *ngIf="displayOptions.showAssignee && workItem.fields['System.AssignedTo']">
+                <div class="assignee-avatar">
+                  {{ getAssignedToInitials(workItem.fields['System.AssignedTo']) }}
+                </div>
+              </div>
+      
+              <div class="story-points" *ngIf="displayOptions.showStoryPoints && workItem.fields['Microsoft.VSTS.Scheduling.StoryPoints']">
+                <span class="points-badge">
+                  {{ getStoryPointsDisplay(workItem.fields['Microsoft.VSTS.Scheduling.StoryPoints']) }}
+                </span>
+              </div>
+      
+              <div class="priority" *ngIf="displayOptions.showPriority && workItem.fields['Microsoft.VSTS.Common.Priority']">
+                <i class="fas fa-flag" 
+                  [style.color]="getPriorityColor(workItem.fields['Microsoft.VSTS.Common.Priority'])"></i>
+              </div>
+            </div> -->
+            
+            <div class="iteration-info" *ngIf="displayOptions.showIteration && workItem.fields['System.IterationPath']">
+              <span class="sprint-icon">
+                <i class="fas fa-align-right"></i>
+                <i class="fas fa-person-running"></i>
+              </span>
+              <span>{{ workItem.fields['System.IterationPath'] }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="urgency-indicator" 
+             [title]="getUrgencyTooltip(getSprintInfo(workItem))">
+          <i [ngClass]="getUrgencyIcon(getSprintInfo(workItem).urgencyLevel)"
+             [style.color]="getUrgencyColor(getSprintInfo(workItem).urgencyLevel)"></i>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Empty Work Items State -->
+    <div class="empty-state" *ngIf="filteredWorkItems.length === 0 && workItems.length > 0">
+      <div class="empty-icon">
+        <i class="fas fa-filter"></i>
+      </div>
+      <h4>No Items Match Filter</h4>
+      <p>All work items are filtered out. Try adjusting your filter settings.</p>
+      <button type="button" class="btn-secondary" (click)="showFilterOptions = true">
+        <i class="fas fa-filter"></i>
+        Adjust Filters
+      </button>
+    </div>
+    
+    <div class="empty-state" *ngIf="filteredWorkItems.length === 0 && workItems.length === 0 && !loading">
+      <div class="empty-icon">
+        <i class="fas fa-tasks"></i>
+      </div>
+      <h4>No Work Items Found</h4>
+      <p>No work items match the selected criteria.</p>
+    </div>
+  </div>
+</div>

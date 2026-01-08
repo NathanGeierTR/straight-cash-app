@@ -1,0 +1,76 @@
+:host {
+    --bright-blue: oklch(51.01% 0.274 263.83);
+    --electric-violet: oklch(53.18% 0.28 296.97);
+    --french-violet: oklch(47.66% 0.246 305.88);
+    --vivid-pink: oklch(69.02% 0.277 332.77);
+    --hot-red: oklch(61.42% 0.238 15.34);
+    --orange-red: oklch(63.32% 0.24 31.68);
+
+    --gray-900: oklch(19.37% 0.006 300.98);
+    --gray-700: oklch(36.98% 0.014 302.71);
+    --gray-400: oklch(70.9% 0.015 304.04);
+
+    --red-to-pink-to-purple-vertical-gradient: linear-gradient(
+      180deg,
+      var(--orange-red) 0%,
+      var(--vivid-pink) 50%,
+      var(--electric-violet) 100%
+    );
+
+    --red-to-pink-to-purple-horizontal-gradient: linear-gradient(
+      90deg,
+      var(--orange-red) 0%,
+      var(--vivid-pink) 50%,
+      var(--electric-violet) 100%
+    );
+
+    --pill-accent: var(--bright-blue);
+
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .main {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--saf-color-background-default) 0%, var(--saf-color-background-subtle) 100%);
+
+    .header {
+      background: var(--saf-color-brand-racing-green-600);
+      color: var(--saf-color-interactive-on-primary-default);
+      padding: 2rem;
+      margin-bottom: 0;
+      background-image: url(/assets/green-swirl.png);
+      background-repeat: no-repeat;
+      background-position: 0 100%;
+      background-size: cover;
+      
+      .header-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 24px;
+        margin: 0 auto;
+        max-width: 1400px;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        color: var(--saf-color-interactive-on-primary-default);
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin: 0;
+        font-weight: 400;
+      }
+    }
+  }
+  .brand-orange {
+    color: var(--saf-color-brand-orange-400);
+  }

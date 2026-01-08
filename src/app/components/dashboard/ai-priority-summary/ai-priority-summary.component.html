@@ -1,0 +1,220 @@
+<div class="widget-header">
+    <h2 class="widget-title">
+        <i class="fas fa-wand-sparkles"></i>
+        AI Assistant
+    </h2>
+
+    <!-- API Usage Monitor -->
+    <div class="api-usage-monitor" *ngIf="isConfigured">
+        <div class="usage-stats">
+        <div class="stat-item" [title]="'API calls made in current session'">
+            <i class="fas fa-chart-line"></i>
+            <span class="stat-label">Calls:</span>
+            <span class="stat-value">{{ rateLimitInfo.callsUsed }}</span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.callsRemaining !== null" 
+                [title]="'Remaining API calls before limit'">
+            <i class="fas fa-battery-three-quarters"></i>
+            <span class="stat-label">Remaining:</span>
+            <span class="stat-value" [style.color]="getRateLimitColor()">
+            {{ rateLimitInfo.callsRemaining }}
+            </span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.callsLimit" 
+                [title]="'Total API call limit for ' + getResetTimePeriod()">
+            <i class="fas fa-layer-group"></i>
+            <span class="stat-label">Limit:</span>
+            <span class="stat-value">{{ rateLimitInfo.callsLimit }}</span>
+            <span class="stat-period" *ngIf="getResetTimePeriod()">({{ getResetTimePeriod() }})</span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.resetTime" 
+                [title]="'Time until rate limit resets'">
+            <i class="fas fa-clock"></i>
+            <span class="stat-label">Resets in:</span>
+            <span class="stat-value">{{ getResetTimeFormatted() }}</span>
+        </div>
+        
+        <button 
+            type="button" 
+            class="reset-counter-btn"
+            (click)="resetRateLimit()"
+            title="Reset call counter">
+            <i class="fas fa-xmark"></i>
+        </button>
+        </div>
+        
+        <div class="usage-bar" *ngIf="rateLimitInfo.callsLimit && rateLimitInfo.callsRemaining !== null">
+        <div class="usage-fill" 
+                [style.width.%]="getRateLimitPercentage()"
+                [style.background-color]="getRateLimitColor()">
+        </div>
+        </div>
+    </div>
+    <!-- <div class="widget-actions">
+        <button 
+        type="button" 
+        class="btn-icon"
+        (click)="refresh()"
+        [disabled]="loading || !isConfigured"
+        title="Refresh">
+        <i class="fas fa-sync" [class.spinning]="loading"></i>
+        </button>
+    </div> -->
+</div>
+
+
+<div class="widget-content" *ngIf="isExpanded">
+    <!-- Not Configured State -->
+    <div class="not-configured" *ngIf="!isConfigured">
+        <i class="fas fa-robot"></i>
+        <p>Configure GitHub AI in the chat widget to enable priority summaries</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p *ngIf="waitingForData">Waiting for dashboard data to load...</p>
+        <p *ngIf="!waitingForData">Analyzing your dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error && !loading">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{ error }}</p>
+        <button type="button" class="btn-secondary btn-sm" (click)="refresh()">
+        Try Again
+        </button>
+    </div>
+
+    <!-- Summary Content -->
+    <div class="summary-content" *ngIf="summary && !loading">
+        <!-- Overview -->
+        <div class="overview-section" *ngIf="summary && summary.overview">
+        <p class="overview-text" [innerHTML]="isAnimating ? animatedOverview : convertMarkdownLinks(summary.overview)">
+            <span class="typing-cursor" *ngIf="isAnimating">|</span>
+        </p>
+        </div>
+
+        <!-- Top Priorities -->
+        <div class="priority-section" *ngIf="summary.topPriorities && summary.topPriorities.length > 0">
+        <h3 class="section-title">
+            Top Priorities
+        </h3>
+        <ul class="priority-list">
+            <li *ngFor="let priority of summary.topPriorities" class="priority-item">
+            <i class="fas fa-circle"></i>
+            <span [innerHTML]="convertMarkdownLinks(priority)"></span>
+            </li>
+        </ul>
+        </div>
+
+        <!-- Urgent Items -->
+        <div class="urgent-section" *ngIf="summary.urgentItems && summary.urgentItems.length > 0">
+        <h3 class="section-title urgent">
+            <i class="fas fa-exclamation-triangle"></i>
+            Needs Attention
+        </h3>
+        <ul class="urgent-list">
+            <li *ngFor="let item of summary.urgentItems" class="urgent-item">
+            <i class="fas fa-circle"></i>
+            <span [innerHTML]="convertMarkdownLinks(item)"></span>
+            </li>
+        </ul>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions-section" *ngIf="summary.suggestions && summary.suggestions.length > 0">
+        <h3 class="section-title">
+            <i class="fas fa-lightbulb"></i>
+            Suggestions
+        </h3>
+        <ul class="suggestions-list">
+            <li *ngFor="let suggestion of summary.suggestions" class="suggestion-item">
+            <i class="fas fa-circle"></i>
+            <span [innerHTML]="convertMarkdownLinks(suggestion)"></span>
+            </li>
+        </ul>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="timestamp" *ngIf="lastUpdated">
+        <span class="last-updated">
+            <i class="fas fa-clock"></i>
+            Updated {{ lastUpdated | date:'short' }}
+        </span>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-section" *ngIf="summary && !loading && isConfigured">
+            <div class="chat-header">
+                <h4 class="chat-title">
+                    <i class="fas fa-comments"></i>
+                    Ask Me Anything
+                </h4>
+                <button 
+                    type="button" 
+                    class="btn-clear-chat"
+                    (click)="clearChat()"
+                    *ngIf="chatMessages.length > 0"
+                    title="Clear chat history">
+                    <i class="fas fa-trash"></i>
+                    Clear Chat
+                </button>
+            </div>
+    
+            <!-- Chat Messages -->
+            <div class="chat-messages" #chatContainer *ngIf="chatMessages.length > 0">
+            <div *ngFor="let msg of chatMessages" 
+                    class="chat-message"
+                    [class.user-message]="msg.role === 'user'"
+                    [class.ai-message]="msg.role === 'assistant'">
+                <div class="message-header">
+                <span class="message-role">
+                    <i [class]="msg.role === 'user' ? 'fas fa-user' : 'fas fa-robot'"></i>
+                    {{ msg.role === 'user' ? 'You' : 'AI Assistant' }}
+                </span>
+                <span class="message-time">{{ formatChatTimestamp(msg.timestamp) }}</span>
+                </div>
+                <div class="message-content" [innerHTML]="convertMarkdownLinks(msg.content)"></div>
+            </div>
+    
+            <!-- Loading indicator -->
+            <div class="chat-message ai-message" *ngIf="chatLoading">
+                <div class="message-header">
+                <span class="message-role">
+                    <i class="fas fa-robot"></i>
+                    AI Assistant
+                </span>
+                </div>
+                <div class="message-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                Thinking...
+                </div>
+            </div>
+            </div>
+    
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+            <textarea
+                [(ngModel)]="currentChatMessage"
+                (keydown)="handleChatKeyDown($event)"
+                placeholder="Ask about your priorities, tasks, or work items..."
+                name="AIchat"
+                class="chat-input"
+                rows="2"
+                [disabled]="chatLoading"></textarea>
+            <button
+                type="button"
+                class="btn-send"
+                (click)="sendChatMessage()"
+                [disabled]="!currentChatMessage.trim() || chatLoading"
+                title="Send message (Enter)">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+            </div>
+        </div>
+    </div>
+</div>

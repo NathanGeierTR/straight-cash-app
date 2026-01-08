@@ -1,0 +1,142 @@
+<div class="news-ticker-widget">
+  <div class="widget-header">
+    <div class="widget-actions">
+      <button 
+        *ngIf="isConfigured" 
+        class="action-btn" 
+        (click)="refreshNews()" 
+        [disabled]="isLoading"
+        title="Refresh News"
+      >
+        <span [class.spinning]="isLoading">↻</span>
+      </button>
+      <button 
+        *ngIf="isConfigured" 
+        class="action-btn" 
+        (click)="clearConfiguration()" 
+        title="Settings"
+      >
+        <span>⚙</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="widget-content">
+    <!-- Configuration Setup -->
+    <div *ngIf="!isConfigured" class="config-setup">
+      <div class="config-section">
+        <label for="apiKey">NewsAPI Key:</label>
+        <input 
+          type="password" 
+          id="apiKey"
+          [(ngModel)]="apiKey" 
+          placeholder="Enter your NewsAPI.org API key"
+          class="config-input"
+        >
+        <div class="api-help">
+          <small>Get a free API key from <a href="https://newsapi.org" target="_blank">NewsAPI.org</a></small>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <label for="searchTopic">Topic:</label>
+        <input 
+          type="text" 
+          id="searchTopic"
+          [(ngModel)]="searchTopic" 
+          placeholder="e.g., technology, programming"
+          class="config-input"
+        >
+        
+        <div class="topic-suggestions">
+          <span class="suggestions-label">Popular topics:</span>
+          <div class="topic-chips">
+            <button 
+              *ngFor="let topic of popularTopics.slice(0, 6)" 
+              class="topic-chip"
+              (click)="selectTopic(topic)"
+            >
+              {{ topic }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <label for="refreshInterval">Refresh Interval (minutes):</label>
+        <select id="refreshInterval" [(ngModel)]="refreshInterval" class="config-select">
+          <option value="5">5 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="15">15 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="60">1 hour</option>
+        </select>
+      </div>
+
+      <button 
+        class="save-config-btn" 
+        (click)="saveConfiguration()"
+        [disabled]="!apiKey.trim() || !searchTopic.trim()"
+      >
+        Start News Ticker
+      </button>
+    </div>
+
+    <!-- News Ticker Display -->
+    <div *ngIf="isConfigured" class="ticker-display">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Loading {{ searchTopic }} news...</span>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !isLoading" class="error-state">
+        <div class="error-icon">⚠️</div>
+        <div class="error-message">{{ error }}</div>
+        <button class="retry-btn" (click)="refreshNews()">Try Again</button>
+      </div>
+
+      <!-- News Articles -->
+      <div *ngIf="!isLoading && !error && articles.length > 0" class="news-content">
+        <div class="current-topic">
+          <span class="topic-label">{{ searchTopic }}</span>
+          <span class="article-counter">{{ currentArticleIndex + 1 }} of {{ articles.length }}</span>
+        </div>
+
+        <div class="ticker-container" (click)="openArticle(getCurrentArticle()!)">
+          <div *ngIf="getCurrentArticle() as article" class="article-display">
+            <div class="article-main">
+              <h4 class="article-title">{{ article.title }}</h4>
+              <p class="article-description" *ngIf="article.description">
+                {{ article.description }}
+              </p>
+            </div>
+            
+            <div class="article-meta">
+              <span class="article-source">{{ article.source.name }}</span>
+              <span class="article-time">{{ getTimeAgo(article.publishedAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation dots -->
+        <div class="ticker-navigation" *ngIf="articles.length > 1">
+          <button 
+            *ngFor="let article of articles; let i = index" 
+            class="nav-dot"
+            [class.active]="i === currentArticleIndex"
+            (click)="currentArticleIndex = i"
+          ></button>
+        </div>
+      </div>
+
+      <!-- No Results State -->
+      <div *ngIf="!isLoading && !error && articles.length === 0" class="no-results">
+        <div class="no-results-icon">📰</div>
+        <p>No recent news found for "{{ searchTopic }}"</p>
+        <button class="change-topic-btn" (click)="clearConfiguration()">Change Topic</button>
+      </div>
+    </div>
+  </div>
+</div>

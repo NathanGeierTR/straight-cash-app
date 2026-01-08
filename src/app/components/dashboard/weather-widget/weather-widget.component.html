@@ -1,0 +1,113 @@
+<div class="weather-widget">
+  <!-- Current Weather -->
+  <div class="current-weather">
+    <div class="weather-header">
+      <div class="location-info">
+        <h4 class="location">📍 {{ currentWeather.location }}</h4>
+        <p class="update-time">Updated {{ new Date() | date:'short' }}</p>
+      </div>
+      <button class="refresh-btn" (click)="updateWeatherData()">🔄</button>
+    </div>
+    
+    <div class="weather-main">
+      <div class="temperature-section">
+        <div class="weather-icon">{{ currentWeather.icon }}</div>
+        <div class="temperature" [style.color]="getTemperatureColor(currentWeather.temperature)">
+          {{ currentWeather.temperature }}°F
+        </div>
+        <div class="condition">{{ currentWeather.condition }}</div>
+        <div class="feels-like">Feels like {{ currentWeather.feelLike }}°F</div>
+      </div>
+    </div>
+
+    <!-- Weather Details Grid -->
+    <div class="weather-details">
+      <div class="detail-item">
+        <span class="detail-icon">💧</span>
+        <span class="detail-label">Humidity</span>
+        <span class="detail-value">{{ currentWeather.humidity }}%</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-icon">💨</span>
+        <span class="detail-label">Wind</span>
+        <span class="detail-value">{{ currentWeather.windSpeed }} mph</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-icon">👁️</span>
+        <span class="detail-label">Visibility</span>
+        <span class="detail-value">{{ currentWeather.visibility }} mi</span>
+      </div>
+      <div class="detail-item" [ngClass]="getUVIndexClass(currentWeather.uvIndex)">
+        <span class="detail-icon">☀️</span>
+        <span class="detail-label">UV Index</span>
+        <span class="detail-value">{{ currentWeather.uvIndex }} {{ getUVIndexText(currentWeather.uvIndex) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5-Day Forecast -->
+  <div class="forecast-section">
+    <h4 class="section-title">5-Day Forecast</h4>
+    <div class="forecast-list">
+      <div *ngFor="let day of forecast" class="forecast-item">
+        <div class="forecast-day">{{ day.day }}</div>
+        <div class="forecast-icon">{{ day.icon }}</div>
+        <div class="forecast-temps">
+          <span class="high-temp" [style.color]="getTemperatureColor(day.high)">{{ day.high }}°</span>
+          <span class="temp-separator">/</span>
+          <span class="low-temp">{{ day.low }}°</span>
+        </div>
+        <div class="forecast-condition">{{ day.condition }}</div>
+        <div class="forecast-rain">
+          <span class="rain-icon">🌧️</span>
+          <span class="rain-chance">{{ day.precipitation }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Air Quality -->
+  <div class="air-quality-section">
+    <h4 class="section-title">Air Quality</h4>
+    <div class="air-quality-main">
+      <div class="aqi-score" [ngClass]="getAQIClass(airQuality.aqi)">
+        <div class="aqi-value">{{ airQuality.aqi }}</div>
+        <div class="aqi-status">{{ getAQIStatus(airQuality.aqi) }}</div>
+      </div>
+      <div class="pollutants">
+        <div class="pollutant-item">
+          <span class="pollutant-name">PM2.5</span>
+          <span class="pollutant-value">{{ airQuality.pm25 }} μg/m³</span>
+        </div>
+        <div class="pollutant-item">
+          <span class="pollutant-name">PM10</span>
+          <span class="pollutant-value">{{ airQuality.pm10 }} μg/m³</span>
+        </div>
+        <div class="pollutant-item">
+          <span class="pollutant-name">O₃</span>
+          <span class="pollutant-value">{{ airQuality.o3 }} μg/m³</span>
+        </div>
+        <div class="pollutant-item">
+          <span class="pollutant-name">NO₂</span>
+          <span class="pollutant-value">{{ airQuality.no2 }} μg/m³</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather Tips -->
+  <div class="weather-tips">
+    <div class="tip-item" *ngIf="currentWeather.uvIndex > 6">
+      <span class="tip-icon">🧴</span>
+      <span class="tip-text">High UV - Apply sunscreen</span>
+    </div>
+    <div class="tip-item" *ngIf="currentWeather.humidity > 70">
+      <span class="tip-icon">🌡️</span>
+      <span class="tip-text">High humidity - Stay hydrated</span>
+    </div>
+    <div class="tip-item" *ngIf="currentWeather.windSpeed > 15">
+      <span class="tip-icon">🌪️</span>
+      <span class="tip-text">Windy conditions - Secure loose items</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,337 @@
+// Using Saffron Design System Colors
+.open-arena-chat {
+  background: var(--saf-color-background-subtle);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--saf-color-line-subtle);
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--saf-color-text-strong);
+      background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .widget-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .action-btn {
+        background: var(--saf-color-background-default);
+        border: 1px solid var(--saf-color-line-subtle);
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--saf-color-text-subtle);
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: var(--saf-color-background-strong);
+          border-color: var(--saf-color-brand-racing-green-400);
+          color: var(--saf-color-brand-racing-green-600);
+        }
+
+        &.danger:hover {
+          background: var(--saf-color-background-strong);
+          border-color: var(--saf-color-brand-orange-400);
+          color: var(--saf-color-brand-orange-600);
+        }
+
+        span {
+          font-size: 14px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .widget-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .toggle-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+
+      .toggle-view-btn {
+        background: var(--saf-color-background-default);
+        border: 1px solid var(--saf-color-line-subtle);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        color: var(--saf-color-text-strong);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+
+        i {
+          font-size: 0.875rem;
+          color: var(--saf-color-brand-orange-500);
+        }
+
+        &:hover {
+          background: var(--saf-color-background-strong);
+          border-color: var(--saf-color-brand-racing-green-400);
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    .url-setup {
+      .input-group {
+        margin-bottom: 1rem;
+
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--saf-color-text-strong);
+        }
+
+        .url-input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid var(--saf-color-line-subtle);
+          border-radius: 6px;
+          font-size: 0.875rem;
+          background: var(--saf-color-background-default);
+          color: var(--saf-color-text-strong);
+          margin-bottom: 0.75rem;
+          box-sizing: border-box;
+
+          &:focus {
+            outline: none;
+            border-color: var(--saf-color-brand-racing-green-400);
+            box-shadow: 0 0 0 2px rgba(var(--saf-color-brand-racing-green-400), 0.1);
+          }
+
+          &::placeholder {
+            color: var(--saf-color-text-subtle);
+          }
+        }
+
+        .set-url-btn {
+          background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(var(--saf-color-brand-racing-green-600), 0.3);
+          }
+
+          &:disabled {
+            background: var(--saf-color-line-subtle);
+            cursor: not-allowed;
+            transform: none;
+          }
+        }
+      }
+
+      .url-help {
+        p {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.875rem;
+          color: var(--saf-color-text-strong);
+        }
+
+        small {
+          font-size: 0.75rem;
+          color: var(--saf-color-text-subtle);
+        }
+      }
+    }
+
+    .iframe-container {
+      flex: 1;
+      border: 1px solid var(--saf-color-line-subtle);
+      overflow: hidden;
+      height: 600px;
+
+      .chat-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: var(--saf-color-background-default);
+      }
+    }
+
+    .placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem;
+      border: 2px dashed var(--saf-color-line-subtle);
+      border-radius: 8px;
+      background: var(--saf-color-background-default);
+
+      .placeholder-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.6;
+      }
+
+      p {
+        margin: 0;
+        color: var(--saf-color-text-subtle);
+        font-size: 0.875rem;
+      }
+    }
+
+    .iframe-fallback {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 600px;
+      background: var(--saf-color-background-default);
+      border: 1px solid var(--saf-color-line-subtle);
+      border-radius: 8px;
+
+      .fallback-content {
+        text-align: center;
+        padding: 2rem;
+        max-width: 400px;
+
+        .fallback-icon {
+          font-size: 3rem;
+          color: var(--saf-color-brand-orange-500);
+          margin-bottom: 1.5rem;
+          opacity: 0.8;
+        }
+
+        h3 {
+          margin: 0 0 1rem 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--saf-color-text-strong);
+        }
+
+        p {
+          margin: 0 0 2rem 0;
+          font-size: 0.875rem;
+          color: var(--saf-color-text-subtle);
+          line-height: 1.6;
+        }
+
+        .open-external-btn {
+          background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
+          color: white;
+          border: none;
+          padding: 0.875rem 1.75rem;
+          border-radius: 8px;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+
+          i {
+            font-size: 0.875rem;
+          }
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+
+        .refresh-btn {
+          background: var(--saf-color-background-default);
+          color: var(--saf-color-text-strong);
+          border: 1px solid var(--saf-color-line-subtle);
+          padding: 0.875rem 1.75rem;
+          border-radius: 8px;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i {
+            font-size: 0.875rem;
+          }
+
+          &:hover {
+            background: var(--saf-color-background-strong);
+            border-color: var(--saf-color-brand-racing-green-400);
+            transform: translateY(-1px);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .open-arena-chat {
+    padding: 1rem;
+
+    .widget-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+
+      .widget-actions {
+        align-self: flex-end;
+      }
+    }
+
+    .widget-content {
+      .iframe-container .chat-iframe {
+        min-height: 300px;
+      }
+    }
+  }
+}

@@ -1,0 +1,327 @@
+<div class="coworker-timezones-widget">
+  <div class="widget-header">
+    <h2 class="widget-title">
+      <i class="fas fa-globe"></i>
+      Team Time Zones
+    </h2>
+    
+    <div class="widget-actions">
+      <!-- Teams Connection Button -->
+      <div class="teams-connection">
+        <button 
+          *ngIf="!teamsConnected"
+          type="button" 
+          class="btn-icon"
+          (click)="connectTeams()"
+          title="Connect to Microsoft Teams">
+          <img src="assets/Teams.svg" alt="Microsoft Teams Logo" class="teams-logo">
+        </button>
+        <button 
+          *ngIf="teamsConnected"
+          type="button" 
+          class="btn-icon"
+          (click)="disconnectTeams()"
+          title="Connected to Teams">
+          <img src="assets/Teams.svg" alt="Microsoft Teams Logo" class="teams-logo">
+          <span class="connection-badge">
+            <i class="fas fa-check"></i>
+          </span>
+        </button>
+      </div>
+      <button 
+        type="button" 
+        class="btn-icon"
+        (click)="showAddForm = !showAddForm"
+        [class.active]="showAddForm"
+        title="Add Coworker">
+        <i class="fas fa-plus"></i>
+      </button>
+      
+      <div class="dropdown">
+        <button type="button" class="btn-icon" title="More Actions">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="dropdown-menu">
+          <button type="button" (click)="exportCoworkers()">
+            <i class="fas fa-download"></i>
+            Export
+          </button>
+          <label class="dropdown-item">
+            <i class="fas fa-upload"></i>
+            Import
+            <input type="file" accept=".json" (change)="importCoworkers($event)" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Coworker Form -->
+  <div class="add-form" *ngIf="showAddForm">
+    <div class="form-group">
+        <label class="form-label">Email *</label>
+      <input 
+        type="email" 
+        [(ngModel)]="newCoworker.email"
+        class="form-control"
+        autofocus>
+    </div>
+    
+    <div class="timezone-selection-row">
+      <div class="form-group">
+        <label class="form-label">By Offset from Your Time</label>
+        <select [(ngModel)]="newCoworker.timezoneOffset" class="form-control">
+          <option *ngFor="let tz of timezoneOffsets" [ngValue]="tz.value">
+            {{ tz.label }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Or By City</label>
+        <select [(ngModel)]="newCoworker.selectedCity" class="form-control">
+          <option *ngFor="let city of cityTimezones" [value]="city.timezone">
+            {{ city.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <button 
+        type="button" 
+        class="btn-primary" 
+        (click)="addCoworker()"
+        [disabled]="!newCoworker.email.trim()">
+        <i class="fas fa-plus"></i>
+        Add
+      </button>
+      <button 
+        type="button" 
+        class="btn-secondary" 
+        (click)="showAddForm = false">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Coworkers List -->
+  <div class="coworkers-container">
+    <div class="empty-state" *ngIf="coworkers.length === 0">
+      <i class="fas fa-users"></i>
+      <p>No coworkers added yet. Add your team members to track their time zones!</p>
+    </div>
+
+    <div class="coworker-card" *ngFor="let coworker of coworkers; let i = index">
+      <!-- Edit Mode -->
+      <div class="coworker-edit" *ngIf="editingCoworkerId === coworker.id">
+        <div class="form-group">
+          <input 
+            type="email" 
+            [(ngModel)]="editingCoworker.email"
+            class="form-control"
+            placeholder="Email">
+        </div>
+        
+        <div class="form-group">
+          <input 
+            type="text" 
+            [(ngModel)]="editingCoworker.name"
+            class="form-control"
+            placeholder="Name">
+        </div>
+        
+        <div class="form-group">
+          <input 
+            type="text" 
+            [(ngModel)]="editingCoworker.role"
+            class="form-control"
+            placeholder="Role">
+        </div>
+        
+        <div class="timezone-selection-row">
+          <div class="form-group">
+            <label class="form-label">By Offset from Your Time</label>
+            <select [(ngModel)]="editingCoworker.timezoneOffset" class="form-control">
+              <option *ngFor="let tz of timezoneOffsets" [ngValue]="tz.value">
+                {{ tz.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Or By City</label>
+            <select [(ngModel)]="editingCoworker.selectedCity" class="form-control">
+              <option *ngFor="let city of cityTimezones" [value]="city.timezone">
+                {{ city.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn-primary" (click)="saveEdit(coworker.id)">
+            <i class="fas fa-save"></i>
+            Save
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- View Mode -->
+      <div class="coworker-view" *ngIf="editingCoworkerId !== coworker.id">
+        <div class="coworker-info">
+          <div class="coworker-avatar-container">
+            <div class="coworker-avatar" [style.background-color]="coworker.avatarColor">
+                {{ getAvatarInitial(coworker.name) }}
+            </div>
+            <div 
+              *ngIf="coworker.teamsPresence" 
+              class="presence-indicator"
+              [style.background-color]="getPresenceColor(coworker.teamsPresence.availability)"
+              [title]="coworker.teamsPresence.availability">
+            </div>
+          </div>
+          
+          <div class="coworker-details">
+            <h4 class="coworker-name">{{ formatCoworkerName(coworker.name) }}</h4>
+            <p class="coworker-role" *ngIf="coworker.role">{{ coworker.role }}</p>
+            <p class="coworker-location">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ coworker.location }}
+            </p>
+          </div>
+          
+          <div class="coworker-time">
+            <div class="time-display" [class.undefined-timezone]="!coworker.timezone">
+              {{ getCurrentTime(coworker.timezone) }}
+            </div>
+            <div class="status-badge" [class.undefined-timezone]="!coworker.timezone">
+              {{ getStatusText(coworker.timezone) }}
+            </div>
+          </div>
+          
+          <div class="coworker-actions">
+            <button 
+              *ngIf="coworker.email"
+              type="button" 
+              class="btn-icon-small teams-chat"
+              (click)="openTeamsChat(coworker.email)"
+              title="Chat in Teams">
+              <i class="fas fa-comment"></i>
+            </button>
+            <button 
+                type="button" 
+                class="btn-icon-small"
+                (click)="moveCoworkerUp(i)"
+                [disabled]="i === 0"
+                title="Move Up">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <button 
+                type="button" 
+                class="btn-icon-small"
+                (click)="moveCoworkerDown(i)"
+                [disabled]="i === coworkers.length - 1"
+                title="Move Down">
+                <i class="fas fa-arrow-down"></i>
+            </button>
+            <button 
+                type="button" 
+                class="btn-icon-small"
+                (click)="startEdit(coworker)"
+                title="Edit">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button 
+                type="button" 
+                class="btn-icon-small delete"
+                (click)="deleteCoworker(coworker.id)"
+                title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Time Progress Bar -->
+        <div class="time-progress-container">
+          <div class="progress-bar-wrapper">
+            <div 
+              class="progress-bar-background">
+            </div>
+            <div class="progress-indicator-container">
+              <div 
+                class="progress-indicator"
+                [style.left.%]="getTimeProgress(coworker.timezone)">
+                <ng-container [ngSwitch]="getDayOrNight(coworker.timezone)">
+                    <i *ngSwitchCase="'day'" class="fas fa-sun"></i>
+                    <i *ngSwitchCase="'night'" class="fas fa-moon"></i>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <div class="time-scale">
+            <span class="time-marker">12am</span>
+            <span class="time-marker">6am</span>
+            <span class="time-marker">12pm</span>
+            <span class="time-marker">6pm</span>
+            <span class="time-marker">12am</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teams Setup Modal -->
+  <div class="teams-setup-modal" *ngIf="showTeamsSetup">
+    <div class="modal-content">
+      <h3>Connect to Microsoft Teams</h3>
+      <p>To connect to Microsoft Teams, you'll need an access token from Microsoft Graph API.</p>
+      
+      <div class="setup-instructions">
+        <h4>How to get an access token:</h4>
+        <ol>
+          <li>Visit <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank">Graph Explorer</a></li>
+          <li>Sign in with your Microsoft 365 account</li>
+          <li>Grant permission: "Presence.Read" and "User.Read"</li>
+          <li>Enable these permissions:
+            <ul>
+              <li><strong>Presence.Read</strong> (for your own presence)</li>
+              <li><strong>Presence.Read.All</strong> (to read others' presence - optional)</li>
+              <li><strong>User.Read.All</strong> (to look up users by email)</li>
+              <li><strong>MailboxSettings.Read</strong> (to auto-detect timezones)</li>
+            </ul>
+          </li>
+          <li>Copy the access token from the request headers</li>
+        </ol>
+      </div>
+      
+      <div class="form-group">
+        <textarea
+          [(ngModel)]="teamsAccessToken"
+          placeholder="Paste your access token here"
+          class="form-control"
+          rows="4">
+        </textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-primary" 
+          (click)="saveTeamsToken()"
+          [disabled]="!teamsAccessToken.trim()">
+          Connect
+        </button>
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="showTeamsSetup = false">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

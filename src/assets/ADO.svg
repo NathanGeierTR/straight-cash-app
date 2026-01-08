@@ -1,0 +1,17 @@
+<defs>  
+    <style>  
+      .azure-blue { fill: #0078D4; }  
+    </style>  
+  </defs>
+    
+  <!-- Main shape -->  
+  <path class="azure-blue" d="M 88 18 L 88 58 L 73 73 L 73 83 L 24 68 L 24 28 L 56 8 L 88 18 Z M 32 32 L 32 64 L 66 64 L 66 32 L 32 32 Z"/>
+    
+  <!-- Top arrow -->  
+  <path class="azure-blue" d="M 56 8 L 88 18 L 66 32 L 56 8 Z"/>
+    
+  <!-- Bottom arrow -->  
+  <path class="azure-blue" d="M 73 73 L 73 83 L 24 68 L 32 64 L 73 73 Z"/>
+    
+  <!-- White/light center trapezoid -->  
+  <path fill="#FFFFFF" d="M 32 32 L 66 32 L 66 64 L 32 64 Z"/> 

@@ -1,0 +1,13 @@
+{
+  "/ado-api/**": {
+    "target": "https://dev.azure.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/ado-api": ""
+    },
+    "onProxyReq": "function(proxyReq, req, res) { console.log('Proxying request to: ' + proxyReq.path); }",
+    "onError": "function(err, req, res) { console.log('Proxy error: ' + err); }"
+  }
+}

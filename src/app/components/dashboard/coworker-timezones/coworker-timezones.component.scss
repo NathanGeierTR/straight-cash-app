@@ -1,0 +1,697 @@
+:host {
+  height: 100%;
+}
+.coworker-timezones-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--saf-color-background-default);
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 1.5rem;
+
+  .widget-header {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--saf-color-line-subtle);
+    padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .widget-title {
+        align-items: center;
+        background: linear-gradient(
+        135deg,
+        var(--saf-color-brand-orange-400),
+        var(--saf-color-brand-orange-700));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        gap: 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+
+        i {
+            color: var(--saf-color-brand-racing-green-600);
+            font-size: 1.1rem;
+        }
+    }
+
+    .widget-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .btn-icon {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: var(--saf-color-brand-racing-green-600);
+        padding: 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: var(--saf-color-brand-racing-green-500);
+        }
+
+        &.active {
+          background: var(--saf-color-brand-racing-green-500);
+          color: var(--saf-color-brand-racing-green-700);
+          border-color: var(--saf-color-brand-racing-green-500);
+        }
+      }
+
+      .teams-connection {
+        .btn-icon {
+          position: relative;
+          
+          .teams-logo {
+            width: 20px;
+            height: 20px;
+            display: block;
+          }
+          
+          .connection-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            background: #28a745;
+            border: 2px solid var(--saf-color-line-subtle);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            i {
+              font-size: 8px;
+              color: white;
+            }
+          }
+        }
+
+        .active {
+          background: #5558AF;
+        }
+      }
+
+      .dropdown {
+        position: relative;
+
+        .dropdown-menu {
+          display: none;
+          position: absolute;
+          right: 0;
+          top: 100%;
+          margin-top: 0.25rem;
+          background: white;
+          border: 1px solid var(--saf-color-line-subtle);
+          border-radius: 4px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          min-width: 150px;
+          z-index: 1000;
+
+          button, .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: none;
+            border: none;
+            text-align: left;
+            font-size: 0.875rem;
+            color: var(--text-color);
+            cursor: pointer;
+
+            &:hover {
+              background: var(--bg-hover);
+            }
+
+            i {
+              width: 16px;
+              color: var(--text-muted);
+            }
+          }
+        }
+
+        &:hover .dropdown-menu {
+          display: block;
+        }
+      }
+    }
+  }
+
+  .add-form {
+    padding: 1rem;
+    background: var(--bg-hover);
+    border-bottom: 1px solid var(--saf-color-line-subtle);
+
+    .form-group {
+      margin-bottom: 0.75rem;
+
+      .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--saf-color-line-subtle);
+        border-radius: 4px;
+        background: white;
+        font-size: 0.875rem;
+
+        &:focus {
+          outline: none;
+          border-color: var(--saf-color-brand-racing-green-700);
+          box-shadow: 0 0 0 2px rgba(0, 75, 47, 0.1);
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &.btn-primary {
+          background: var(--saf-color-brand-racing-green-700);
+          color: white;
+
+          &:hover:not(:disabled) {
+            background: var(--saf-color-brand-racing-green-500);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+
+        &.btn-secondary {
+          background: #6c757d;
+          color: white;
+
+          &:hover {
+            background: #5a6268;
+          }
+        }
+      }
+    }
+  }
+
+  .coworkers-container {
+    flex: 1;
+    overflow-y: auto;
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      text-align: center;
+
+      i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+      }
+
+      p {
+        margin: 0;
+        font-size: 1rem;
+      }
+    }
+
+    .coworker-card {
+      background: white;
+      border: 1px solid var(--saf-color-line-subtle);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 12px 16px;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+
+      .coworker-view {
+        .coworker-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 0.5rem;
+
+          .coworker-avatar {
+            align-items: center;
+            border-radius: 100%;
+            color: white;
+            display: flex;
+            font-weight: 700;
+            height: 32px;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            width: 32px;
+
+            .avatar-photo {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 50%;
+            }
+
+            .presence-indicator {
+              position: absolute;
+              bottom: -2px;
+              right: -2px;
+              width: 12px;
+              height: 12px;
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+            }
+          }
+
+          .coworker-details {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+
+            .coworker-name {
+              font-size: 1rem;
+              font-weight: 600;
+              color: var(--text-color);
+              margin: 0;
+            }
+
+            .coworker-role {
+              font-size: 0.875rem;
+              color: var(--text-muted);
+              margin: 0;
+            }
+
+            .coworker-location {
+              margin: 0;
+              font-size: 0.75rem;
+              color: var(--text-muted);
+              display: flex;
+              align-items: center;
+              gap: 0.25rem;
+
+              i {
+                color: var(--saf-color-brand-racing-green-500);
+              }
+            }
+          }
+
+          .coworker-time {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+
+            .time-display {
+              border-radius: 4px;
+              font-size: 1rem;
+              font-weight: 500;
+              color: var(--saf-color-green-200);
+              background-color: var(--saf-color-brand-racing-green-700);
+              margin: 0;
+              padding: 0 8px;
+            }
+
+            .status-badge {
+              display: inline-block;
+              padding: 0.125rem 0.5rem;
+              background: var(--saf-color-brand-racing-green-100);
+              color: var(--saf-color-brand-racing-green-700);
+              border-radius: 12px;
+              font-size: 0.75rem;
+              font-weight: 600;
+
+              &.status-available {
+                background: #dff6dd;
+                color: #92c353;
+              }
+              
+              &.status-busy {
+                background: #fde7e9;
+                color: #c4314b;
+              }
+              
+              &.status-away {
+                background: #fff4ce;
+                color: #ffaa44;
+              }
+              
+              &.status-offline {
+                background: #edebe9;
+                color: #8a8886;
+              }
+            }
+          }
+
+          .coworker-actions {
+            display: flex;
+            gap: 0.25rem;
+
+            .btn-icon-small {
+              background: transparent;
+              border: 1px solid var(--saf-color-line-subtle);
+              padding: 0.25rem 0.5rem;
+              border-radius: 4px;
+              cursor: pointer;
+              color: var(--text-color);
+              font-size: 0.875rem;
+              transition: all 0.2s;
+              
+              &.delete:hover {
+                background: #dc3545;
+                border-color: #dc3545;
+                color: white;
+              }
+
+              &.teams-chat {
+                color: #5558AF;
+              }
+            }
+          }
+        }
+
+        .time-progress-container {
+          .time-scale {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 0.25rem;
+
+            .time-marker {
+              font-size: 0.7rem;
+              color: var(--text-muted);
+              font-weight: 500;
+            }
+          }
+
+          .progress-bar-wrapper {
+            position: relative;
+            height: 24px;
+            border-radius: 12px;
+            overflow: visible;
+
+            .progress-bar-background {
+              background: linear-gradient(to right,
+                /* Night */
+                #01162E 0%, /* Deepest night blue */
+                #1E3C72 20%, /* Midnight blue */
+                /* Dawn/Morning */
+                #61abdc 30%, /* Lighter blue, pre-dawn */
+                #82b7db 45%, /* Bright day yellow */
+                #61abdc 60%, /* Afternoon blue */
+                /* Dusk/Evening */
+                #EE6C45 70%, /* Sunset orange/red */
+                #50366F 75%, /* Evening purple */
+                /* Back to Night */
+                #01162E 90% /* Deep night blue */ );
+              width: 100%;
+              border-radius: 25px; /* Optional: gives a nice rounded look */
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              border-radius: 12px;
+            }
+
+            .progress-indicator-container {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              margin: 0 12px;
+
+              .progress-indicator {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                color: #FFE58A;
+
+                .indicator-dot {
+                  width: 16px;
+                  height: 16px;
+                  background: white;
+                  border: 3px solid var(--saf-color-brand-racing-green-700);
+                  border-radius: 50%;
+                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                  z-index: 2;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .coworker-edit {
+        .form-group {
+          margin-bottom: 0.75rem;
+
+          .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--saf-color-line-subtle);
+            border-radius: 4px;
+            background: white;
+            font-size: 0.875rem;
+
+            &:focus {
+              outline: none;
+              border-color: var(--saf-color-brand-racing-green-700);
+              box-shadow: 0 0 0 2px rgba(0, 75, 47, 0.1);
+            }
+          }
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.5rem;
+
+          button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &.btn-primary {
+              background: var(--saf-color-brand-racing-green-700);
+              color: white;
+
+              &:hover {
+                background: var(--saf-color-brand-racing-green-500);
+              }
+            }
+
+            &.btn-secondary {
+              background: #6c757d;
+              color: white;
+
+              &:hover {
+                background: #5a6268;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .teams-setup-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+
+      h3 {
+        margin: 0 0 1rem 0;
+        color: var(--text-color);
+      }
+
+      p {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+      }
+
+      .setup-instructions {
+        background: var(--bg-hover);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+
+        h4 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.875rem;
+          color: var(--text-color);
+        }
+
+        ol {
+          margin: 0;
+          padding-left: 1.5rem;
+          font-size: 0.875rem;
+          color: var(--text-muted);
+
+          li {
+            margin-bottom: 0.25rem;
+          }
+        }
+
+        a {
+          color: var(--saf-color-brand-racing-green-600);
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
+      textarea.form-control {
+        font-family: monospace;
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .email-lookup-group {
+    display: flex;
+    gap: 0.5rem;
+
+    .form-control {
+      flex: 1;
+    }
+
+    .btn-lookup {
+      background: var(--saf-color-brand-racing-green-700);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background: var(--saf-color-brand-racing-green-500);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .undefined-timezone {
+    opacity: 0.5;
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .coworker-timezones-widget {
+      .coworkers-container {
+        .coworker-card {
+          .coworker-view {
+            .coworker-info {
+              flex-wrap: wrap;
+
+              .coworker-time {
+                width: 100%;
+                text-align: left;
+                margin-top: 0.5rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.timezone-mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  
+  .toggle-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--saf-color-line-subtle);
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    
+    &:hover {
+      background: var(--bg-hover);
+    }
+    
+    &.active {
+      background: var(--saf-color-brand-racing-green-700);
+      color: white;
+      border-color: var(--saf-color-brand-racing-green-700);
+    }
+  }
+}
+
+.timezone-selection-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+}
+}

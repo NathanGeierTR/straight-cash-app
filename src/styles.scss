@@ -1,0 +1,308 @@
+/* You can add global styles to this file, and also import other style files */
+
+// Sass variables
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$danger-color: #dc3545;
+$warning-color: #ffc107;
+$info-color: #17a2b8;
+
+// Typography variables
+$font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.5;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+
+// Mixins
+@mixin border-radius($radius: 4px) {
+  border-radius: $radius;
+}
+
+@mixin box-shadow($shadow: 0 2px 4px rgba(0, 0, 0, 0.1)) {
+  box-shadow: $shadow;
+}
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+// Responsive mixin
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: #{$breakpoint-sm}) {
+      @content;
+    }
+  }
+  @if $breakpoint == md {
+    @media (min-width: #{$breakpoint-md}) {
+      @content;
+    }
+  }
+  @if $breakpoint == lg {
+    @media (min-width: #{$breakpoint-lg}) {
+      @content;
+    }
+  }
+  @if $breakpoint == xl {
+    @media (min-width: #{$breakpoint-xl}) {
+      @content;
+    }
+  }
+}
+
+// Global styles
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Source Sans 3", sans-serif;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: #333;
+  background-color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Arimo", sans-serif;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+button {
+  font-family: "Arimo", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+  
+  @include respond-to(sm) {
+    padding: 0 20px;
+  }
+}
+
+// Button styles using Sass features
+.btn {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  margin-bottom: 0;
+  font-size: $font-size-base;
+  font-weight: 400;
+  line-height: $line-height-base;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  @include border-radius();
+  @include transition();
+  
+  &:hover {
+    text-decoration: none;
+  }
+  
+  &:focus {
+    outline: 0;
+    @include box-shadow(0 0 0 0.2rem rgba($primary-color, 0.25));
+  }
+  
+  &-primary {
+    color: #fff;
+    background-color: $primary-color;
+    border-color: $primary-color;
+    
+    &:hover {
+      background-color: darken($primary-color, 10%);
+      border-color: darken($primary-color, 12%);
+    }
+  }
+  
+  &-secondary {
+    color: #fff;
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    
+    &:hover {
+      background-color: darken($secondary-color, 10%);
+      border-color: darken($secondary-color, 12%);
+    }
+  }
+}
+
+:root {
+    --saf-color-background-default: #ffffff;
+    --saf-color-background-subtle: #fafafa;
+    --saf-color-background-strong: #ededed;
+    --saf-color-background-stronger: #b3b3b3;
+    --saf-color-background-inverse: #1f1f1f;
+    --saf-color-line-strong: #737373;
+    --saf-color-line-subtle: #e6e6e6;
+    --saf-color-interactive-focus: #0065ff;
+    --saf-color-interactive-overlay: rgba(0, 0, 0, 0.3);
+    --saf-color-interactive-on-primary-default: #f2f2f2;
+    --saf-color-interactive-on-primary-hover: #004070;
+    --saf-color-interactive-on-primary-active: #ffffff;
+    --saf-color-interactive-on-secondary-default: #1f1f1f;
+    --saf-color-interactive-on-secondary-hover: #004070;
+    --saf-color-interactive-on-secondary-active: #ffffff;
+    --saf-color-interactive-on-tertiary-default: #1f1f1f;
+    --saf-color-interactive-on-tertiary-hover: #004070;
+    --saf-color-interactive-on-tertiary-active: #004070;
+    --saf-color-interactive-on-disabled-strong: #f2f2f2;
+    --saf-color-interactive-on-disabled-subtle: #8c8c8c;
+    --saf-color-interactive-on-hero-default: #ffffff;
+    --saf-color-interactive-on-hero-hover: #ab3300;
+    --saf-color-interactive-on-hero-active: #ffffff;
+    --saf-color-interactive-on-read-only-strong: #e6e6e6;
+    --saf-color-interactive-on-read-only-subtle: #737373;
+    --saf-color-interactive-primary-default: #000000;
+    --saf-color-interactive-primary-hover: #e5f4ff;
+    --saf-color-interactive-primary-active: #004070;
+    --saf-color-interactive-secondary-default: #fafafa;
+    --saf-color-interactive-secondary-hover: #e5f4ff;
+    --saf-color-interactive-secondary-active: #004070;
+    --saf-color-interactive-tertiary-default: rgba(255, 255, 255, 0);
+    --saf-color-interactive-tertiary-hover: #e5f4ff;
+    --saf-color-interactive-tertiary-active: #ffffff;
+    --saf-color-interactive-disabled-strong: #8c8c8c;
+    --saf-color-interactive-disabled-subtle: #f2f2f2;
+    --saf-color-interactive-hero-default: #d64000;
+    --saf-color-interactive-hero-hover: #fff0e5;
+    --saf-color-interactive-hero-active: #ab3300;
+    --saf-color-interactive-background-default: #ffffff;
+    --saf-color-interactive-background-subtle: #fafafa;
+    --saf-color-interactive-background-strong: #ededed;
+    --saf-color-interactive-background-stronger: #d2d2d2;
+    --saf-color-interactive-background-strongest: #404040;
+    --saf-color-interactive-read-only-strong: #737373;
+    --saf-color-interactive-read-only-subtle: #e6e6e6;
+    --saf-color-anchor-default: #006fc4;
+    --saf-color-anchor-hover: #005da2;
+    --saf-color-anchor-active: #004070;
+    --saf-color-anchor-visited: #9647d1;
+    --saf-color-text-heavy: #1f1f1f;
+    --saf-color-text-strong: #404040;
+    --saf-color-text-subtle: #737373;
+    --saf-color-text-knockout: #ffffff;
+    --saf-color-status-success-strong: #387c2b;
+    --saf-color-status-success-subtle: #eaffe5;
+    --saf-color-status-error-strong: #dc0a0a;
+    --saf-color-status-error-subtle: #ffeded;
+    --saf-color-status-information-strong: #005da2;
+    --saf-color-status-information-subtle: #e5f4ff;
+    --saf-color-status-warning-strong: #ca4615;
+    --saf-color-status-warning-subtle: #fff8e5;
+    --saf-color-status-neutral-strong: #404040;
+    --saf-color-status-neutral-subtle: #ededed;
+    --saf-color-white: #ffffff;
+    --saf-color-black: #000000;
+    --saf-color-gray-50: #fafafa;
+    --saf-color-gray-100: #f2f2f2;
+    --saf-color-gray-150: #ededed;
+    --saf-color-gray-200: #e6e6e6;
+    --saf-color-gray-250: #d2d2d2;
+    --saf-color-gray-300: #b3b3b3;
+    --saf-color-gray-350: #8c8c8c;
+    --saf-color-gray-400: #737373;
+    --saf-color-gray-500: #404040;
+    --saf-color-gray-600: #1f1f1f;
+    --saf-color-blue-50: #f2faff;
+    --saf-color-blue-100: #e5f4ff;
+    --saf-color-blue-200: #b5daf7;
+    --saf-color-blue-300: #47b0ff;
+    --saf-color-blue-350: #006fc4;
+    --saf-color-blue-400: #005da2;
+    --saf-color-blue-500: #004070;
+    --saf-color-blue-600: #00233d;
+    --saf-color-blue-focus: #0065ff;
+    --saf-color-orange-100: #fff0e5;
+    --saf-color-orange-200: #ffd9bf;
+    --saf-color-orange-300: #ffb280;
+    --saf-color-orange-400: #fa6400;
+    --saf-color-orange-500: #ca4615;
+    --saf-color-green-100: #eaffe5;
+    --saf-color-green-200: #c9ffbf;
+    --saf-color-green-300: #87cc7a;
+    --saf-color-green-400: #387c2b;
+    --saf-color-green-500: #214a1a;
+    --saf-color-red-100: #ffeded;
+    --saf-color-red-200: #ffbfbf;
+    --saf-color-red-300: #ff8080;
+    --saf-color-red-400: #dc0a0a;
+    --saf-color-red-500: #a10707;
+    --saf-color-yellow-100: #fff8e5;
+    --saf-color-yellow-200: #ffeebf;
+    --saf-color-yellow-300: #ffdc80;
+    --saf-color-yellow-400: #fbb700;
+    --saf-color-yellow-500: #c98700;
+    --saf-color-purple-100: #f4e5ff;
+    --saf-color-purple-200: #e3bfff;
+    --saf-color-purple-300: #9647d1;
+    --saf-color-purple-400: #621f95;
+    --saf-color-purple-500: #351a6e;
+    --saf-color-brand-gray-100: #e5e5e5;
+    --saf-color-brand-gray-200: #9f9f9f;
+    --saf-color-brand-gray-300: #7a7a7a;
+    --saf-color-brand-gray-400: #212223;
+    --saf-color-brand-sky-100: #e3f1fd;
+    --saf-color-brand-sky-200: #6bacee;
+    --saf-color-brand-sky-300: #3990e9;
+    --saf-color-brand-sky-400: #0874e3;
+    --saf-color-brand-sky-500: #065db6;
+    --saf-color-brand-sky-600: #054688;
+    --saf-color-brand-sky-700: #032e5b;
+    --saf-color-brand-orange-100: #efb399;
+    --saf-color-brand-orange-200: #e68c66;
+    --saf-color-brand-orange-300: #de6633;
+    --saf-color-brand-orange-400: #d64000;
+    --saf-color-brand-orange-500: #ab3300;
+    --saf-color-brand-orange-600: #802600;
+    --saf-color-brand-orange-700: #561a00;
+    --saf-color-brand-racing-green-100: #cbd1ce;
+    --saf-color-brand-racing-green-200: #acb7b1;
+    --saf-color-brand-racing-green-300: #8d9c94;
+    --saf-color-brand-racing-green-400: #6e8178;
+    --saf-color-brand-racing-green-500: #50665b;
+    --saf-color-brand-racing-green-600: #314b3e;
+    --saf-color-brand-racing-green-700: #123021;
+    --saf-color-brand-teal-100: #e3f3ee;
+    --saf-color-brand-teal-200: #94d1c2;
+    --saf-color-brand-teal-300: #71c1ad;
+    --saf-color-brand-teal-400: #4db299;
+    --saf-color-brand-teal-500: #3e8e7a;
+    --saf-color-brand-teal-600: #2e6b5c;
+    --saf-color-brand-teal-700: #1f473d;
+    --saf-color-brand-lime-100: #e1f4cd;
+    --saf-color-brand-lime-200: #bce0a2;
+    --saf-color-brand-lime-300: #a5d583;
+    --saf-color-brand-lime-400: #8fcb64;
+    --saf-color-brand-lime-500: #72a250;
+    --saf-color-brand-lime-600: #567a3c;
+    --saf-color-brand-lime-700: #1f473d;
+    --saf-color-brand-gold-100: #fcf2da;
+    --saf-color-brand-gold-200: #f2d08f;
+    --saf-color-brand-gold-300: #edc06a;
+    --saf-color-brand-gold-400: #e9b045;
+    --saf-color-brand-gold-500: #ba8d37;
+    --saf-color-brand-gold-600: #8c6a29;
+    --saf-color-brand-gold-700: #5d461c;
+    --saf-color-brand-amber-100: #f8eadd;
+    --saf-color-brand-amber-200: #e5af7f;
+    --saf-color-brand-amber-300: #dd9455;
+    --saf-color-brand-amber-400: #d4792a;
+    --saf-color-brand-amber-500: #aa6122;
+    --saf-color-brand-amber-600: #7f4919;
+    --saf-color-brand-amber-700: #553011;
+}

@@ -1,0 +1,404 @@
+// Using Saffron Design System Colors
+.news-ticker-widget {
+  background: var(--saf-color-background-subtle);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--saf-color-line-subtle);
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--saf-color-text-strong);
+      background: linear-gradient(135deg, var(--saf-color-brand-orange-400), var(--saf-color-brand-orange-600));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .widget-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .action-btn {
+        background: var(--saf-color-background-default);
+        border: 1px solid var(--saf-color-line-subtle);
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--saf-color-text-subtle);
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background: var(--saf-color-background-strong);
+          border-color: var(--saf-color-brand-orange-400);
+          color: var(--saf-color-brand-orange-600);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      }
+    }
+  }
+
+  .widget-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    // Configuration Setup Styles
+    .config-setup {
+      .config-section {
+        margin-bottom: 1.5rem;
+
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--saf-color-text-strong);
+        }
+
+        .config-input, .config-select {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid var(--saf-color-line-subtle);
+          border-radius: 6px;
+          font-size: 0.875rem;
+          background: var(--saf-color-background-default);
+          color: var(--saf-color-text-strong);
+          box-sizing: border-box;
+
+          &:focus {
+            outline: none;
+            border-color: var(--saf-color-brand-orange-400);
+            box-shadow: 0 0 0 2px rgba(var(--saf-color-brand-orange-400), 0.1);
+          }
+        }
+
+        .api-help {
+          margin-top: 0.5rem;
+          
+          small {
+            font-size: 0.75rem;
+            color: var(--saf-color-text-subtle);
+            
+            a {
+              color: var(--saf-color-brand-orange-500);
+              text-decoration: none;
+              
+              &:hover {
+                text-decoration: underline;
+              }
+            }
+          }
+        }
+
+        .topic-suggestions {
+          margin-top: 0.75rem;
+
+          .suggestions-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--saf-color-text-subtle);
+            margin-bottom: 0.5rem;
+          }
+
+          .topic-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .topic-chip {
+              background: var(--saf-color-background-default);
+              border: 1px solid var(--saf-color-line-subtle);
+              border-radius: 16px;
+              padding: 0.25rem 0.75rem;
+              font-size: 0.75rem;
+              color: var(--saf-color-text-subtle);
+              cursor: pointer;
+              transition: all 0.2s ease;
+
+              &:hover {
+                background: var(--saf-color-brand-orange-400);
+                color: white;
+                border-color: var(--saf-color-brand-orange-400);
+              }
+            }
+          }
+        }
+      }
+
+      .save-config-btn {
+        background: linear-gradient(135deg, var(--saf-color-brand-orange-400), var(--saf-color-brand-orange-600));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(var(--saf-color-brand-orange-400), 0.3);
+        }
+
+        &:disabled {
+          background: var(--saf-color-line-subtle);
+          cursor: not-allowed;
+          transform: none;
+        }
+      }
+    }
+
+    // Ticker Display Styles
+    .ticker-display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      .loading-state, .error-state, .no-results {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .loading-state {
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid var(--saf-color-line-subtle);
+          border-top: 3px solid var(--saf-color-brand-orange-400);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
+        }
+
+        span {
+          color: var(--saf-color-text-subtle);
+          font-size: 0.875rem;
+        }
+      }
+
+      .error-state {
+        .error-icon {
+          font-size: 2rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .error-message {
+          color: var(--saf-color-text-strong);
+          margin-bottom: 1rem;
+          font-size: 0.875rem;
+        }
+
+        .retry-btn {
+          background: var(--saf-color-brand-orange-400);
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.875rem;
+
+          &:hover {
+            background: var(--saf-color-brand-orange-500);
+          }
+        }
+      }
+
+      .no-results {
+        .no-results-icon {
+          font-size: 2rem;
+          margin-bottom: 0.5rem;
+          opacity: 0.6;
+        }
+
+        p {
+          color: var(--saf-color-text-subtle);
+          margin-bottom: 1rem;
+          font-size: 0.875rem;
+        }
+
+        .change-topic-btn {
+          background: var(--saf-color-brand-orange-400);
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.875rem;
+
+          &:hover {
+            background: var(--saf-color-brand-orange-500);
+          }
+        }
+      }
+
+      .news-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .current-topic {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid var(--saf-color-line-subtle);
+
+          .topic-label {
+            font-weight: 600;
+            color: var(--saf-color-brand-orange-600);
+            text-transform: capitalize;
+          }
+
+          .article-counter {
+            font-size: 0.75rem;
+            color: var(--saf-color-text-subtle);
+          }
+        }
+
+        .ticker-container {
+          flex: 1;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: var(--saf-color-background-default);
+          }
+
+          .article-display {
+            padding: 1rem;
+
+            .article-main {
+              margin-bottom: 0.75rem;
+
+              .article-title {
+                margin: 0 0 0.5rem 0;
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--saf-color-text-strong);
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+
+              .article-description {
+                margin: 0;
+                font-size: 0.875rem;
+                color: var(--saf-color-text-subtle);
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+            }
+
+            .article-meta {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 0.75rem;
+              color: var(--saf-color-text-subtle);
+
+              .article-source {
+                font-weight: 600;
+              }
+            }
+          }
+        }
+
+        .ticker-navigation {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 1rem;
+
+          .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            background: var(--saf-color-line-subtle);
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.2s ease;
+
+            &.active {
+              background: var(--saf-color-brand-orange-400);
+              transform: scale(1.2);
+            }
+
+            &:hover {
+              background: var(--saf-color-brand-orange-400);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .news-ticker-widget {
+    padding: 1rem;
+
+    .widget-content {
+      .config-setup {
+        .topic-suggestions .topic-chips {
+          .topic-chip {
+            font-size: 0.625rem;
+            padding: 0.125rem 0.5rem;
+          }
+        }
+      }
+
+      .ticker-display .news-content {
+        .current-topic {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.25rem;
+        }
+      }
+    }
+  }
+}

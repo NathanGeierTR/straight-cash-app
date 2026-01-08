@@ -1,0 +1,578 @@
+// Dashboard Variables
+$dashboard-gap: 1.5rem;
+$widget-radius: 12px;
+$widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$border-color: #e5e7eb;
+
+// Priority Colors
+$priority-high: #ef4444;
+$priority-medium: #f59e0b;
+$priority-low: #10b981;
+
+// Background & Text Colors
+$bg-primary: #ffffff;
+$bg-secondary: #f9fafb;
+$text-primary: #111827;
+$text-secondary: #6b7280;
+
+.dashboard-container {
+  padding: $dashboard-gap;
+  background: linear-gradient(135deg, var(--saf-color-brand-racing-green-100) 0%, var(--saf-color-background-subtle) 100%);
+  min-height: calc(100vh - 120px);
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: $dashboard-gap;
+    max-width: 1400px;
+    margin: 0 auto;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  .widget {
+    background: var(--saf-color-background-subtle);
+    border-radius: $widget-radius;
+    padding: 1.5rem;
+    box-shadow: $widget-shadow;
+    border: 1px solid $border-color;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    // &:hover {
+    //   transform: translateY(-2px);
+    //   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    // }
+
+    .widget-title {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      background: linear-gradient(
+        135deg,
+        var(--saf-color-brand-orange-400),
+        var(--saf-color-text-heavy));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      border-bottom: 2px solid $border-color;
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        color: var(--saf-color-brand-racing-green-600);
+        font-size: 1.1rem;
+      }
+    }
+
+    .component-placeholder {
+      padding: 2rem;
+      text-align: center;
+      color: var(--saf-color-text-subtle);
+      font-style: italic;
+      background: var(--saf-color-background-subtle);
+      border-radius: 8px;
+      border: 2px dashed var(--saf-color-brand-orange-200);
+    }
+  }
+
+  // ADO Widget
+  .ado-widget {
+    grid-column: span 2;
+    background: var(--saf-color-background-subtle);
+    max-height: 740px;
+    
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+
+    // Enhanced button visibility for project management
+    .widget-actions {
+      button {
+        min-width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        position: relative;
+
+        i {
+          font-size: 1rem;
+        }
+
+        // Project management button (folder icon)
+        &:first-child {
+          background: var(--saf-color-brand-orange-100);
+          border: 1px solid var(--saf-color-brand-orange-300);
+          color: var(--saf-color-brand-orange-700);
+
+          &:hover {
+            background: var(--saf-color-brand-orange-200);
+            transform: scale(1.05);
+          }
+
+          &.active {
+            background: var(--saf-color-brand-orange-500);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          }
+        }
+
+        // Add tooltip-like visual cue
+        &:hover::after {
+          content: attr(title);
+          position: absolute;
+          bottom: -2rem;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          white-space: nowrap;
+          z-index: 1000;
+          opacity: 0;
+          animation: fadeIn 0.2s ease-in-out 0.5s forwards;
+        }
+      }
+    }
+
+    // Ensure project config panel is highly visible
+    .project-config-panel {
+      background: linear-gradient(135deg, var(--saf-color-brand-orange-50), var(--saf-color-background-subtle));
+      border: 2px solid var(--saf-color-brand-orange-200);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+      h4 {
+        color: var(--saf-color-brand-orange-700);
+        border-bottom: 2px solid var(--saf-color-brand-orange-300);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .multi-project-notice {
+        background: var(--saf-color-semantic-info-subtle);
+        border: 1px solid var(--saf-color-semantic-info);
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+
+        i {
+          color: var(--saf-color-semantic-info-strong);
+          margin-top: 0.125rem;
+        }
+
+        strong {
+          color: var(--saf-color-semantic-info-strong);
+        }
+      }
+    }
+  }
+
+  // Sprint Calendar Widget
+  .sprint-calendar-widget {
+    grid-column: span 1;
+    
+    @media (max-width: 1024px) {
+      grid-column: span 1;
+    }
+  }
+
+  // World Clock Widget
+  .world-clock-widget {
+    color: var(--saf-color-interactive-on-primary-default);
+
+    .widget-title {
+      color: var(--saf-color-interactive-on-primary-default);
+      border-bottom-color: var(--saf-color-brand-orange-400);
+    }
+  }
+
+  // GitHub AI Widget
+  .github-ai-widget {
+    grid-column: span 2;
+    background: var(--saf-color-background-subtle);
+    max-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    
+    @media (max-width: 1024px) {
+      grid-column: span 1;
+    }
+  }
+
+  // Task List Widget
+  .task-list-widget {
+    grid-column: span 1;
+    background: var(--saf-color-background-subtle);
+    max-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    
+    @media (max-width: 1024px) {
+      grid-column: span 1;
+    }
+  }
+
+  // Coworker Timezones Widget
+  .coworker-timezones-widget {
+    grid-column: span 2;
+    background: var(--saf-color-background-subtle);
+    max-height: 640px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    
+    @media (max-width: 1024px) {
+      grid-column: span 1;
+    }
+  }
+
+  // Task Tracker Widget
+  .task-tracker-widget {
+    grid-column: span 1;
+  }
+
+  // Weather Widget
+  .weather-widget {
+    background: linear-gradient(135deg, var(--saf-color-brand-orange-300) 0%, var(--saf-color-brand-orange-400) 100%);
+    color: var(--saf-color-interactive-on-primary-default);
+
+    .widget-title {
+      color: var(--saf-color-interactive-on-primary-default);
+      border-bottom-color: var(--saf-color-brand-racing-green-400);
+    }
+  }
+
+  // Quick Stats Widget
+  .quick-stats-widget {
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+
+      .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--saf-color-background-subtle);
+        border-radius: 8px;
+        border: 1px solid var(--saf-color-line-subtle);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+
+        .stat-icon {
+          font-size: 1.5rem;
+          color: var(--saf-color-brand-racing-green-600);
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--saf-color-brand-orange-400);
+        }
+
+        .stat-label {
+          font-size: 0.875rem;
+          color: var(--saf-color-text-subtle);
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // Productivity Widget
+  .productivity-widget {
+    .focus-items {
+      .focus-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: var(--saf-color-background-subtle);
+        border-radius: 8px;
+        border-left: 4px solid transparent;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: var(--saf-color-background-strong);
+          transform: translateX(4px);
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .focus-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          margin-right: 0.75rem;
+          flex-shrink: 0;
+        }
+
+        .priority-icon {
+          margin-right: 0.75rem;
+          flex-shrink: 0;
+          width: 16px;
+          text-align: center;
+        }
+
+        &.priority-high {
+          border-left-color: var(--saf-color-brand-orange-500);
+          .focus-dot {
+            background: var(--saf-color-brand-orange-500);
+          }
+          .priority-icon {
+            color: var(--saf-color-brand-orange-500);
+          }
+        }
+
+        &.priority-medium {
+          border-left-color: var(--saf-color-brand-orange-300);
+          .focus-dot {
+            background: var(--saf-color-brand-orange-300);
+          }
+          .priority-icon {
+            color: var(--saf-color-brand-orange-300);
+          }
+        }
+
+        &.priority-low {
+          border-left-color: var(--saf-color-brand-racing-green-400);
+          .focus-dot {
+            background: var(--saf-color-brand-racing-green-400);
+          }
+          .priority-icon {
+            color: var(--saf-color-brand-racing-green-400);
+          }
+        }
+
+        span {
+          font-size: 0.875rem;
+          color: var(--saf-color-text-strong);
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// Keyframes for button tooltips
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// Sliding Chat Drawer Styles
+.chat-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 450px;
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  .drawer-tab {
+    position: absolute;
+    right: 100%;
+    top: 120px;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
+    color: white;
+    padding: 12px 4px;
+    border-radius: 8px 0 0 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: -4px 0 7px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    user-select: none;
+    border-width: 2px 0 4px 3px;
+    border-style: solid;
+    border-color: var(--saf-color-brand-orange-400);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        var(--saf-color-brand-racing-green-500),
+        var(--saf-color-brand-racing-green-700));
+        box-shadow: -2px 0 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-icon {
+      font-size: 1.25rem;
+      display: block;
+    }
+
+
+
+    .tab-text {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+  }
+
+  .drawer-content {
+    background: var(--saf-color-background-default);
+    height: 100%;
+    border-left: 1px solid var(--saf-color-line-subtle);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+
+    .drawer-header {
+      background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--saf-color-line-subtle);
+
+      .drawer-title {
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        i {
+          font-size: 1.1rem;
+        }
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s ease;
+        font-size: 16px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        &:active {
+          background: rgba(255, 255, 255, 0.4);
+        }
+      }
+    }    .drawer-body {
+      flex: 1;
+      overflow: hidden;
+      
+      app-open-arena-chat {
+        height: 100%;
+        display: block;
+        
+        ::ng-deep .open-arena-chat {
+          height: 100%;
+          margin: 0;
+          border-radius: 0;
+          box-shadow: none;
+          border: none;
+          background: transparent;
+          
+          .widget-content {
+            height: calc(100% - 20px);
+            
+            .iframe-container {
+              height: 100%;
+              border: none;
+              border-radius: 8px;
+              overflow: hidden;
+              
+              .chat-iframe {
+                height: 100%;
+                width: 100%;
+                border: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Responsive behavior
+  @media (max-width: 768px) {    
+    .drawer-tab {
+      right: 100%;
+      padding: 0.75rem 0.5rem;
+      
+      .tab-text {
+        font-size: 0.625rem;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .drawer-tab {
+      right: 100%;
+      padding: 0.5rem;
+      
+      .tab-icon {
+        font-size: 1rem;
+      }
+      
+      .tab-text {
+        display: none;
+      }
+    }
+  }
+  
+  // Overlay for mobile when drawer is open
+  @media (max-width: 768px) {
+    .chat-drawer.open::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 450px;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: -1;
+    }
+  }
+}

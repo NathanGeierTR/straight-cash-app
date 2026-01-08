@@ -1,0 +1,305 @@
+<div class="github-ai-chat">
+  <div class="widget-header">
+    <h3 class="widget-title">
+      <i class="fas fa-robot"></i>
+      GitHub AI Assistant
+      <span class="model-badge" *ngIf="isConfigured">
+        <i class="fab fa-github"></i>
+        {{ selectedModel }}
+      </span>
+    </h3>
+    
+    <div class="widget-actions">
+      <button 
+        type="button" 
+        class="btn-secondary"
+        (click)="showConfig = !showConfig"
+        [class.active]="showConfig"
+        title="Settings">
+        <i class="fas fa-cog"></i>
+      </button>
+      
+      <button 
+        type="button" 
+        class="btn-secondary" 
+        (click)="clearConversation()"
+        *ngIf="messages.length > 0"
+        title="Clear Conversation">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Configuration Panel -->
+  <div class="config-panel" *ngIf="showConfig">
+    <h4>GitHub AI Configuration</h4>
+    
+    <div class="info-notice">
+      <i class="fas fa-info-circle"></i>
+      <div>
+        <strong>GitHub Models API:</strong> This uses GitHub's AI Models service.
+        <br>You need a fine-grained Personal Access Token from GitHub with appropriate permissions.
+        <br><a href="https://github.com/settings/tokens?type=beta" target="_blank">Create a token here</a>
+      </div>
+    </div>
+    
+    <div class="config-form">
+      <div class="form-group">
+        <label for="github-token">Personal Access Token:</label>
+        <input 
+          id="github-token"
+          type="password" 
+          [(ngModel)]="personalAccessToken" 
+          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          class="form-control">
+        <small>
+          Required permissions: Read access to model inference
+        </small>
+      </div>
+      
+      <div class="form-group">
+        <label for="model-select">AI Model:</label>
+        <select 
+          id="model-select"
+          [(ngModel)]="selectedModel" 
+          class="form-control">
+          <option *ngFor="let model of availableModels" [value]="model">
+            {{ model }}
+          </option>
+        </select>
+        <small>
+          GPT-4o and GPT-4o-mini recommended for best performance
+        </small>
+      </div>
+      
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="testConnection()"
+          [disabled]="!personalAccessToken || testingConnection">
+          <i class="fas fa-plug" [class.fa-spin]="testingConnection"></i>
+          {{ testingConnection ? 'Testing...' : 'Test Connection' }}
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-primary" 
+          (click)="saveConfiguration()"
+          [disabled]="!personalAccessToken">
+          <i class="fas fa-save"></i>
+          Save Configuration
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="clearConfiguration()" 
+          *ngIf="isConfigured">
+          <i class="fas fa-times"></i>
+          Clear
+        </button>
+      </div>
+
+      <div class="connection-test-result" *ngIf="connectionTestResult">
+        <div class="test-result" 
+             [class.success]="connectionTestResult.includes('✅')"
+             [class.error]="!connectionTestResult.includes('✅')">
+          {{ connectionTestResult }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not Configured State -->
+  <div class="empty-state" *ngIf="!isConfigured && !showConfig">
+    <div class="empty-icon">
+      <i class="fab fa-github"></i>
+    </div>
+    <h4>Configure GitHub AI</h4>
+    <p>Connect to GitHub's AI Models service to chat with GPT-4 and other advanced models.</p>
+    <button type="button" class="btn-primary" (click)="showConfig = true">
+      <i class="fas fa-cog"></i>
+      Configure Now
+    </button>
+  </div>
+
+  <!-- Chat Interface -->
+  <div class="chat-container" *ngIf="isConfigured && !showConfig">
+    <!-- ADO title prompt generator -->
+    <div class="quick-prompt-section">
+      <div class="quick-prompt-header">
+        <i class="fas fa-bolt"></i>
+        <span>Generate ADO title</span>
+      </div>
+      <div class="quick-prompt-input-container">
+        <textarea
+          [(ngModel)]="adoTitleInput"
+          placeholder="Paste relevant ADO item info here..."
+          class="quick-prompt-textarea"
+          rows="1"></textarea>
+        <button 
+          type="button"
+          class="quick-prompt-button"
+          (click)="applyAdoTitlePrompt()"
+          [disabled]="!adoTitleInput.trim()">
+          <i class="fas fa-arrow-down"></i>
+          Generate ADO title prompt
+        </button>
+      </div>
+    </div>
+    <!-- Scrum update prompt generator -->
+    <div class="quick-prompt-section">
+      <div class="quick-prompt-header">
+        <i class="fas fa-bolt"></i>
+        <span>Generate scrum update</span>
+      </div>
+      <div class="quick-prompt-input-container">
+        <textarea
+          [(ngModel)]="scrumUpdateInput"
+          placeholder="Paste latest activity here..."
+          class="quick-prompt-textarea"
+          rows="1"></textarea>
+        <button 
+          type="button"
+          class="quick-prompt-button"
+          (click)="applyScrumPrompt()"
+          [disabled]="!scrumUpdateInput.trim()">
+          <i class="fas fa-arrow-down"></i>
+          Generate scrum prompt
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="messages-area" #messagesContainer>
+      <div class="welcome-message" *ngIf="messages.length === 0">
+        <div class="welcome-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h4>Start a conversation</h4>
+        <p>Ask me anything! I can help with code, documentation, problem-solving, and more.</p>
+        
+        <div class="suggested-prompts">
+          <button 
+            *ngFor="let prompt of suggestedPrompts"
+            type="button"
+            class="prompt-btn"
+            (click)="useSuggestedPrompt(prompt)">
+            <i class="fas fa-lightbulb"></i>
+            {{ prompt }}
+          </button>
+        </div>
+      </div>
+
+      <div class="message" 
+           *ngFor="let message of messages"
+           [class.user-message]="message.role === 'user'"
+           [class.ai-message]="message.role === 'assistant'">
+        <div class="message-avatar">
+          <i *ngIf="message.role === 'user'" class="fas fa-user"></i>
+          <i *ngIf="message.role === 'assistant'" class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-header">
+            <span class="message-sender">
+              {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
+            </span>
+            <span class="message-time">
+              {{ formatTimestamp(message.timestamp) }}
+            </span>
+          </div>
+          <div class="message-text" [innerHTML]="message.content"></div>
+        </div>
+      </div>
+
+      <div class="typing-indicator" *ngIf="loading">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Display -->
+    <div class="error-message" *ngIf="error">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ error }}
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="input-container">
+        <textarea
+          [(ngModel)]="currentMessage"
+          (keydown)="handleKeyDown($event)"
+          placeholder="Type your message... (Shift+Enter for new line)"
+          class="message-input"
+          rows="1"></textarea>
+        <button 
+          type="button"
+          class="send-button"
+          (click)="sendMessage()"
+          [disabled]="!currentMessage.trim() || loading">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="input-hint">
+        <small>Press Enter to send, Shift+Enter for new line</small>
+      </div>
+    </div>
+
+    <!-- API Usage Monitor -->
+    <div class="api-usage-monitor" *ngIf="isConfigured && !showConfig">
+      <div class="usage-stats">
+        <div class="stat-item" [title]="'API calls made in current session'">
+          <i class="fas fa-chart-line"></i>
+          <span class="stat-label">Calls:</span>
+          <span class="stat-value">{{ rateLimitInfo.callsUsed }}</span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.callsRemaining !== null" 
+             [title]="'Remaining API calls before limit'">
+          <i class="fas fa-hourglass-half"></i>
+          <span class="stat-label">Remaining:</span>
+          <span class="stat-value" [style.color]="getRateLimitColor()">
+            {{ rateLimitInfo.callsRemaining }}
+          </span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.callsLimit" 
+             [title]="'Total API call limit'">
+          <i class="fas fa-layer-group"></i>
+          <span class="stat-label">Limit:</span>
+          <span class="stat-value">{{ rateLimitInfo.callsLimit }}</span>
+        </div>
+        
+        <div class="stat-item" *ngIf="rateLimitInfo.resetTime" 
+             [title]="'Time until rate limit resets'">
+          <i class="fas fa-clock"></i>
+          <span class="stat-label">Reset:</span>
+          <span class="stat-value">{{ getResetTimeFormatted() }}</span>
+        </div>
+        
+        <button 
+          type="button" 
+          class="reset-counter-btn"
+          (click)="resetRateLimit()"
+          title="Reset call counter">
+          <i class="fas fa-redo"></i>
+        </button>
+      </div>
+      
+      <div class="usage-bar" *ngIf="rateLimitInfo.callsLimit">
+        <div class="usage-fill" 
+             [style.width.%]="getRateLimitPercentage()"
+             [style.background-color]="getRateLimitColor()">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
