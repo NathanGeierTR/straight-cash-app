@@ -1,8 +1,47 @@
 <main class="main">
   <header class="header" [style.background-image]="'url(assets/green-swirl.png)'">
     <div class="header-container">
-      <img src="assets/tr-logo.svg" width="320" alt="Thomson Reuters Logo" class="tr-logo">
-      <h1><span class="brand-orange">TR</span>ack Board</h1>
+      <div class="header-left">
+        <img src="assets/tr-logo.svg" width="320" alt="Thomson Reuters Logo" class="tr-logo">
+        <h1><span class="brand-orange">TR</span>ack Board</h1>
+      </div>
+    </div>
+    
+    <!-- GitHub AI Status Badge - Fixed Top Right -->
+    <div class="ai-status-badge" 
+         [class.connected]="isAIConnected && !isRateLimitExceeded"
+         [class.disconnected]="!isAIConnected"
+         [class.exceeded]="isAIConnected && isRateLimitExceeded"
+         (click)="toggleSetupPrompt()">
+      <div class="badge-content">
+        <i class="fab fa-github"></i>
+        <span class="status-label">AI API</span>
+        <i *ngIf="isAIConnected && !isRateLimitExceeded" class="fas fa-check-circle status-icon connected"></i>
+        <i *ngIf="isAIConnected && isRateLimitExceeded" class="fas fa-circle-exclamation status-icon exceeded"></i>
+        <i *ngIf="!isAIConnected" class="fas fa-unlink status-icon disconnected"></i>
+        <span *ngIf="isAIConnected && rateLimit" class="call-count">
+          {{ rateLimit.callsUsed }} calls
+          <span *ngIf="rateLimit.callsRemaining !== null" class="remaining-count">
+            ({{ rateLimit.callsRemaining }} left)
+          </span>
+          <button class="reset-btn" (click)="resetCallCount($event)" title="Reset call count">
+            <i class="fas fa-redo"></i>
+          </button>
+        </span>
+      </div>
+    </div>
+    
+    <!-- Setup Prompt Popover -->
+    <div class="setup-prompt" *ngIf="showSetupPrompt && !isAIConnected">
+      <div class="prompt-arrow"></div>
+      <div class="prompt-content">
+        <i class="fas fa-info-circle"></i>
+        <p>GitHub AI features are not configured.</p>
+        <button class="btn-primary" (click)="scrollToAIWidget()">
+          <i class="fas fa-cog"></i>
+          Set Up Now
+        </button>
+      </div>
     </div>
   </header>
   <app-dashboard></app-dashboard>

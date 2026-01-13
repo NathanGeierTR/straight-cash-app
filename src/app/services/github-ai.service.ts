@@ -130,7 +130,7 @@ export class GitHubAIService {
   /**
    * Update rate limit info from API response headers
    */
-  private updateRateLimitFromHeaders(headers: HttpHeaders): void {
+  private updateRateLimitFromHeaders(headers: HttpHeaders, isSuccess: boolean = true): void {
     const remaining = headers.get('x-ratelimit-remaining');
     const limit = headers.get('x-ratelimit-limit');
     const reset = headers.get('x-ratelimit-reset');
@@ -138,7 +138,7 @@ export class GitHubAIService {
     const current = this.rateLimitSubject.value;
     const updated: RateLimitInfo = {
       callsUsed: current.callsUsed + 1,
-      callsRemaining: remaining ? parseInt(remaining, 10) : current.callsRemaining,
+      callsRemaining: remaining ? parseInt(remaining, 10) : (isSuccess && current.callsRemaining === 0 ? null : current.callsRemaining),
       callsLimit: limit ? parseInt(limit, 10) : current.callsLimit,
       resetTime: reset ? new Date(parseInt(reset, 10) * 1000) : current.resetTime
     };
@@ -255,9 +255,16 @@ export class GitHubAIService {
           errorMessage = 'Access denied. Check your token permissions';
         } else if (error.status === 429) {
           errorMessage = 'Rate limit exceeded. Please try again later';
-          // Try to update rate limit info even on error
+          // Set rate limit to 0 to indicate exceeded state
+          const current = this.rateLimitSubject.value;
+          this.saveRateLimitInfo({
+            ...current,
+            callsRemaining: 0,
+            callsLimit: current.callsLimit || 15 // Default limit if unknown
+          });
+          // Try to update rate limit info from headers if available
           if (error.headers) {
-            this.updateRateLimitFromHeaders(error.headers);
+            this.updateRateLimitFromHeaders(error.headers, false);
           }
         } else if (error.error?.error?.message) {
           errorMessage = error.error.error.message;

@@ -51,6 +51,8 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
   currentChatMessage = '';
   isChatting = false;
   chatLoading = false;
+  showChat = false;
+  isClippyVisible = true;
   private shouldScrollChat = false;
 
   constructor(
@@ -62,6 +64,12 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
 
   ngOnInit(): void {
     this.isConfigured = this.githubAI.isConfigured();
+    
+    // Load Clippy visibility preference from localStorage
+    const savedClippyVisibility = localStorage.getItem('clippy-visible');
+    if (savedClippyVisibility !== null) {
+      this.isClippyVisible = savedClippyVisibility === 'true';
+    }
     
     if (this.isConfigured) {
       // Subscribe to rate limit info
@@ -77,6 +85,25 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
       
       // No auto-refresh - only load on page reload
     }
+  }
+
+  toggleChat(): void {
+    this.showChat = !this.showChat;
+    
+    // Add greeting message from Clippy if chat is opened and no messages exist
+    if (this.showChat && this.chatMessages.length === 0) {
+      this.chatMessages.push({
+        role: 'assistant',
+        content: 'Hi there! 👋 I\'m Clippy, your AI assistant. What would you like to do today? I can help you with your priorities, tasks, work items, or answer questions about your work.',
+        timestamp: new Date()
+      });
+      this.saveChatHistory();
+    }
+  }
+
+  toggleClippy(): void {
+    this.isClippyVisible = !this.isClippyVisible;
+    localStorage.setItem('clippy-visible', this.isClippyVisible.toString());
   }
 
   ngOnDestroy(): void {

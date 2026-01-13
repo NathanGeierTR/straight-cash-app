@@ -1,58 +1,75 @@
 <div class="widget-header">
     <h2 class="widget-title">
         <i class="fas fa-wand-sparkles"></i>
-        AI Assistant
+        Clip-AI
     </h2>
-
-    <!-- API Usage Monitor -->
-    <div class="api-usage-monitor" *ngIf="isConfigured">
-        <div class="usage-stats">
-        <div class="stat-item" [title]="'API calls made in current session'">
-            <i class="fas fa-chart-line"></i>
-            <span class="stat-label">Calls:</span>
-            <span class="stat-value">{{ rateLimitInfo.callsUsed }}</span>
-        </div>
-        
-        <div class="stat-item" *ngIf="rateLimitInfo.callsRemaining !== null" 
-                [title]="'Remaining API calls before limit'">
-            <i class="fas fa-battery-three-quarters"></i>
-            <span class="stat-label">Remaining:</span>
-            <span class="stat-value" [style.color]="getRateLimitColor()">
-            {{ rateLimitInfo.callsRemaining }}
-            </span>
-        </div>
-        
-        <div class="stat-item" *ngIf="rateLimitInfo.callsLimit" 
-                [title]="'Total API call limit for ' + getResetTimePeriod()">
-            <i class="fas fa-layer-group"></i>
-            <span class="stat-label">Limit:</span>
-            <span class="stat-value">{{ rateLimitInfo.callsLimit }}</span>
-            <span class="stat-period" *ngIf="getResetTimePeriod()">({{ getResetTimePeriod() }})</span>
-        </div>
-        
-        <div class="stat-item" *ngIf="rateLimitInfo.resetTime" 
-                [title]="'Time until rate limit resets'">
-            <i class="fas fa-clock"></i>
-            <span class="stat-label">Resets in:</span>
-            <span class="stat-value">{{ getResetTimeFormatted() }}</span>
-        </div>
-        
-        <button 
-            type="button" 
-            class="reset-counter-btn"
-            (click)="resetRateLimit()"
-            title="Reset call counter">
-            <i class="fas fa-xmark"></i>
-        </button>
-        </div>
-        
-        <div class="usage-bar" *ngIf="rateLimitInfo.callsLimit && rateLimitInfo.callsRemaining !== null">
-        <div class="usage-fill" 
-                [style.width.%]="getRateLimitPercentage()"
-                [style.background-color]="getRateLimitColor()">
-        </div>
-        </div>
+    <button 
+        type="button" 
+        class="btn-toggle-clippy"
+        [class]="isClippyVisible ? 'clippy-visible' : 'clippy-hidden'"
+        (click)="toggleClippy()"
+        [title]="isClippyVisible ? 'Minimize Clippy' : 'Show Clippy'">
+        <i [class]="isClippyVisible ? 'fas fa-window-minimize' : 'fas fa-paperclip'"></i>
+    </button>
+    <!-- Clippy Animation -->
+    <div class="clippy-container" 
+         [class.minimized]="!isClippyVisible"
+         (click)="toggleChat()" 
+         [title]="isClippyVisible ? 'Click to chat with Clippy' : ''">
+        <svg class="clippy" viewBox="0 0 230 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="clipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#c0c0d0;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#80809f;stop-opacity:1" />
+                </linearGradient>
+                <radialGradient id="eyeGradient" cx="50%" cy="50%" r="95%" fx="50%" fy="50%">
+                    <stop offset="40%" stop-color="white" stop-opacity="1" />
+                    <stop offset="100%" stop-color="black" stop-opacity="1" />
+                </radialGradient>
+                
+                <!-- Clip paths for eyelids -->
+                <clipPath id="eyelidClipLeft">
+                    <rect x="8" y="218" width="100" height="80" class="eyelid-clip-left"/>
+                </clipPath>
+                <clipPath id="eyelidClipRight">
+                    <rect x="140" y="234" width="100" height="80" class="eyelid-clip-right"/>
+                </clipPath>
+            </defs>
+            <!-- Paper clip body -->
+            <g class="clippy-body">
+                <!-- Full loop -->
+                <path d="M 89 344 Q 87 380 95 415 C 107 495 181 494 177 408 C 173 308 185 254 194 196 C 203 90 88 93 73 185 C 57 283 59 368 70 453 C 80 598 201 598 212 507 C 213 449 193 395 218 354" 
+                      fill="none" stroke="url(#clipGradient)" stroke-width="20" stroke-linecap="round"/>
+            </g>
+            
+            <!-- Left eye assembly -->
+            <g class="eye-assembly-left" clip-path="url(#eyelidClipLeft)">
+                <!-- Eye sphere -->
+                <ellipse cx="58" cy="258" rx="50" ry="40" fill="url(#eyeGradient)" class="eye-left" stroke="#7777AA" stroke-width="2"/>
+                <!-- Pupil -->
+                <ellipse cx="58" cy="258" rx="25" ry="20" fill="#000" class="pupil-left"/>
+            </g>
+            
+            <!-- Right eye assembly -->
+            <g class="eye-assembly-right" clip-path="url(#eyelidClipRight)">
+                <!-- Eye sphere -->
+                <ellipse cx="190" cy="274" rx="50" ry="40" fill="url(#eyeGradient)" stroke="#7777AA" stroke-width="2"/>
+                <!-- Pupil -->
+                <ellipse cx="190" cy="274" rx="25" ry="20" fill="#000" class="pupil-right"/>
+            </g>
+            
+            <!-- Eyebrows (outside clipping) -->
+            <g class="eyebrows">
+                <!-- Left eyebrow -->
+                <path d="M 30 210 Q 58 185 90 190" 
+                      fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" class="eyebrow-left"/>
+                <!-- Right eyebrow -->
+                <path d="M 187 210 Q 220 205 240 240" 
+                      fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" class="eyebrow-right"/>
+            </g>
+        </svg>
     </div>
+
     <!-- <div class="widget-actions">
         <button 
         type="button" 
@@ -67,6 +84,70 @@
 
 
 <div class="widget-content" *ngIf="isExpanded">
+    <!-- Chat Interface -->
+    <div class="chat-section" *ngIf="showChat && summary && !loading && isConfigured">
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" #chatContainer *ngIf="chatMessages.length > 0">
+        <div *ngFor="let msg of chatMessages" 
+                class="chat-message"
+                [class.user-message]="msg.role === 'user'"
+                [class.ai-message]="msg.role === 'assistant'"
+                [class.clippy-message]="msg.role === 'assistant'">
+            <div class="message-header">
+            <span class="message-role">
+                <i [class]="msg.role === 'user' ? 'fas fa-user' : 'fas fa-paperclip'"></i>
+                {{ msg.role === 'user' ? 'You' : 'Clippy' }}
+            </span>
+            <span class="message-time">{{ formatChatTimestamp(msg.timestamp) }}</span>
+            </div>
+            <div class="message-content" [innerHTML]="convertMarkdownLinks(msg.content)"></div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="chat-message ai-message" *ngIf="chatLoading">
+            <div class="message-header">
+                <span class="message-role">
+                    <i class="fas fa-robot"></i>
+                    AI Assistant
+                </span>
+            </div>
+            <div class="message-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                Thinking...
+            </div>
+            </div>
+            <button 
+                type="button" 
+                class="btn-clear-chat"
+                (click)="clearChat()"
+                *ngIf="chatMessages.length > 0"
+                title="Clear chat">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+        <textarea
+            [(ngModel)]="currentChatMessage"
+            (keydown)="handleChatKeyDown($event)"
+            placeholder="Ask about your priorities, tasks, or work items..."
+            name="AIchat"
+            class="chat-input"
+            rows="2"
+            [disabled]="chatLoading"></textarea>
+        <button
+            type="button"
+            class="btn-send"
+            (click)="sendChatMessage()"
+            [disabled]="!currentChatMessage.trim() || chatLoading"
+            title="Send message (Enter)">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+        </div>
+    </div>
+
     <!-- Not Configured State -->
     <div class="not-configured" *ngIf="!isConfigured">
         <i class="fas fa-robot"></i>
@@ -141,80 +222,10 @@
 
         <!-- Last Updated -->
         <div class="timestamp" *ngIf="lastUpdated">
-        <span class="last-updated">
-            <i class="fas fa-clock"></i>
-            Updated {{ lastUpdated | date:'short' }}
-        </span>
-        </div>
-
-        <!-- Chat Interface -->
-        <div class="chat-section" *ngIf="summary && !loading && isConfigured">
-            <div class="chat-header">
-                <h4 class="chat-title">
-                    <i class="fas fa-comments"></i>
-                    Ask Me Anything
-                </h4>
-                <button 
-                    type="button" 
-                    class="btn-clear-chat"
-                    (click)="clearChat()"
-                    *ngIf="chatMessages.length > 0"
-                    title="Clear chat history">
-                    <i class="fas fa-trash"></i>
-                    Clear Chat
-                </button>
-            </div>
-    
-            <!-- Chat Messages -->
-            <div class="chat-messages" #chatContainer *ngIf="chatMessages.length > 0">
-            <div *ngFor="let msg of chatMessages" 
-                    class="chat-message"
-                    [class.user-message]="msg.role === 'user'"
-                    [class.ai-message]="msg.role === 'assistant'">
-                <div class="message-header">
-                <span class="message-role">
-                    <i [class]="msg.role === 'user' ? 'fas fa-user' : 'fas fa-robot'"></i>
-                    {{ msg.role === 'user' ? 'You' : 'AI Assistant' }}
-                </span>
-                <span class="message-time">{{ formatChatTimestamp(msg.timestamp) }}</span>
-                </div>
-                <div class="message-content" [innerHTML]="convertMarkdownLinks(msg.content)"></div>
-            </div>
-    
-            <!-- Loading indicator -->
-            <div class="chat-message ai-message" *ngIf="chatLoading">
-                <div class="message-header">
-                <span class="message-role">
-                    <i class="fas fa-robot"></i>
-                    AI Assistant
-                </span>
-                </div>
-                <div class="message-content">
-                <i class="fas fa-spinner fa-spin"></i>
-                Thinking...
-                </div>
-            </div>
-            </div>
-    
-            <!-- Chat Input -->
-            <div class="chat-input-container">
-            <textarea
-                [(ngModel)]="currentChatMessage"
-                (keydown)="handleChatKeyDown($event)"
-                placeholder="Ask about your priorities, tasks, or work items..."
-                name="AIchat"
-                class="chat-input"
-                rows="2"
-                [disabled]="chatLoading"></textarea>
-            <button
-                type="button"
-                class="btn-send"
-                (click)="sendChatMessage()"
-                [disabled]="!currentChatMessage.trim() || chatLoading"
-                title="Send message (Enter)">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-            </div>
+            <span class="last-updated">
+                <i class="fas fa-clock"></i>
+                Updated {{ lastUpdated | date:'short' }}
+            </span>
         </div>
     </div>
 </div>
