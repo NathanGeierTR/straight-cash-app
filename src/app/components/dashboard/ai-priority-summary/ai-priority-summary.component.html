@@ -9,7 +9,10 @@
         [class]="isClippyVisible ? 'clippy-visible' : 'clippy-hidden'"
         (click)="toggleClippy()"
         [title]="isClippyVisible ? 'Minimize Clippy' : 'Show Clippy'">
-        <i [class]="isClippyVisible ? 'fas fa-window-minimize' : 'fas fa-paperclip'"></i>
+        <i *ngIf="isClippyVisible; else showPaperclip" class="fas fa-window-minimize"></i>
+        <ng-template #showPaperclip>
+            <img src="assets/smart-clippy.svg" alt="Clippy Icon" height="24" class="clippy-icon"/>
+        </ng-template>
     </button>
     <!-- Clippy Animation -->
     <div class="clippy-container" 

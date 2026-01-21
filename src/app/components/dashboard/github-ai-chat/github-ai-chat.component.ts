@@ -27,6 +27,7 @@ export class GitHubAiChatComponent implements OnInit, OnDestroy, AfterViewChecke
   currentMessage = '';
   loading = false;
   error: string | null = null;
+  tokenError = false;
   testingConnection = false;
   connectionTestResult: string | null = null;
 
@@ -69,7 +70,20 @@ export class GitHubAiChatComponent implements OnInit, OnDestroy, AfterViewChecke
     
     this.aiService.error$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(error => this.error = error);
+      .subscribe(error => {
+        this.error = error;
+        
+        // Check if the error is token-related and set tokenError flag
+        if (error && (
+            error.includes('Invalid or expired GitHub Personal Access Token') || 
+            error.includes('Access denied. Check your token permissions') ||
+            error.includes('GitHub AI service not configured')
+          )) {
+          this.tokenError = true;
+        } else {
+          this.tokenError = false;
+        }
+      });
 
     // Subscribe to rate limit info
     this.aiService.rateLimit$
@@ -112,6 +126,7 @@ export class GitHubAiChatComponent implements OnInit, OnDestroy, AfterViewChecke
       this.isConfigured = true;
       this.showConfig = false;
       this.error = null;
+      this.tokenError = false;
       this.connectionTestResult = 'Configuration saved successfully!';
       
       setTimeout(() => {
@@ -184,6 +199,7 @@ export class GitHubAiChatComponent implements OnInit, OnDestroy, AfterViewChecke
     this.messages.push(userMessage);
     this.currentMessage = '';
     this.error = null;
+    this.tokenError = false;
     this.shouldScrollToBottom = true;
 
     // Send to AI service

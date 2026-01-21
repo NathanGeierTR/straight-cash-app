@@ -3,9 +3,13 @@
     <h3 class="widget-title">
       <i class="fas fa-robot"></i>
       GitHub AI Assistant
-      <span class="model-badge" *ngIf="isConfigured">
+      <span class="model-badge" *ngIf="isConfigured && !tokenError">
         <i class="fab fa-github"></i>
         {{ selectedModel }}
+      </span>
+      <span class="error-badge" *ngIf="tokenError">
+        <i class="fas fa-exclamation-circle"></i>
+        Token Error
       </span>
     </h3>
     
@@ -240,13 +244,14 @@
           placeholder="Type your message... (Shift+Enter for new line)"
           class="message-input"
           rows="1"></textarea>
-        <button 
-          type="button"
-          class="send-button"
-          (click)="sendMessage()"
-          [disabled]="!currentMessage.trim() || loading">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+      <button 
+        type="button"
+        class="send-button"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage.trim() || loading"
+        aria-label="Send message">
+        <i class="fas fa-paper-plane"></i>
+      </button>
       </div>
       <div class="input-hint">
         <small>Press Enter to send, Shift+Enter for new line</small>

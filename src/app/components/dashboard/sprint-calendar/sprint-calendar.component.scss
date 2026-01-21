@@ -127,13 +127,13 @@ $today-color: var(--saf-color-orange-400);
       background: var(--saf-color-background-subtle);
       border: 1px solid var(--saf-color-line-subtle);
       aspect-ratio: 1;
-      padding: 0.375rem;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
       border-radius: 4px;
+      line-height: 0.8;
 
       &.other-month {
         opacity: 0.3;

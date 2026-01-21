@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 })
 export class AppComponent implements OnInit, OnDestroy {
   isAIConnected = false;
+  hasTokenError = false;
   rateLimit: RateLimitInfo | null = null;
   showSetupPrompt = false;
   private subscriptions = new Subscription();
@@ -23,6 +24,18 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Subscribe to AI service configuration status
     this.isAIConnected = this.githubAIService.isConfigured();
+    
+    // Subscribe to error status to detect token issues
+    this.subscriptions.add(
+      this.githubAIService.error$.subscribe(error => {
+        // Check if the error is token-related
+        this.hasTokenError = !!(error && (
+          error.includes('Invalid or expired GitHub Personal Access Token') || 
+          error.includes('Access denied. Check your token permissions') ||
+          error.includes('GitHub AI service not configured')
+        ));
+      })
+    );
     
     // Subscribe to rate limit updates
     this.subscriptions.add(
@@ -72,5 +85,10 @@ export class AppComponent implements OnInit, OnDestroy {
       return true;
     }
     return false;
+  }
+  
+  get isAIServiceValid(): boolean {
+    // The AI service is considered valid if it's configured and doesn't have token errors
+    return this.isAIConnected && !this.hasTokenError;
   }
 }

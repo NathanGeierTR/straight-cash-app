@@ -1,0 +1,404 @@
+.widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.widget-header {
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+
+  .widget-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--saf-color-text-strong);
+
+    i {
+      color: var(--saf-color-brand-orange-500);
+    }
+  }
+}
+
+.widget-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.add-entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  .task-input,
+  .description-input {
+    padding: 0.75rem;
+    border: 1px solid var(--saf-color-border-strong);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--saf-color-brand-orange-500);
+    }
+  }
+
+  .task-input {
+    font-weight: 500;
+  }
+
+  .btn-add {
+    background: var(--saf-color-brand-orange-500);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--saf-color-brand-orange-600);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.time-entries-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--saf-color-surface-secondary);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--saf-color-border-strong);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--saf-color-border-default);
+    }
+  }
+}
+
+.time-entry-card {
+  background: var(--saf-color-surface-secondary);
+  border: 1px solid var(--saf-color-border-subtle);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+
+  &.running {
+    border-color: var(--saf-color-brand-orange-500);
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.view-mode {
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+
+    .entry-info {
+      flex: 1;
+      min-width: 0;
+
+      .task-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        color: var(--saf-color-text-strong);
+      }
+
+      .task-description {
+        font-size: 0.875rem;
+        color: var(--saf-color-text-default);
+        margin: 0;
+        line-height: 1.4;
+      }
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 0.25rem;
+      margin-left: 0.5rem;
+    }
+  }
+
+  .entry-timer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .timer-display {
+      padding: 0.75rem;
+      background: var(--saf-color-surface-primary);
+      border-radius: 8px;
+      border: 2px solid var(--saf-color-border-subtle);
+
+      &.session-timer {
+        border-color: var(--saf-color-brand-orange-500);
+        background: rgba(255, 152, 0, 0.05);
+      }
+
+      &.grand-total {
+        background: var(--saf-color-surface-secondary);
+        
+        &.large {
+          padding: 1rem;
+        }
+      }
+
+      .timer-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--saf-color-text-subtle);
+        margin-bottom: 0.5rem;
+      }
+
+      .time-value {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--saf-color-text-strong);
+
+        span {
+          color: var(--saf-color-text-strong);
+        }
+
+        &.running {
+          i {
+            color: var(--saf-color-brand-orange-500);
+            animation: pulse 1.5s ease-in-out infinite;
+          }
+          
+          span {
+            color: var(--saf-color-text-strong);
+          }
+        }
+
+        i {
+          font-size: 1.5rem;
+          color: var(--saf-color-text-subtle);
+        }
+      }
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 0.5rem;
+
+      .btn-timer {
+        flex: 1;
+        padding: 0.625rem 1rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+
+        &.btn-start {
+          background: var(--saf-color-feedback-success-default);
+          color: white;
+
+          &:hover {
+            background: var(--saf-color-feedback-success-hover);
+          }
+        }
+
+        &.btn-stop {
+          background: var(--saf-color-feedback-error-default);
+          color: white;
+
+          &:hover {
+            background: var(--saf-color-feedback-error-hover);
+          }
+        }
+
+        &.btn-reset {
+          background: var(--saf-color-surface-primary);
+          color: var(--saf-color-text-default);
+          border: 1px solid var(--saf-color-border-strong);
+
+          &:hover:not(:disabled) {
+            background: var(--saf-color-surface-secondary);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
+}
+
+.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .edit-task-input,
+  .edit-description-input {
+    padding: 0.625rem;
+    border: 1px solid var(--saf-color-border-strong);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--saf-color-brand-orange-500);
+    }
+  }
+
+  .edit-task-input {
+    font-weight: 500;
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-save {
+      background: var(--saf-color-feedback-success-default);
+      color: white;
+
+      &:hover {
+        background: var(--saf-color-feedback-success-hover);
+      }
+    }
+
+    .btn-cancel {
+      background: var(--saf-color-surface-primary);
+      color: var(--saf-color-text-default);
+      border: 1px solid var(--saf-color-border-strong);
+
+      &:hover {
+        background: var(--saf-color-surface-secondary);
+      }
+    }
+  }
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--saf-color-border-subtle);
+  border-radius: 6px;
+  padding: 0.375rem 0.5rem;
+  cursor: pointer;
+  color: var(--saf-color-text-default);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background: var(--saf-color-surface-primary);
+    border-color: var(--saf-color-border-strong);
+  }
+
+  &.btn-delete {
+    &:hover {
+      background: var(--saf-color-feedback-error-default);
+      border-color: var(--saf-color-feedback-error-default);
+      color: white;
+    }
+  }
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--saf-color-text-subtle);
+
+  i {
+    font-size: 3rem;
+    opacity: 0.3;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+
+    &.empty-hint {
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

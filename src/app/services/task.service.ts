@@ -11,6 +11,9 @@ export interface Task {
   completedAt?: Date;
   priority?: 'low' | 'medium' | 'high';
   tags?: string[];
+  timeTracked?: number; // Total seconds tracked
+  isTimeRunning?: boolean;
+  timeStartedAt?: number; // Timestamp when current session started
 }
 
 @Injectable({
@@ -240,5 +243,136 @@ export class TaskService {
       overdue: this.getOverdueTasks().length,
       dueToday: this.getTasksDueToday().length
     };
+  }
+
+  /**
+   * Start time tracking for a task
+   */
+  startTimeTracking(id: string): void {
+    // Stop any other running timers first
+    const runningTasks = this.tasksSubject.value.filter(t => t.isTimeRunning);
+    if (runningTasks.length > 0) {
+      runningTasks.forEach(task => {
+        this.stopTimeTracking(task.id);
+      });
+    }
+
+    // Start this task's timer
+    const tasks = this.tasksSubject.value.map(task => {
+      if (task.id === id) {
+        return {
+          ...task,
+          isTimeRunning: true,
+          timeStartedAt: Date.now(),
+          timeTracked: task.timeTracked || 0
+        };
+      }
+      return task;
+    });
+    this.saveTasks(tasks);
+  }
+
+  /**
+   * Stop time tracking for a task
+   */
+  stopTimeTracking(id: string): void {
+    const task = this.getTaskById(id);
+    if (!task || !task.isTimeRunning || !task.timeStartedAt) return;
+
+    // Calculate elapsed time and add to total
+    const sessionTime = Math.floor((Date.now() - task.timeStartedAt) / 1000);
+    const totalTime = (task.timeTracked || 0) + sessionTime;
+
+    // Update the task
+    const tasks = this.tasksSubject.value.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          isTimeRunning: false,
+          timeStartedAt: undefined,
+          timeTracked: totalTime
+        };
+      }
+      return t;
+    });
+    this.saveTasks(tasks);
+  }
+
+  /**
+   * Toggle time tracking for a task
+   */
+  toggleTimeTracking(id: string): void {
+    const task = this.getTaskById(id);
+    if (!task) return;
+
+    if (task.isTimeRunning) {
+      this.stopTimeTracking(id);
+    } else {
+      this.startTimeTracking(id);
+    }
+  }
+
+  /**
+   * Get current session time for a running task (in seconds)
+   */
+  getCurrentSessionTime(id: string): number {
+    const task = this.getTaskById(id);
+    if (!task || !task.isTimeRunning || !task.timeStartedAt) return 0;
+    return Math.floor((Date.now() - task.timeStartedAt) / 1000);
+  }
+
+  /**
+   * Get total tracked time for a task (in seconds)
+   */
+  getTotalTrackedTime(id: string): number {
+    const task = this.getTaskById(id);
+    if (!task) return 0;
+    
+    let totalTime = task.timeTracked || 0;
+    
+    // Add current session time if timer is running
+    if (task.isTimeRunning && task.timeStartedAt) {
+      totalTime += Math.floor((Date.now() - task.timeStartedAt) / 1000);
+    }
+    
+    return totalTime;
+  }
+
+  /**
+   * Reset time tracking for a task
+   */
+  resetTimeTracking(id: string): void {
+    const task = this.getTaskById(id);
+    if (!task) return;
+
+    // Stop timer if running
+    if (task.isTimeRunning) {
+      this.stopTimeTracking(id);
+    }
+
+    // Reset time tracked
+    const tasks = this.tasksSubject.value.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          timeTracked: 0,
+          isTimeRunning: false,
+          timeStartedAt: undefined
+        };
+      }
+      return t;
+    });
+    this.saveTasks(tasks);
+  }
+
+  /**
+   * Format time as HH:MM:SS
+   */
+  formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 }

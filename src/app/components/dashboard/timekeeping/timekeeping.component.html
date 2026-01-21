@@ -1,0 +1,152 @@
+<div class="widget">
+  <div class="widget-header">
+    <h2 class="widget-title">
+      <i class="fa-regular fa-clock"></i>
+      Time Tracking
+    </h2>
+  </div>
+
+  <div class="widget-content">
+    <!-- Add New Entry Form (always shown at top) -->
+    <div class="add-entry-form">
+      <input
+        type="text"
+        class="task-input"
+        [(ngModel)]="newTaskName"
+        placeholder="Task name..."
+        (keyup.enter)="addEntry()"
+      />
+      <input
+        type="text"
+        class="description-input"
+        [(ngModel)]="newDescription"
+        placeholder="Description (optional)..."
+        (keyup.enter)="addEntry()"
+      />
+      <button
+        type="button"
+        class="btn-add"
+        (click)="addEntry()"
+        [disabled]="!newTaskName.trim()"
+      >
+        <i class="fa-solid fa-plus"></i>
+        Add Task
+      </button>
+    </div>
+
+    <!-- Time Entries List -->
+    <div class="time-entries-list" *ngIf="entries.length > 0">
+      <div
+        *ngFor="let entry of entries"
+        class="time-entry-card"
+        [class.running]="entry.isTimeRunning"
+      >
+        <!-- View Mode -->
+        <div class="view-mode" *ngIf="editingId !== entry.id">
+          <div class="entry-header">
+          <div class="entry-info">
+            <h3 class="task-name">{{ entry.title }}</h3>
+            <p class="task-description" *ngIf="entry.description">
+              {{ entry.description }}
+            </p>
+          </div>
+            <div class="entry-actions">
+              <button
+                type="button"
+                class="btn-icon"
+                (click)="startEditing(entry.id)"
+                title="Edit"
+              >
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-icon btn-delete"
+                (click)="deleteEntry(entry.id)"
+                title="Delete"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="entry-timer">
+          <!-- Current Session Timer (shown when running) -->
+          <div class="timer-display session-timer" *ngIf="entry.isTimeRunning">
+            <div class="timer-label">Current Session</div>
+            <div class="time-value running">
+              <i class="fa-solid fa-stopwatch"></i>
+              <span>{{ formatTime(getSessionTime(entry.id)) }}</span>
+            </div>
+          </div>
+
+          <!-- Grand Total (always shown) -->
+          <div class="timer-display grand-total" [class.large]="!entry.isTimeRunning">
+            <div class="timer-label">{{ entry.isTimeRunning ? 'Total Time' : 'Total' }}</div>
+            <div class="time-value" [class.running]="entry.isTimeRunning">
+                <i class="fa-solid fa-clock"></i>
+                <span>{{ formatTime(getGrandTotal(entry.id)) }}</span>
+              </div>
+            </div>
+
+            <div class="timer-controls">
+              <button
+                type="button"
+                class="btn-timer"
+              [class.btn-start]="!entry.isTimeRunning"
+              [class.btn-stop]="entry.isTimeRunning"
+              (click)="toggleTimer(entry.id)"
+            >
+              <i class="fa-solid" [class.fa-play]="!entry.isTimeRunning" [class.fa-stop]="entry.isTimeRunning"></i>
+              {{ entry.isTimeRunning ? 'Stop' : 'Start' }}
+              </button>
+              <button
+                type="button"
+                class="btn-timer btn-reset"
+                (click)="resetTimer(entry.id)"
+                [disabled]="getGrandTotal(entry.id) === 0"
+                title="Reset total time"
+              >
+                <i class="fa-solid fa-rotate-left"></i>
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="edit-mode" *ngIf="editingId === entry.id">
+          <input
+            type="text"
+            class="edit-task-input"
+            [(ngModel)]="editTaskName"
+            placeholder="Task name..."
+          />
+          <input
+            type="text"
+            class="edit-description-input"
+            [(ngModel)]="editDescription"
+            placeholder="Description (optional)..."
+          />
+          <div class="edit-actions">
+            <button type="button" class="btn-save" (click)="saveEdit()">
+              <i class="fa-solid fa-check"></i>
+              Save
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancelEdit()">
+              <i class="fa-solid fa-xmark"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="entries.length === 0">
+      <i class="fa-regular fa-clock"></i>
+      <p>No tasks yet</p>
+      <p class="empty-hint">Add a task above to start tracking time</p>
+    </div>
+  </div>
+</div>

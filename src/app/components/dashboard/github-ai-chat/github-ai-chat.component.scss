@@ -42,6 +42,24 @@
           color: var(--saf-color-brand-racing-green-600);
         }
       }
+
+      .error-badge {
+        background: var(--saf-color-semantic-critical-subtle);
+        color: var(--saf-color-semantic-critical-strong);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        border: 1px solid var(--saf-color-semantic-critical);
+        margin-left: 0.5rem;
+        
+        i {
+          color: var(--saf-color-semantic-critical-strong);
+        }
+      }
     }
 
     .widget-actions {

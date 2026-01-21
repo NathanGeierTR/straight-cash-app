@@ -1,5 +1,6 @@
 // Dashboard Variables
 $dashboard-gap: 1.5rem;
+$dashboard-gap-mobile: 4px;
 $widget-radius: 12px;
 $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 $border-color: #e5e7eb;
@@ -20,6 +21,10 @@ $text-secondary: #6b7280;
   background: linear-gradient(135deg, var(--saf-color-brand-racing-green-100) 0%, var(--saf-color-background-subtle) 100%);
   min-height: calc(100vh - 120px);
 
+  @media (max-width: 768px) {
+    padding: $dashboard-gap-mobile;
+  }
+
   .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -29,7 +34,7 @@ $text-secondary: #6b7280;
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
-      gap: 1rem;
+      gap: $dashboard-gap-mobile;
     }
   }
 
@@ -89,6 +94,18 @@ $text-secondary: #6b7280;
     @media (max-width: 768px) {
       grid-column: span 1;
     }
+  }
+
+  // Timekeeping Widget
+  .timekeeping-widget {
+    grid-column: span 2;
+    background: var(--saf-color-background-subtle);
+    max-height: 740px;
+    
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+  }
 
     // Enhanced button visibility for project management
     .widget-actions {
@@ -236,6 +253,7 @@ $text-secondary: #6b7280;
     flex-direction: column;
     overflow: hidden;
     padding: 0;
+    word-break: normal;
     
     @media (max-width: 1024px) {
       grid-column: span 1;
@@ -372,7 +390,6 @@ $text-secondary: #6b7280;
       }
     }
   }
-}
 
 // Keyframes for button tooltips
 @keyframes fadeIn {
@@ -392,7 +409,8 @@ $text-secondary: #6b7280;
   top: 0;
   right: 0;
   height: 100vh;
-  width: 450px;
+  max-width: 450px;
+  width: 100%;
   z-index: 1000;
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -409,7 +427,7 @@ $text-secondary: #6b7280;
     background: linear-gradient(135deg, var(--saf-color-brand-racing-green-600), var(--saf-color-brand-racing-green-700));
     color: white;
     padding: 12px 4px;
-    border-radius: 8px 0 0 8px;
+    border-radius: 40px 0 0 40px;
     border: none;
     cursor: pointer;
     display: flex;
@@ -536,7 +554,7 @@ $text-secondary: #6b7280;
   }
 
   // Responsive behavior
-  @media (max-width: 768px) {    
+  @media (max-width: 768px) {
     .drawer-tab {
       right: 100%;
       padding: 0.75rem 0.5rem;
@@ -575,4 +593,7 @@ $text-secondary: #6b7280;
       z-index: -1;
     }
   }
+}
+@media (max-width: 768px) {    
+  $dashboard-gap: 4px;
 }

@@ -9,17 +9,17 @@
     
     <!-- GitHub AI Status Badge - Fixed Top Right -->
     <div class="ai-status-badge" 
-         [class.connected]="isAIConnected && !isRateLimitExceeded"
-         [class.disconnected]="!isAIConnected"
-         [class.exceeded]="isAIConnected && isRateLimitExceeded"
+         [class.connected]="isAIServiceValid && !isRateLimitExceeded"
+         [class.disconnected]="!isAIConnected || hasTokenError"
+         [class.exceeded]="isAIServiceValid && isRateLimitExceeded"
          (click)="toggleSetupPrompt()">
       <div class="badge-content">
         <i class="fab fa-github"></i>
         <span class="status-label">AI API</span>
-        <i *ngIf="isAIConnected && !isRateLimitExceeded" class="fas fa-check-circle status-icon connected"></i>
-        <i *ngIf="isAIConnected && isRateLimitExceeded" class="fas fa-circle-exclamation status-icon exceeded"></i>
-        <i *ngIf="!isAIConnected" class="fas fa-unlink status-icon disconnected"></i>
-        <span *ngIf="isAIConnected && rateLimit" class="call-count">
+        <i *ngIf="isAIServiceValid && !isRateLimitExceeded" class="fas fa-check-circle status-icon connected"></i>
+        <i *ngIf="isAIServiceValid && isRateLimitExceeded" class="fas fa-circle-exclamation status-icon exceeded"></i>
+        <i *ngIf="!isAIConnected || hasTokenError" class="fas fa-unlink status-icon disconnected"></i>
+        <span *ngIf="isAIServiceValid && rateLimit" class="call-count">
           {{ rateLimit.callsUsed }} calls
           <span *ngIf="rateLimit.callsRemaining !== null" class="remaining-count">
             ({{ rateLimit.callsRemaining }} left)
@@ -32,11 +32,11 @@
     </div>
     
     <!-- Setup Prompt Popover -->
-    <div class="setup-prompt" *ngIf="showSetupPrompt && !isAIConnected">
+    <div class="setup-prompt" *ngIf="showSetupPrompt && (!isAIConnected || hasTokenError)">
       <div class="prompt-arrow"></div>
       <div class="prompt-content">
         <i class="fas fa-info-circle"></i>
-        <p>GitHub AI features are not configured.</p>
+        <p>{{ hasTokenError ? 'GitHub AI token is invalid or expired.' : 'GitHub AI features are not configured.' }}</p>
         <button class="btn-primary" (click)="scrollToAIWidget()">
           <i class="fas fa-cog"></i>
           Set Up Now

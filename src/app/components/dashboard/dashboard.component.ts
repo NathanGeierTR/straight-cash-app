@@ -9,6 +9,7 @@ import { CoworkerTimezonesComponent } from './coworker-timezones/coworker-timezo
 import { AiPrioritySummaryComponent } from './ai-priority-summary/ai-priority-summary.component';
 import { TaskTrackerComponent } from './task-tracker/task-tracker.component';
 import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.component';
+import { TimekeepingComponent } from './timekeeping/timekeeping.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +24,8 @@ import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.co
     CoworkerTimezonesComponent,
     AiPrioritySummaryComponent,
     TaskTrackerComponent,
-    OutlookCalendarComponent
+    OutlookCalendarComponent,
+    TimekeepingComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
