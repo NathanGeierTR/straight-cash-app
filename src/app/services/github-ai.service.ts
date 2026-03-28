@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { Firestore, doc, getDoc, setDoc, updateDoc, increment } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, onSnapshot, increment } from '@angular/fire/firestore';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -104,20 +104,17 @@ export class GitHubAIService {
   }
 
   /**
-   * Load call counter from Firestore on startup
+   * Subscribe to call counter in Firestore in real-time
    */
   private loadRateLimitInfo(): void {
     const ref = doc(this.firestore, this.COUNTER_DOC);
-    getDoc(ref).then(snapshot => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        const current = this.rateLimitSubject.value;
-        this.rateLimitSubject.next({
-          ...current,
-          callsUsed: data['callsUsed'] ?? 0
-        });
-      }
-    }).catch(e => console.error('Failed to load rate limit from Firestore:', e));
+    onSnapshot(ref, snapshot => {
+      const current = this.rateLimitSubject.value;
+      this.rateLimitSubject.next({
+        ...current,
+        callsUsed: snapshot.exists() ? (snapshot.data()['callsUsed'] ?? 0) : 0
+      });
+    }, e => console.error('Failed to listen to rate limit from Firestore:', e));
   }
 
   /**
