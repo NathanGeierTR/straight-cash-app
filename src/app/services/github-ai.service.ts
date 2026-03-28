@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { Firestore, doc, getDoc, setDoc, updateDoc, increment } from '@angular/fire/firestore';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -57,7 +58,9 @@ export class GitHubAIService {
   });
   public rateLimit$ = this.rateLimitSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  private readonly COUNTER_DOC = 'api-counters/github-ai';
+
+  constructor(private http: HttpClient, private firestore: Firestore) {
     this.loadConfiguration();
     this.loadRateLimitInfo();
   }
@@ -101,30 +104,30 @@ export class GitHubAIService {
   }
 
   /**
-   * Load rate limit info from localStorage
+   * Load call counter from Firestore on startup
    */
   private loadRateLimitInfo(): void {
-    const saved = localStorage.getItem('github-ai-rate-limit');
-    if (saved) {
-      try {
-        const info = JSON.parse(saved);
-        // Convert resetTime string back to Date
-        if (info.resetTime) {
-          info.resetTime = new Date(info.resetTime);
-        }
-        this.rateLimitSubject.next(info);
-      } catch (e) {
-        console.error('Failed to load rate limit info:', e);
+    const ref = doc(this.firestore, this.COUNTER_DOC);
+    getDoc(ref).then(snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        const current = this.rateLimitSubject.value;
+        this.rateLimitSubject.next({
+          ...current,
+          callsUsed: data['callsUsed'] ?? 0
+        });
       }
-    }
+    }).catch(e => console.error('Failed to load rate limit from Firestore:', e));
   }
 
   /**
-   * Save rate limit info to localStorage
+   * Persist the full RateLimitInfo snapshot to Firestore
    */
   private saveRateLimitInfo(info: RateLimitInfo): void {
-    localStorage.setItem('github-ai-rate-limit', JSON.stringify(info));
     this.rateLimitSubject.next(info);
+    const ref = doc(this.firestore, this.COUNTER_DOC);
+    setDoc(ref, { callsUsed: info.callsUsed }, { merge: true })
+      .catch(e => console.error('Failed to save rate limit to Firestore:', e));
   }
 
   /**
@@ -143,7 +146,12 @@ export class GitHubAIService {
       resetTime: reset ? new Date(parseInt(reset, 10) * 1000) : current.resetTime
     };
 
-    this.saveRateLimitInfo(updated);
+    // Atomically increment in Firestore so concurrent tabs don't overwrite each other
+    const ref = doc(this.firestore, this.COUNTER_DOC);
+    setDoc(ref, { callsUsed: increment(1) }, { merge: true })
+      .catch(e => console.error('Failed to increment call counter in Firestore:', e));
+
+    this.rateLimitSubject.next(updated);
   }
 
   /**
