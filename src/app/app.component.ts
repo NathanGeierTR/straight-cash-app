@@ -2,13 +2,16 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { LoginComponent } from './components/login/login.component';
 import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
+import { AuthService } from './services/auth.service';
 import { Subscription } from 'rxjs';
+import { User } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, CommonModule],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -17,11 +20,21 @@ export class AppComponent implements OnInit, OnDestroy {
   hasTokenError = false;
   rateLimit: RateLimitInfo | null = null;
   showSetupPrompt = false;
+  currentUser: User | null = null;
+  authLoaded = false;
   private subscriptions = new Subscription();
 
-  constructor(public githubAIService: GitHubAIService) {}
+  constructor(public githubAIService: GitHubAIService, private authService: AuthService) {}
 
   ngOnInit() {
+    // Track auth state
+    this.subscriptions.add(
+      this.authService.user$.subscribe(user => {
+        this.currentUser = user;
+        this.authLoaded = true;
+      })
+    );
+
     // Subscribe to AI service configuration status
     this.isAIConnected = this.githubAIService.isConfigured();
     
@@ -73,6 +86,10 @@ export class AppComponent implements OnInit, OnDestroy {
   resetCallCount(event: Event) {
     event.stopPropagation(); // Prevent toggleSetupPrompt from firing
     this.githubAIService.resetRateLimitInfo();
+  }
+
+  logout() {
+    this.authService.logout().subscribe();
   }
 
   get isRateLimitExceeded(): boolean {

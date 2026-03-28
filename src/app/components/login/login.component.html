@@ -1,0 +1,46 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="assets/tr-logo.svg" width="240" alt="Thomson Reuters Logo" class="tr-logo">
+      <h1><span class="brand-orange">TR</span>ack Board</h1>
+    </div>
+
+    <form class="login-form" (ngSubmit)="onSubmit()" autocomplete="on">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" class="btn-login" [disabled]="isLoading">
+        <span *ngIf="isLoading"><i class="fas fa-spinner fa-spin"></i> Signing in...</span>
+        <span *ngIf="!isLoading">Sign In</span>
+      </button>
+    </form>
+  </div>
+</div>

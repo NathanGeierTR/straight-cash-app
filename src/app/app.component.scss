@@ -66,6 +66,25 @@
           align-items: center;
           margin-left: auto;
           width: auto;
+
+          .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 7px 14px;
+            transition: background 0.2s;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.22);
+            }
+          }
         }
       }
       
@@ -196,6 +215,7 @@
         background: var(--saf-color-background-default);
         border: 1px solid var(--saf-color-border-subtle);
         border-radius: 8px;
+        color: var(--saf-color-brand-racing-green-700);
         padding: 16px;
         min-width: 280px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
