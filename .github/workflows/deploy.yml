@@ -34,6 +34,7 @@ jobs:
       
       - name: Inject Firebase config
         run: |
+          mkdir -p src/environments
           cat > src/environments/environment.ts << 'EOF'
           export const environment = {
               production: true,
