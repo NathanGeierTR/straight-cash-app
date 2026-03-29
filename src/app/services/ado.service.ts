@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface AdoWorkItem {
   id: number;
@@ -86,8 +87,8 @@ export class AdoService {
     this.project = project;
     this.personalAccessToken = personalAccessToken;
     
-    // Use proxy URL for development to avoid CORS issues
-    this.baseUrl = `/ado-api/${organization}/${project}/_apis`;
+    // Use environment-configured base URL (proxy in dev, direct in production)
+    this.baseUrl = `${environment.adoApiBaseUrl}/${organization}/${project}/_apis`;
     
     // Debug logging for authentication setup
     console.log(`🔐 Initializing ADO Service:`, {
@@ -120,7 +121,7 @@ export class AdoService {
    * Get all projects in the organization
    */
   getProjects(): Observable<AdoProject[]> {
-    const url = `/ado-api/${this.organization}/_apis/projects?api-version=7.0`;
+    const url = `${environment.adoApiBaseUrl}/${this.organization}/_apis/projects?api-version=7.0`;
     return this.http.get<any>(url, { headers: this.headers }).pipe(
       map(response => response.value),
       catchError(error => {
@@ -444,7 +445,7 @@ export class AdoService {
       return of([]);
     }
 
-    const url = `/ado-api/${this.organization}/${this.project}/_apis/work/teamsettings/iterations?api-version=7.0`;
+    const url = `${environment.adoApiBaseUrl}/${this.organization}/${this.project}/_apis/work/teamsettings/iterations?api-version=7.0`;
     
     return this.http.get<any>(url, { headers: this.headers }).pipe(
       map(response => {
