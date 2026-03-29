@@ -894,3 +894,104 @@
 
   i { font-size: 0.85rem; }
 }
+
+// ── Skill buttons row ──────────────────────────────────────────
+.skill-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 0 4px;
+  border-top: 1px solid rgba(49, 75, 62, 0.12);
+  margin-top: 4px;
+}
+
+.btn-skill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(49, 75, 62, 0.08);
+  color: #314b3e;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+
+  &:hover:not(:disabled) {
+    background: rgba(49, 75, 62, 0.15);
+    border-color: #314b3e;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  i { font-size: 0.75rem; }
+}
+
+// ── Scrum Update Panel ─────────────────────────────────────────
+.scrum-panel {
+  margin-top: 12px;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.scrum-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(49, 75, 62, 0.07);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #314b3e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  i { margin-right: 6px; }
+
+  .btn-dismiss {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+
+    &:hover { color: #333; }
+  }
+}
+
+.scrum-loading,
+.scrum-error {
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  color: #777;
+
+  i { margin-right: 6px; }
+}
+
+.scrum-error {
+  color: #c0392b;
+}
+
+.scrum-text {
+  padding: 14px 16px;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #2c2c2c;
+  white-space: pre-wrap;
+}

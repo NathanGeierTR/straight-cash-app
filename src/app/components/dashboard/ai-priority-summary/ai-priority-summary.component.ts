@@ -5,6 +5,7 @@ import { GitHubAIService, ChatMessage, RateLimitInfo } from '../../../services/g
 import { TaskService } from '../../../services/task.service';
 import { AdoService } from '../../../services/ado.service';
 import { CoworkerService } from '../../../services/coworker.service';
+import { JournalService, JournalEntry } from '../../../services/journal.service';
 import { Subject, combineLatest, timer } from 'rxjs';
 import { takeUntil, filter, take, debounceTime } from 'rxjs/operators';
 
@@ -56,11 +57,19 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
   isClippyVisible = true;
   private shouldScrollChat = false;
 
+  // Scrum update
+  scrumUpdate: string | null = null;
+  scrumLoading = false;
+  scrumError: string | null = null;
+  showScrumUpdate = false;
+  private journalEntries: JournalEntry[] = [];
+
   constructor(
     private githubAI: GitHubAIService,
     private taskService: TaskService,
     private adoService: AdoService,
-    private coworkerService: CoworkerService
+    private coworkerService: CoworkerService,
+    private journalService: JournalService
   ) {}
 
   ngOnInit(): void {
@@ -77,6 +86,11 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
       this.githubAI.rateLimit$
         .pipe(takeUntil(this.destroy$))
         .subscribe(info => this.rateLimitInfo = info);
+
+      // Keep journal entries in sync
+      this.journalService.entries$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(entries => this.journalEntries = entries);
 
       // Load chat history
       this.loadChatHistory();
@@ -491,6 +505,64 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
     context.push(`Current time: ${timeOfDay}, ${dayOfWeek}`);
 
     return context.join('\n');
+  }
+
+  generateScrumUpdate(): void {
+    if (!this.githubAI.isConfigured()) {
+      this.scrumError = 'GitHub AI not configured.';
+      return;
+    }
+
+    if (this.journalEntries.length === 0) {
+      this.scrumError = 'No journal entries found. Add some journal entries first!';
+      return;
+    }
+
+    this.scrumLoading = true;
+    this.scrumError = null;
+    this.scrumUpdate = null;
+    this.showScrumUpdate = true;
+
+    const recentEntries = this.journalEntries.slice(0, 20);
+    const entryLines = recentEntries.map(e => {
+      const dateStr = e.timestamp.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const timeStr = e.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      return `[${dateStr} ${timeStr}] ${e.text}`;
+    }).join('\n');
+
+    const prompt = `You are helping a developer prepare a brief scrum standup update for their team.
+
+Based on the following work journal entries, write a concise, natural-sounding standup update covering:
+1. What I've been focused on / what I did
+2. Any updates or progress worth sharing
+3. Any blockers or things that need attention
+
+Keep it brief (3-5 sentences), conversational, and ready to read aloud. Do NOT use bullet points — write it as flowing prose.
+
+Journal entries (most recent first):
+${entryLines}
+
+Respond with just the standup update text, nothing else.`;
+
+    this.githubAI.sendMessage(prompt)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.scrumUpdate = response.trim();
+          this.scrumLoading = false;
+        },
+        error: (err) => {
+          console.error('Scrum update generation failed:', err);
+          this.scrumError = err.message || 'Failed to generate scrum update.';
+          this.scrumLoading = false;
+        }
+      });
+  }
+
+  dismissScrumUpdate(): void {
+    this.showScrumUpdate = false;
+    this.scrumUpdate = null;
+    this.scrumError = null;
   }
 
   refresh(): void {
