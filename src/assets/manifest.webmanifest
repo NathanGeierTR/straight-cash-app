@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#314b3e",
-  "background_color": "#ffffff",
+  "background_color": "#314b3e",
   "icons": [
     {
       "src": "assets/TR-app-logo.png",
