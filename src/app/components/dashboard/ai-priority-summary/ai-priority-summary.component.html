@@ -160,8 +160,18 @@
     <!-- Loading State -->
     <div class="loading-state" *ngIf="loading">
         <i class="fas fa-spinner fa-spin"></i>
-        <p *ngIf="waitingForData">Waiting for dashboard data to load...</p>
+        <p *ngIf="waitingForData">Scanning dashboard data...</p>
         <p *ngIf="!waitingForData">Analyzing your dashboard...</p>
+    </div>
+
+    <!-- Ready State — waiting for user to trigger -->
+    <div class="ready-state" *ngIf="dataReady && !summary && !loading && !error && isConfigured">
+        <img src="assets/smart-clippy.svg" alt="Clippy" class="ready-clippy-icon"/>
+        <p>Dashboard data scanned. Ready to generate your daily summary.</p>
+        <button type="button" class="btn-generate" (click)="generateSummary()">
+            <i class="fas fa-wand-sparkles"></i>
+            Generate Daily Summary
+        </button>
     </div>
 
     <!-- Error State -->

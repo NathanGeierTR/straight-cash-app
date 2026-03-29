@@ -30,6 +30,7 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
   isConfigured = false;
   isExpanded = true;
   waitingForData = true;
+  dataReady = false;
   animatedOverview = '';
   isAnimating = false;
 
@@ -218,10 +219,9 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
         });
         
         this.waitingForData = false;
+        this.dataReady = true;
+        this.loading = false;
         this.dataReady$.next();
-        
-        // Generate initial summary
-        this.generateSummary();
       },
       error: (err) => {
         console.error('Error waiting for data sources:', err);
@@ -231,15 +231,16 @@ export class AiPrioritySummaryComponent implements OnInit, OnDestroy, AfterViewC
       }
     });
 
-    // Fallback: if data doesn't load within 10 seconds, generate summary anyway
+    // Fallback: if data doesn't load within 10 seconds, stop waiting and allow manual trigger
     timer(10000).pipe(
       takeUntil(this.dataReady$),
       takeUntil(this.destroy$)
     ).subscribe(() => {
       if (this.waitingForData) {
-        console.warn('⚠️ Timeout (10s) waiting for dashboard data. Generating summary with available data.');
+        console.warn('⚠️ Timeout (10s) waiting for dashboard data. Ready for manual summary generation.');
         this.waitingForData = false;
-        this.generateSummary();
+        this.dataReady = true;
+        this.loading = false;
       }
     });
   }

@@ -846,3 +846,51 @@
   }
 }
 }
+
+// Ready state — data scanned, waiting for user to trigger
+.ready-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+
+  .ready-clippy-icon {
+    width: 48px;
+    height: 48px;
+    opacity: 0.85;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: var(--saf-color-text-subtle);
+    margin: 0;
+  }
+}
+
+.btn-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--saf-color-brand-racing-green-600, #314b3e);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+
+  &:hover {
+    background: var(--saf-color-brand-racing-green-700, #243829);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i { font-size: 0.85rem; }
+}
