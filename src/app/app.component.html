@@ -5,6 +5,8 @@
   <!-- Side navigation -->
   <nav class="sidenav">
     <div class="sidenav-items">
+      <img src="assets/kinesis.svg" height="30" alt="Thomson Reuters kinesis" class="tr-kinesis">
+
       <button class="sidenav-btn" [class.active]="currentView === 'dashboard'"
               (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard">
         <i class="fas fa-house"></i>
@@ -60,7 +62,6 @@
     <header class="topbar" [style.background-image]="'url(assets/green-swirl.png)'">
       <div class="topbar-inner">
         <div class="topbar-title">
-          <img src="assets/tr-logo.svg" height="36" alt="Thomson Reuters Logo" class="tr-logo">
           <h1><span class="brand-orange">TR</span>ack Board</h1>
         </div>
       </div>
