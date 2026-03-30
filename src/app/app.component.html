@@ -8,18 +8,27 @@
       <img src="assets/kinesis.svg" height="30" alt="Thomson Reuters kinesis" class="tr-kinesis">
 
       <button class="sidenav-btn" [class.active]="currentView === 'dashboard'"
-              (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard">
+              (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard"
+              (touchstart)="onNavTouchStart($event, 'Dashboard', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
         <i class="fas fa-house"></i>
       </button>
 
       <button class="sidenav-btn" [class.active]="currentView === 'connections'"
-              (click)="navigateTo('connections')" data-label="Connections" aria-label="Connections">
+              (click)="navigateTo('connections')" data-label="Connections" aria-label="Connections"
+              (touchstart)="onNavTouchStart($event, 'Connections', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
         <i class="fas fa-plug"></i>
       </button>
 
       <button class="sidenav-btn" [class.active]="currentView === 'journal'"
-              (click)="navigateTo('journal')" data-label="Journal" aria-label="Journal">
+              (click)="navigateTo('journal')" data-label="Journal" aria-label="Journal"
+              (touchstart)="onNavTouchStart($event, 'Journal', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
         <i class="fas fa-book-open"></i>
+      </button>
+
+      <button class="sidenav-btn" [class.active]="currentView === 'open-arena-chat'"
+              (click)="navigateTo('open-arena-chat')" data-label="Open Arena Chat" aria-label="Open Arena Chat"
+              (touchstart)="onNavTouchStart($event, 'Open Arena Chat', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
+        <i class="fas fa-robot"></i>
       </button>
     </div>
 
@@ -31,7 +40,8 @@
               [class.ai-disconnected]="!isAIConnected || hasTokenError"
               (click)="navigateTo('connections')"
               [attr.aria-label]="isAIServiceValid ? 'GitHub AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls used' : 'GitHub AI not configured'"
-              [attr.data-label]="isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured'">
+              [attr.data-label]="isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured'"
+              (touchstart)="onNavTouchStart($event, isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured', 'bottom-left')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
         <i class="fab fa-github"></i>
         <span class="ai-dot"
               [class.connected]="isAIServiceValid && !isRateLimitExceeded"
@@ -39,10 +49,17 @@
               [class.disconnected]="!isAIConnected || hasTokenError"></span>
       </button>
 
-      <button class="sidenav-btn" (click)="logout()" data-label="Sign Out" aria-label="Sign Out">
+      <button class="sidenav-btn" (click)="logout()" data-label="Sign Out" aria-label="Sign Out"
+              (touchstart)="onNavTouchStart($event, 'Sign Out', 'bottom-left')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </div>
+
+    <!-- Long-press touch tooltip -->
+    <span *ngIf="touchTooltipLabel" class="touch-tooltip"
+          [style.left.px]="touchTooltipX"
+          [style.top.px]="touchTooltipY"
+          [style.transform]="touchTooltipTransform">{{ touchTooltipLabel }}</span>
 
     <!-- Setup Prompt Popover -->
     <div class="setup-prompt" *ngIf="showSetupPrompt && (!isAIConnected || hasTokenError)">
@@ -71,6 +88,7 @@
       <app-dashboard *ngIf="currentView === 'dashboard'"></app-dashboard>
       <app-connections *ngIf="currentView === 'connections'"></app-connections>
       <app-journal *ngIf="currentView === 'journal'"></app-journal>
+      <app-open-arena-chat *ngIf="currentView === 'open-arena-chat'"></app-open-arena-chat>
     </main>
   </div>
 

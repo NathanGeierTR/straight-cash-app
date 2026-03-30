@@ -9,7 +9,6 @@
 // ── App shell layout ────────────────────────────────────────────
 
 .app-shell {
-  display: flex;
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -17,7 +16,7 @@
 // ── Side navigation ─────────────────────────────────────────────
 
 .sidenav {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
@@ -85,23 +84,25 @@
     background: var(--saf-color-background-subtle, #f4f4f4);
     color: var(--saf-color-text-default, #222);
 
-    // Tooltip
-    &::after {
-      content: attr(data-label);
-      position: absolute;
-      left: calc(100% + 10px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--saf-color-gray-700, #333);
-      color: #fff;
-      font-size: 0.78rem;
-      font-weight: 600;
-      white-space: nowrap;
-      padding: 5px 10px;
-      border-radius: 6px;
-      pointer-events: none;
-      z-index: 300;
-      font-family: "Arimo", sans-serif;
+    // Tooltip (pointer/mouse devices only)
+    @media (hover: hover) {
+      &::after {
+        content: attr(data-label);
+        position: absolute;
+        left: calc(100% + 10px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--saf-color-gray-700, #333);
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+        padding: 5px 10px;
+        border-radius: 6px;
+        pointer-events: none;
+        z-index: 300;
+        font-family: "Arimo", sans-serif;
+      }
     }
   }
 
@@ -291,24 +292,112 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+// ── Touch long-press tooltip ────────────────────────────────────
+
+.touch-tooltip {
+  position: fixed;
+  background: var(--saf-color-gray-700, #333);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 9999;
+  font-family: "Arimo", sans-serif;
+  animation: fadeIn 0.12s ease;
+}
+
 // ── Mobile ──────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  :host {
+    --sidenav-width: 0px;
+    --topbar-height: 66px;
+    --mobile-nav-height: 48px;
+  }
+
+  // Sidenav becomes a horizontal bar fixed below the topbar
+  .sidenav {
+    position: absolute;
+    top: var(--topbar-height);
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: var(--mobile-nav-height);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--saf-color-border-subtle, #e8e8e8);
+    z-index: 200;
+    gap: 0;
+
+    .tr-kinesis {
+      display: none;
+    }
+
+    .sidenav-items {
+      flex-direction: row;
+      flex: 1;
+      gap: 2px;
+    }
+
+    .sidenav-bottom {
+      flex-direction: row;
+      gap: 2px;
+    }
+
+    // Move setup popover below the horizontal nav bar
+    .setup-prompt {
+      left: 8px;
+      bottom: auto;
+      top: calc(var(--topbar-height) + var(--mobile-nav-height) + 8px);
+    }
+  }
+
+  // Smaller, tighter buttons
+  .sidenav-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  // Reposition hover tooltips for the horizontal bar
+  @media (hover: hover) {
+    .sidenav-items .sidenav-btn:hover::after {
+      left: 0;
+      right: auto;
+      top: calc(100% + 6px);
+      transform: none;
+    }
+
+    .sidenav-bottom .sidenav-btn:hover::after {
+      right: 0;
+      left: auto;
+      top: calc(100% + 6px);
+      transform: none;
+    }
+  }
+
+  // No left margin needed; page-body gets top padding to clear the nav bar
+  .app-content {
+    margin-left: 0;
+  }
+
+  .page-body {
+    padding-top: var(--mobile-nav-height);
+  }
+}
 
 @media (max-width: 600px) {
   :host {
-    --sidenav-width: 56px;
+    --topbar-height: 56px;
   }
-
-  .sidenav-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1rem;
-  }
-
-  .sidenav-logo .sidenav-logo-img {
-    width: 36px;
-    height: 36px;
-  }
-
   .topbar .topbar-title h1 {
     font-size: 1.3rem;
   }

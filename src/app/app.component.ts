@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { LoginComponent } from './components/login/login.component';
 import { ConnectionsComponent } from './components/connections/connections.component';
 import { JournalComponent } from './components/journal/journal.component';
+import { OpenArenaChatComponent } from './components/dashboard/open-arena-chat/open-arena-chat.component';
 import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
 import { AuthService } from './services/auth.service';
 import { Subscription } from 'rxjs';
@@ -13,7 +14,7 @@ import { User } from '@angular/fire/auth';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, CommonModule],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, OpenArenaChatComponent, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -24,7 +25,12 @@ export class AppComponent implements OnInit, OnDestroy {
   showSetupPrompt = false;
   currentUser: User | null = null;
   authLoaded = false;
-  currentView: 'dashboard' | 'connections' | 'journal' = 'dashboard';
+  currentView: 'dashboard' | 'connections' | 'journal' | 'open-arena-chat' = 'dashboard';
+  touchTooltipLabel: string | null = null;
+  touchTooltipX = 0;
+  touchTooltipY = 0;
+  touchTooltipTransform = 'translateX(-50%)';
+  private longPressTimer: ReturnType<typeof setTimeout> | null = null;
   private subscriptions = new Subscription();
 
   constructor(public githubAIService: GitHubAIService, private authService: AuthService) {}
@@ -95,7 +101,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe();
   }
 
-  navigateTo(view: 'dashboard' | 'connections' | 'journal') {
+  navigateTo(view: 'dashboard' | 'connections' | 'journal' | 'open-arena-chat') {
     this.currentView = view;
     this.showSetupPrompt = false;
   }
@@ -115,5 +121,43 @@ export class AppComponent implements OnInit, OnDestroy {
   get isAIServiceValid(): boolean {
     // The AI service is considered valid if it's configured and doesn't have token errors
     return this.isAIConnected && !this.hasTokenError;
+  }
+
+  onNavTouchStart(event: TouchEvent, label: string, align: 'above' | 'bottom-right' | 'bottom-left' = 'above') {
+    const touch = event.touches[0];
+    this.longPressTimer = setTimeout(() => {
+      this.touchTooltipLabel = label;
+      if (align === 'bottom-right') {
+        this.touchTooltipX = touch.clientX;
+        this.touchTooltipY = touch.clientY + 20;
+        this.touchTooltipTransform = 'none';
+      } else if (align === 'bottom-left') {
+        this.touchTooltipX = touch.clientX;
+        this.touchTooltipY = touch.clientY + 20;
+        this.touchTooltipTransform = 'translateX(-100%)';
+      } else {
+        this.touchTooltipX = touch.clientX;
+        this.touchTooltipY = touch.clientY - 44;
+        this.touchTooltipTransform = 'translateX(-50%)';
+      }
+    }, 400);
+  }
+
+  onNavTouchEnd() {
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+    this.touchTooltipLabel = null;
+  }
+
+  @HostListener('document:touchend')
+  @HostListener('document:touchcancel')
+  clearTouchTooltip() {
+    this.touchTooltipLabel = null;
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
   }
 }

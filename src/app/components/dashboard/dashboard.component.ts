@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SprintCalendarComponent } from './sprint-calendar/sprint-calendar.component';
-import { OpenArenaChatComponent } from './open-arena-chat/open-arena-chat.component';
 import { NewsTickerWidgetComponent } from './news-ticker-widget/news-ticker-widget.component';
 import { AdoWorkItemsComponent } from './ado-work-items/ado-work-items.component';
 import { GitHubAiChatComponent } from './github-ai-chat/github-ai-chat.component';
@@ -18,7 +17,6 @@ import { JournalWidgetComponent } from './journal-widget/journal-widget.componen
   imports: [
     CommonModule,
     SprintCalendarComponent,
-    OpenArenaChatComponent,
     NewsTickerWidgetComponent,
     AdoWorkItemsComponent,
     GitHubAiChatComponent,
@@ -36,9 +34,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentTime = new Date();
   private timeInterval?: number;
   
-  // Sliding drawer state
-  isChatDrawerOpen = false;
-  
   ngOnInit() {
     // Update time every second
     this.timeInterval = window.setInterval(() => {
@@ -52,7 +47,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
   
-  toggleChatDrawer() {
-    this.isChatDrawerOpen = !this.isChatDrawerOpen;
-  }
 }
