@@ -449,6 +449,11 @@
           <input type="checkbox" [(ngModel)]="displayOptions.showDates" (change)="saveDisplayOptions()">
           <span>Dates</span>
         </label>
+
+        <label class="option-item">
+          <input type="checkbox" [(ngModel)]="displayOptions.showGitHubPrs" (change)="saveDisplayOptions()">
+          <span>GitHub PRs</span>
+        </label>
       </div>
       
       <div class="panel-actions">
@@ -599,6 +604,24 @@
               </span>
               <span>{{ workItem.fields['System.IterationPath'] }}</span>
             </div>
+          </div>
+
+          <!-- GitHub PR Links -->
+          <div class="github-pr-links"
+               *ngIf="displayOptions.showGitHubPrs && (prLinksCache.get(getWorkItemId(workItem))?.length ?? 0) > 0">
+            <a
+              *ngFor="let link of prLinksCache.get(getWorkItemId(workItem))"
+              class="pr-badge"
+              [ngClass]="getPrStatusClass(link.pr, link.prNumber)"
+              [attr.href]="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              (click)="$event.stopPropagation()"
+              [title]="link.pr ? link.pr.title : 'GitHub PR #' + link.prNumber">
+              <i class="fab fa-github"></i>
+              <span>PR #{{ link.prNumber }}</span>
+              <span class="pr-status-label" *ngIf="link.pr || linkedPrStatuses.get(link.prNumber)">{{ getPrStatusLabel(link.pr, link.prNumber) }}</span>
+            </a>
           </div>
         </div>
         <div class="urgency-indicator" 

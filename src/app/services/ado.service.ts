@@ -27,6 +27,15 @@ export interface AdoWorkItem {
     'Microsoft.VSTS.Scheduling.FinishDate'?: string;
   };
   _links?: any;
+  relations?: {
+    rel: string;
+    url: string;
+    attributes?: {
+      name?: string;
+      comment?: string;
+      [key: string]: any;
+    };
+  }[];
 }
 
 export interface AdoWorkItemQueryResult {
@@ -250,7 +259,7 @@ export class AdoService {
    * Get work items by their IDs
    */
   private getWorkItemsByIds(ids: string): Observable<AdoWorkItem[]> {
-    const url = `${this.baseUrl}/wit/workitems?ids=${ids}&api-version=7.0`;
+    const url = `${this.baseUrl}/wit/workitems?ids=${ids}&$expand=relations&api-version=7.0`;
     const idCount = ids.split(',').length;
     
     console.log(`📥 Fetching ${idCount} work items...`);

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subject, forkJoin } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 export interface GitHubUser {
@@ -56,6 +56,16 @@ export interface GitHubSearchResult {
 
 export type PrFilter = 'assigned' | 'review-requested' | 'all';
 
+export type PrReviewState =
+  | 'open'
+  | 'draft'
+  | 'approved'
+  | 'changes-requested'
+  | 'review-requested'
+  | 'merged'
+  | 'closed'
+  | 'unknown';
+
 export interface DiagnosticInfo {
   lastQuery: string | null;
   totalCount: number | null;
@@ -67,6 +77,7 @@ export interface DiagnosticInfo {
 const STORAGE_KEY = 'github-pr-token';
 const STORAGE_USERNAME_KEY = 'github-pr-username';
 const STORAGE_ORG_KEY = 'github-pr-org';
+const STORAGE_REPO_KEY = 'github-pr-repo';
 
 @Injectable({
   providedIn: 'root'
@@ -77,6 +88,7 @@ export class GitHubPrService {
   private token = '';
   private username = '';
   private org = '';
+  private repo = '';
 
   private prsSubject = new BehaviorSubject<GitHubPullRequest[]>([]);
   public prs$ = this.prsSubject.asObservable();
@@ -98,6 +110,14 @@ export class GitHubPrService {
   // Emits the GitHub login name once the token is verified — null while unverified
   private verifiedUsernameSubject = new BehaviorSubject<string | null>(null);
   public verifiedUsername$ = this.verifiedUsernameSubject.asObservable();
+
+  // Emits whenever org or repo config changes so dependents can rebuild caches
+  private repoConfigSubject = new Subject<void>();
+  public repoConfig$ = this.repoConfigSubject.asObservable();
+
+  // Cache of review states for individually-fetched PRs keyed by PR number
+  private linkedPrStatusesSubject = new BehaviorSubject<Map<number, PrReviewState>>(new Map());
+  public linkedPrStatuses$ = this.linkedPrStatusesSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.loadConfiguration();
@@ -160,6 +180,26 @@ export class GitHubPrService {
   setOrg(org: string): void {
     this.org = org.trim();
     localStorage.setItem(STORAGE_ORG_KEY, this.org);
+    this.repoConfigSubject.next();
+  }
+
+  getRepo(): string {
+    return this.repo;
+  }
+
+  setRepo(repo: string): void {
+    this.repo = repo.trim();
+    localStorage.setItem(STORAGE_REPO_KEY, this.repo);
+    this.repoConfigSubject.next();
+  }
+
+  /**
+   * Build a GitHub PR URL from just a PR number using the stored org+repo.
+   * Returns null if org or repo are not configured.
+   */
+  getDefaultPrUrl(prNumber: number): string | null {
+    if (!this.org || !this.repo) return null;
+    return `https://github.com/${this.org}/${this.repo}/pull/${prNumber}`;
   }
 
   /** Re-run the /user call and update diagnostics — useful for manual troubleshooting. */
@@ -195,6 +235,7 @@ export class GitHubPrService {
     this.token = localStorage.getItem(STORAGE_KEY) || '';
     this.username = localStorage.getItem(STORAGE_USERNAME_KEY) || '';
     this.org = localStorage.getItem(STORAGE_ORG_KEY) || '';
+    this.repo = localStorage.getItem(STORAGE_REPO_KEY) || '';
     this.connectedSubject.next(!!this.token);
 
     if (this.token) {
@@ -332,5 +373,60 @@ export class GitHubPrService {
     // e.g. https://api.github.com/repos/owner/repo → owner/repo
     const match = repositoryUrl.match(/\/repos\/(.+)$/);
     return match ? match[1] : '';
+  }
+
+  /**
+   * Fetch review status for a single PR by number, using the configured org+repo.
+   * Derives an effective PrReviewState from the PR details and its reviews.
+   * Results are cached so subsequent calls for the same number are no-ops.
+   */
+  fetchLinkedPrStatus(prNumber: number): void {
+    if (!this.token || !this.org || !this.repo) return;
+    const current = this.linkedPrStatusesSubject.value;
+    if (current.has(prNumber)) return; // already fetched
+
+    const base = `${this.apiBase}/repos/${this.org}/${this.repo}`;
+    forkJoin({
+      pr: this.http.get<any>(`${base}/pulls/${prNumber}`, { headers: this.headers() }),
+      reviews: this.http.get<any[]>(`${base}/pulls/${prNumber}/reviews`, { headers: this.headers() })
+    }).pipe(
+      catchError(() => of(null))
+    ).subscribe(result => {
+      if (!result) return;
+      const { pr, reviews } = result;
+
+      let state: PrReviewState = 'unknown';
+
+      if (pr.merged_at) {
+        state = 'merged';
+      } else if (pr.state === 'closed') {
+        state = 'closed';
+      } else if (pr.draft) {
+        state = 'draft';
+      } else {
+        // Derive effective review decision from the reviews list:
+        // Take the last non-COMMENTED review per reviewer
+        const latest = new Map<string, string>();
+        for (const review of reviews) {
+          if (review.state !== 'COMMENTED') {
+            latest.set(review.user.login, review.state);
+          }
+        }
+        const states = Array.from(latest.values());
+        if (states.includes('CHANGES_REQUESTED')) {
+          state = 'changes-requested';
+        } else if (states.length > 0 && states.every(s => s === 'APPROVED')) {
+          state = 'approved';
+        } else if ((pr.requested_reviewers?.length ?? 0) > 0) {
+          state = 'review-requested';
+        } else {
+          state = 'open';
+        }
+      }
+
+      const updated = new Map(this.linkedPrStatusesSubject.value);
+      updated.set(prNumber, state);
+      this.linkedPrStatusesSubject.next(updated);
+    });
   }
 }

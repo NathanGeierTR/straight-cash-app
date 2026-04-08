@@ -39,7 +39,7 @@
       class="org-input"
       type="text"
       [(ngModel)]="orgInput"
-      placeholder="Filter by org (e.g. tr-labs)"
+      placeholder="GitHub org (e.g. tr-labs)"
       (keydown.enter)="applyOrg()"
       autocomplete="off"
     />
@@ -49,6 +49,26 @@
     </button>
     <span class="active-org-badge" *ngIf="activeOrg">
       <i class="fas fa-filter"></i> {{ activeOrg }}
+    </span>
+  </div>
+
+  <!-- Repo row (used to build ADO → GitHub PR links) -->
+  <div class="org-filter-row" *ngIf="connected">
+    <i class="fas fa-code-branch org-icon"></i>
+    <input
+      class="org-input"
+      type="text"
+      [(ngModel)]="repoInput"
+      placeholder="Default repo for ADO PR links (e.g. my-repo)"
+      (keydown.enter)="applyRepo()"
+      autocomplete="off"
+    />
+    <button class="btn-apply-org" (click)="applyRepo()" [disabled]="repoInput.trim() === activeRepo">Save</button>
+    <button class="btn-clear-org" (click)="clearRepo()" *ngIf="activeRepo" title="Clear repo">
+      <i class="fas fa-xmark"></i>
+    </button>
+    <span class="active-org-badge" *ngIf="activeRepo">
+      <i class="fas fa-code-branch"></i> {{ activeRepo }}
     </span>
   </div>
 

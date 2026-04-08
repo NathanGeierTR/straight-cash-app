@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdoService, AdoWorkItem } from '../../../services/ado.service';
 import { MockAdoService } from '../../../services/mock-ado.service';
+import { GitHubPrService, GitHubPullRequest, PrReviewState } from '../../../services/github-pr.service';
+import { SafePipe } from '../../../pipes/safe.pipe';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError, finalize } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
@@ -27,7 +29,7 @@ interface SprintInfo {
 @Component({
   selector: 'app-ado-work-items',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SafePipe],
   templateUrl: './ado-work-items.component.html',
   styleUrl: './ado-work-items.component.scss'
 })
@@ -64,6 +66,7 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
   // Filters
   selectedView: 'my-items' = 'my-items';
   usingMockData = false;
+  githubPrs: GitHubPullRequest[] = [];
   
   // Display options
   displayOptions = {
@@ -76,7 +79,8 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
     showPriority: true,
     showIteration: true,
     showDates: false,
-    showDescription: false
+    showDescription: false,
+    showGitHubPrs: true
   };
   showDisplayOptions = false;
   
@@ -89,12 +93,15 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
   };
   showFilterOptions = false;
   filteredWorkItems: AdoWorkItem[] = [];
-  
+  prLinksCache = new Map<number, { prNumber: number; pr: GitHubPullRequest | null; url: string | null }[]>();
+  linkedPrStatuses = new Map<number, PrReviewState>();
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private adoService: AdoService,
     private mockAdoService: MockAdoService,
+    private gitHubPrService: GitHubPrService,
     private injector: Injector
   ) {}
 
@@ -119,6 +126,21 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
     this.adoService.error$
       .pipe(takeUntil(this.destroy$))
       .subscribe(error => this.error = error);
+
+    this.gitHubPrService.prs$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(prs => {
+        this.githubPrs = prs;
+        this.rebuildPrLinksCache();
+      });
+
+    this.gitHubPrService.repoConfig$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.rebuildPrLinksCache());
+
+    this.gitHubPrService.linkedPrStatuses$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(statuses => this.linkedPrStatuses = statuses);
 
     // Load projects first, then data
     // (Projects are loaded as part of loadConfiguration)
@@ -304,6 +326,19 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
     
     // Share work items with service (use all items, not just filtered)
     this.adoService.setWorkItems(this.workItems);
+    this.rebuildPrLinksCache();
+  }
+
+  private rebuildPrLinksCache(): void {
+    this.prLinksCache.clear();
+    for (const item of this.filteredWorkItems) {
+      const id = item.fields['System.Id'] || item.id;
+      this.prLinksCache.set(id, this.getGitHubPrLinks(item));
+    }
+    // Kick off status fetches for all linked PR numbers not yet cached
+    this.prLinksCache.forEach(links => {
+      links.forEach(link => this.gitHubPrService.fetchLinkedPrStatus(link.prNumber));
+    });
   }
 
   loadWorkItems() {
@@ -868,5 +903,83 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
       default:
         return '#dddddd'; // Gray for no sprint
     }
+  }
+
+  getGitHubPrLinks(workItem: AdoWorkItem): { prNumber: number; pr: GitHubPullRequest | null; url: string | null }[] {
+    const relations: any[] = (workItem as any).relations || [];
+    const githubPrRelations = relations.filter((r: any) =>
+      r.rel === 'ArtifactLink' && r.attributes?.name === 'GitHub Pull Request'
+    );
+
+    return githubPrRelations
+      .map((relation: any) => {
+        // ADO artifact URL format:
+        // vstfs:///GitHub/PullRequest/{connId}%2F{owner}%2F{repo}%2F{prNumber}  (4 parts)
+        // vstfs:///GitHub/PullRequest/{connId}%2F{repoId}%2F{prNumber}          (3 parts)
+        // vstfs:///GitHub/PullRequest/{connId}%2F{prNumber}                      (2 parts)
+        const rawUrl: string = relation.url ?? '';
+        const parts = rawUrl.split(/%2f/i);
+
+        let prNumber = NaN;
+        let parsedUrl: string | null = null;
+
+        if (parts.length >= 4) {
+          prNumber = parseInt(parts[3], 10);
+          if (!isNaN(prNumber) && parts[1] && parts[2]) {
+            parsedUrl = `https://github.com/${parts[1]}/${parts[2]}/pull/${prNumber}`;
+          }
+        } else if (parts.length >= 2) {
+          prNumber = parseInt(parts[parts.length - 1], 10);
+        }
+
+        if (isNaN(prNumber)) return null;
+
+        const matchedPr = this.githubPrs.find(pr => pr.number === prNumber) ?? null;
+        const url = matchedPr?.html_url
+          ?? parsedUrl
+          ?? this.gitHubPrService.getDefaultPrUrl(prNumber);
+        return { prNumber, pr: matchedPr, url };
+      })
+      .filter((link): link is { prNumber: number; pr: GitHubPullRequest | null; url: string | null } => link !== null);
+  }
+
+  getPrStatusLabel(pr: GitHubPullRequest | null, prNumber?: number): string {
+    const reviewState = prNumber !== undefined ? this.linkedPrStatuses.get(prNumber) : undefined;
+    if (reviewState) {
+      switch (reviewState) {
+        case 'approved': return 'Approved';
+        case 'changes-requested': return 'Changes Requested';
+        case 'review-requested': return 'Review Requested';
+        case 'merged': return 'Merged';
+        case 'closed': return 'Closed';
+        case 'draft': return 'Draft';
+        case 'open': return 'Open';
+      }
+    }
+    if (!pr) return '';
+    if (pr.merged_at) return 'Merged';
+    if (pr.state === 'closed') return 'Closed';
+    if (pr.draft) return 'Draft';
+    return 'Open';
+  }
+
+  getPrStatusClass(pr: GitHubPullRequest | null, prNumber?: number): string {
+    const reviewState = prNumber !== undefined ? this.linkedPrStatuses.get(prNumber) : undefined;
+    if (reviewState) {
+      switch (reviewState) {
+        case 'approved': return 'pr-approved';
+        case 'changes-requested': return 'pr-changes-requested';
+        case 'review-requested': return 'pr-review-requested';
+        case 'merged': return 'pr-merged';
+        case 'closed': return 'pr-closed';
+        case 'draft': return 'pr-draft';
+        case 'open': return 'pr-open';
+      }
+    }
+    if (!pr) return 'pr-unknown';
+    if (pr.merged_at) return 'pr-merged';
+    if (pr.state === 'closed') return 'pr-closed';
+    if (pr.draft) return 'pr-draft';
+    return 'pr-open';
   }
 }

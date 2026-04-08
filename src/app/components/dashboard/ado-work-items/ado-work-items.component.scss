@@ -1004,9 +1004,94 @@
     }
   }
 
+  // GitHub PR Links
+  .github-pr-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+
+    .pr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      text-decoration: none;
+      transition: filter 0.15s ease;
+
+      i { font-size: 0.75rem; }
+
+      .pr-status-label {
+        font-size: 0.65rem;
+        font-weight: 500;
+        opacity: 0.85;
+      }
+
+      &.pr-open {
+        background: var(--saf-color-brand-racing-green-100);
+        border-color: var(--saf-color-brand-racing-green-300);
+        color: var(--saf-color-brand-racing-green-700);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-review-requested {
+        background: var(--saf-color-brand-gold-100);
+        border-color: var(--saf-color-brand-gold-400);
+        color: var(--saf-color-brand-gold-700);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-approved {
+        background: var(--saf-color-brand-racing-green-200);
+        border-color: var(--saf-color-brand-racing-green-500);
+        color: var(--saf-color-brand-racing-green-800);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-changes-requested {
+        background: var(--saf-color-brand-orange-100);
+        border-color: var(--saf-color-brand-orange-400);
+        color: var(--saf-color-brand-orange-700);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-draft {
+        background: var(--saf-color-background-subtle);
+        border-color: var(--saf-color-line-subtle);
+        color: var(--saf-color-text-subtle);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-merged {
+        background: var(--saf-color-brand-sky-100);
+        border-color: var(--saf-color-brand-sky-300);
+        color: var(--saf-color-brand-sky-700);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-closed {
+        background: var(--saf-color-semantic-critical-subtle);
+        border-color: var(--saf-color-semantic-critical);
+        color: var(--saf-color-semantic-critical-strong);
+        &:hover { filter: brightness(0.92); }
+      }
+
+      &.pr-unknown {
+        background: var(--saf-color-background-subtle);
+        border-color: var(--saf-color-line-subtle);
+        color: var(--saf-color-text-subtle);
+      }
+    }
+  }
+
   // Work Item Dates
-  .work-item-dates {
-    margin-bottom: 0.75rem;
+  .work-item-dates {    margin-bottom: 0.75rem;
 
     .date-info {
       display: flex;

@@ -25,6 +25,8 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
 
   orgInput = '';
   activeOrg = '';
+  repoInput = '';
+  activeRepo = '';
 
   private destroy$ = new Subject<void>();
 
@@ -48,6 +50,10 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
     // Restore saved org
     this.activeOrg = this.prService.getOrg();
     this.orgInput = this.activeOrg;
+
+    // Restore saved repo
+    this.activeRepo = this.prService.getRepo();
+    this.repoInput = this.activeRepo;
   }
 
   ngOnDestroy(): void {
@@ -79,6 +85,17 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
     this.activeOrg = '';
     this.prService.setOrg('');
     this.refresh();
+  }
+
+  applyRepo(): void {
+    this.activeRepo = this.repoInput.trim();
+    this.prService.setRepo(this.activeRepo);
+  }
+
+  clearRepo(): void {
+    this.repoInput = '';
+    this.activeRepo = '';
+    this.prService.setRepo('');
   }
 
   toggleExpand(prId: number): void {
