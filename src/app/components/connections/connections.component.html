@@ -107,6 +107,70 @@
             <i class="fas fa-spinner fa-spin"></i> Verifying token identity…
           </ng-template>
         </div>
+
+        <!-- Org filter -->
+        <div class="form-row config-row" *ngIf="githubPrConnected">
+          <div class="form-group">
+            <label><i class="fas fa-building"></i> GitHub Organization filter</label>
+            <div class="input-with-actions">
+              <input type="text" [(ngModel)]="githubPrOrgInput" placeholder="e.g. tr-labs (leave blank for all)"
+                     (keydown.enter)="applyPrOrg()" autocomplete="off" class="token-input">
+              <button class="btn-apply-inline" (click)="applyPrOrg()"
+                      [disabled]="githubPrOrgInput.trim() === githubPrActiveOrg">Apply</button>
+              <button class="btn-clear-inline" (click)="clearPrOrg()" *ngIf="githubPrActiveOrg" title="Clear">
+                <i class="fas fa-xmark"></i>
+              </button>
+            </div>
+            <span class="field-hint" *ngIf="githubPrActiveOrg">
+              <i class="fas fa-filter"></i> Filtering to <strong>{{ githubPrActiveOrg }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <!-- Repo for ADO links -->
+        <div class="form-row config-row" *ngIf="githubPrConnected">
+          <div class="form-group">
+            <label><i class="fas fa-code-branch"></i> Default repo for ADO → PR links</label>
+            <div class="input-with-actions">
+              <input type="text" [(ngModel)]="githubPrRepoInput" placeholder="e.g. thomsonreuters/my-repo"
+                     (keydown.enter)="applyPrRepo()" autocomplete="off" class="token-input">
+              <button class="btn-apply-inline" (click)="applyPrRepo()"
+                      [disabled]="githubPrRepoInput.trim() === githubPrActiveRepo">Save</button>
+              <button class="btn-clear-inline" (click)="clearPrRepo()" *ngIf="githubPrActiveRepo" title="Clear">
+                <i class="fas fa-xmark"></i>
+              </button>
+            </div>
+            <span class="field-hint" *ngIf="githubPrActiveRepo">
+              <i class="fas fa-code-branch"></i> <strong>{{ githubPrActiveRepo }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <!-- Diagnostics -->
+        <div class="config-row" *ngIf="githubPrConnected">
+          <button class="btn-diagnostics-toggle" (click)="githubPrShowDiagnostics = !githubPrShowDiagnostics">
+            <i class="fas fa-stethoscope"></i>
+            {{ githubPrShowDiagnostics ? 'Hide diagnostics' : 'Show diagnostics' }}
+          </button>
+          <div class="diagnostics-panel" *ngIf="githubPrShowDiagnostics && githubPrDiagnostic">
+            <div class="diag-row">
+              <span class="diag-key">Token login</span>
+              <code [class.diag-error]="githubPrDiagnostic.resolvedUsername?.startsWith('ERROR')">
+                {{ githubPrDiagnostic.resolvedUsername || '(verifying…)' }}
+              </code>
+              <button class="btn-verify" (click)="verifyPrToken()"><i class="fas fa-rotate"></i> Re-verify</button>
+            </div>
+            <div class="diag-row"><span class="diag-key">Last query</span><code>{{ githubPrDiagnostic.lastQuery || '(none)' }}</code></div>
+            <div class="diag-row"><span class="diag-key">total_count</span><code>{{ githubPrDiagnostic.totalCount !== null ? githubPrDiagnostic.totalCount : '(not run)' }}</code></div>
+            <div class="diag-row" *ngIf="githubPrDiagnostic.httpStatus !== null">
+              <span class="diag-key">HTTP status</span>
+              <code [class.diag-error]="githubPrDiagnostic.httpStatus !== 200">{{ githubPrDiagnostic.httpStatus }}</code>
+            </div>
+            <div class="diag-row" *ngIf="githubPrDiagnostic.httpMessage">
+              <span class="diag-key">API message</span><code class="diag-error">{{ githubPrDiagnostic.httpMessage }}</code>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="card-actions">

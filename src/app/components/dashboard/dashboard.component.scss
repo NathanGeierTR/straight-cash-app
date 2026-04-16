@@ -85,6 +85,16 @@ $text-secondary: #6b7280;
     }
   }
 
+  // Ask AI Widget (max 2 columns)
+  .ai-ask-widget {
+    grid-column: span 2;
+    background: var(--saf-color-background-subtle);
+
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+  }
+
   // ADO Widget
   .ado-widget {
     grid-column: span 2;

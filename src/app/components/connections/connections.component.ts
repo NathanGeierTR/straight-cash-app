@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { GitHubAIService } from '../../services/github-ai.service';
-import { GitHubPrService } from '../../services/github-pr.service';
+import { GitHubPrService, DiagnosticInfo } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
 
@@ -84,6 +84,13 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.githubPrService.verifiedUsername$.pipe(takeUntil(this.destroy$)).subscribe(u => {
       this.githubPrVerifiedUsername = u;
     });
+    this.githubPrActiveOrg = this.githubPrService.getOrg();
+    this.githubPrOrgInput = this.githubPrActiveOrg;
+    this.githubPrActiveRepo = this.githubPrService.getRepo();
+    this.githubPrRepoInput = this.githubPrActiveRepo;
+    this.githubPrService.diagnostic$.pipe(takeUntil(this.destroy$)).subscribe(d => {
+      this.githubPrDiagnostic = d;
+    });
 
     // Azure DevOps
     try {
@@ -153,6 +160,13 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   }
 
   // GitHub Pull Requests
+  githubPrOrgInput = '';
+  githubPrActiveOrg = '';
+  githubPrRepoInput = '';
+  githubPrActiveRepo = '';
+  githubPrShowDiagnostics = false;
+  githubPrDiagnostic: DiagnosticInfo | null = null;
+
   saveGitHubPr(): void {
     const token = this.githubPrToken.trim();
     if (!token) return;
@@ -167,5 +181,31 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.githubPrToken = '';
     this.githubPrVerifiedUsername = null;
     this.githubPrConnected = false;
+  }
+
+  applyPrOrg(): void {
+    this.githubPrActiveOrg = this.githubPrOrgInput.trim();
+    this.githubPrService.setOrg(this.githubPrActiveOrg);
+  }
+
+  clearPrOrg(): void {
+    this.githubPrOrgInput = '';
+    this.githubPrActiveOrg = '';
+    this.githubPrService.setOrg('');
+  }
+
+  applyPrRepo(): void {
+    this.githubPrActiveRepo = this.githubPrRepoInput.trim();
+    this.githubPrService.setRepo(this.githubPrActiveRepo);
+  }
+
+  clearPrRepo(): void {
+    this.githubPrRepoInput = '';
+    this.githubPrActiveRepo = '';
+    this.githubPrService.setRepo('');
+  }
+
+  verifyPrToken(): void {
+    this.githubPrService.verifyToken();
   }
 }

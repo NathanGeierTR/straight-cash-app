@@ -1,0 +1,94 @@
+<div class="ask-widget">
+
+  <!-- ── Header ───────────────────────────────────────────────── -->
+  <div class="ask-header">
+    <span class="ask-icon"><i class="fas fa-brain"></i></span>
+    <h3 class="ask-title">Ask AI</h3>
+    <span class="ask-subtitle">Journal, tasks &amp; work items included as context</span>
+    <button
+      *ngIf="conversationHistory.length > 0"
+      class="clear-btn"
+      (click)="clearConversation()"
+      title="Clear conversation"
+      aria-label="Clear conversation">
+      <i class="fas fa-broom"></i>
+    </button>
+  </div>
+
+  <!-- ── Not configured ────────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fas fa-key"></i>
+    GitHub AI token not configured. Go to <strong>Connections</strong> to set it up.
+  </div>
+
+  <!-- ── Input area ────────────────────────────────────────────── -->
+  <div class="input-row" *ngIf="isConfigured">
+    <textarea
+      class="ask-textarea"
+      [(ngModel)]="question"
+      (keydown)="onKeydown($event)"
+      placeholder="Ask about work context..."
+      rows="3"
+      [disabled]="loading || anySkillLoading"
+      aria-label="Ask AI a question"></textarea>
+    <button
+      class="send-btn"
+      (click)="ask()"
+      [disabled]="!question.trim() || loading || anySkillLoading"
+      aria-label="Send">
+      <i class="fas fa-paper-plane" *ngIf="!loading"></i>
+      <i class="fas fa-circle-notch fa-spin" *ngIf="loading"></i>
+    </button>
+  </div>
+
+  <div class="input-hint" *ngIf="isConfigured">
+    <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send
+  </div>
+
+  <!-- ── Skills ────────────────────────────────────────────────── -->
+  <div class="skills-row" *ngIf="isConfigured">
+    <span class="skills-label">Skills</span>
+    <button
+      *ngFor="let skill of skills"
+      class="skill-btn"
+      (click)="runSkill(skill.id)"
+      [disabled]="loading || anySkillLoading"
+      [title]="skill.description">
+      <i [class]="skill.icon" *ngIf="!skill.loading"></i>
+      <i class="fas fa-circle-notch fa-spin" *ngIf="skill.loading"></i>
+      {{ skill.label }}
+    </button>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────────── -->
+  <div class="error-row" *ngIf="error">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- ── Conversation ───────────────────────────────────────────── -->
+  <div class="conversation" #chatContainer *ngIf="conversationHistory.length > 0 || loading || anySkillLoading">
+    <ng-container *ngFor="let msg of conversationHistory">
+      <div class="msg" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
+        <div class="msg-meta">
+          <span class="msg-label">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
+          <span class="msg-time">{{ formatTimestamp(msg.timestamp) }}</span>
+        </div>
+        <div class="msg-body"
+          *ngIf="msg.role === 'assistant'"
+          [innerHTML]="formatMessage(msg.content)"></div>
+        <div class="msg-body plain" *ngIf="msg.role === 'user'">{{ msg.content }}</div>
+      </div>
+    </ng-container>
+
+    <!-- Thinking indicator -->
+    <div class="msg assistant thinking" *ngIf="loading || anySkillLoading">
+      <div class="msg-meta">
+        <span class="msg-label">AI</span>
+      </div>
+      <div class="msg-body thinking-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+</div>

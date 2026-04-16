@@ -5,12 +5,12 @@ import { NewsTickerWidgetComponent } from './news-ticker-widget/news-ticker-widg
 import { AdoWorkItemsComponent } from './ado-work-items/ado-work-items.component';
 import { GitHubAiChatComponent } from './github-ai-chat/github-ai-chat.component';
 import { CoworkerTimezonesComponent } from './coworker-timezones/coworker-timezones.component';
-import { AiPrioritySummaryComponent } from './ai-priority-summary/ai-priority-summary.component';
 import { TaskTrackerComponent } from './task-tracker/task-tracker.component';
 import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.component';
 import { TimekeepingComponent } from './timekeeping/timekeeping.component';
 import { JournalWidgetComponent } from './journal-widget/journal-widget.component';
 import { GithubPrWidgetComponent } from './github-pr-widget/github-pr-widget.component';
+import { AiAskWidgetComponent } from './ai-ask-widget/ai-ask-widget.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,12 +22,11 @@ import { GithubPrWidgetComponent } from './github-pr-widget/github-pr-widget.com
     AdoWorkItemsComponent,
     GitHubAiChatComponent,
     CoworkerTimezonesComponent,
-    AiPrioritySummaryComponent,
     TaskTrackerComponent,
     OutlookCalendarComponent,
     TimekeepingComponent,
     JournalWidgetComponent,
-    GithubPrWidgetComponent
+    AiAskWidgetComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
