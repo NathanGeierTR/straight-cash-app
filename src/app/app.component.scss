@@ -4,6 +4,7 @@
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --topbar-height: calc(66px + env(safe-area-inset-top));
 }
 
 // ── App shell layout ────────────────────────────────────────────
@@ -16,7 +17,7 @@
 // ── Side navigation ─────────────────────────────────────────────
 
 .sidenav {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
@@ -148,8 +149,9 @@
 .topbar {
   background: var(--saf-color-brand-racing-green-600, #314b3e);
   color: #fff;
-  padding: 0.75rem 1.5rem;
-  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  display: flex;
+  height: var(--topbar-height);
+  padding: 0 16px;
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: cover;
@@ -315,18 +317,16 @@
   :host {
     --sidenav-width: 0px;
     --topbar-height: calc(66px + env(safe-area-inset-top));
-    --mobile-nav-height: 48px;
   }
 
   // Sidenav becomes a horizontal bar fixed below the topbar
   .sidenav {
-    position: absolute;
+    position: sticky;
     top: var(--topbar-height);
     left: 0;
     right: 0;
     bottom: auto;
     width: 100%;
-    height: var(--mobile-nav-height);
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -355,8 +355,14 @@
     .setup-prompt {
       left: 8px;
       bottom: auto;
-      top: calc(var(--topbar-height) + var(--mobile-nav-height) + 8px);
     }
+  }
+
+  .topbar {
+    height: var(--topbar-height);
+    position: sticky;
+    top: 0;
+    z-index: 300;
   }
 
   // Smaller, tighter buttons
@@ -396,7 +402,7 @@
 
 @media (max-width: 600px) {
   :host {
-    --topbar-height: calc(56px + env(safe-area-inset-top));
+    --topbar-height: calc(36px + env(safe-area-inset-top));
   }
   .topbar .topbar-title h1 {
     font-size: 1.3rem;

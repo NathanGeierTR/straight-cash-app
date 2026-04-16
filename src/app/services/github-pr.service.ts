@@ -187,19 +187,33 @@ export class GitHubPrService {
     return this.repo;
   }
 
+  /** The owner portion of the stored owner/repo path (e.g. 'thomsonreuters'). */
+  getRepoOwner(): string {
+    return this.repo.split('/')[0] ?? '';
+  }
+
+  /** The repo name portion of the stored owner/repo path (e.g. 'labs_cocounsel-agent'). */
+  getRepoName(): string {
+    return this.repo.split('/')[1] ?? '';
+  }
+
   setRepo(repo: string): void {
     this.repo = repo.trim();
     localStorage.setItem(STORAGE_REPO_KEY, this.repo);
+    // Clear cached statuses so they're re-fetched against the new repo
+    this.linkedPrStatusesSubject.next(new Map());
     this.repoConfigSubject.next();
   }
 
   /**
-   * Build a GitHub PR URL from just a PR number using the stored org+repo.
-   * Returns null if org or repo are not configured.
+   * Build a GitHub PR URL from just a PR number using the stored owner/repo path.
+   * Returns null if the repo field is not set or incomplete.
    */
   getDefaultPrUrl(prNumber: number): string | null {
-    if (!this.org || !this.repo) return null;
-    return `https://github.com/${this.org}/${this.repo}/pull/${prNumber}`;
+    const owner = this.getRepoOwner();
+    const name = this.getRepoName();
+    if (!owner || !name) return null;
+    return `https://github.com/${owner}/${name}/pull/${prNumber}`;
   }
 
   /** Re-run the /user call and update diagnostics — useful for manual troubleshooting. */
@@ -381,11 +395,13 @@ export class GitHubPrService {
    * Results are cached so subsequent calls for the same number are no-ops.
    */
   fetchLinkedPrStatus(prNumber: number): void {
-    if (!this.token || !this.org || !this.repo) return;
+    const owner = this.getRepoOwner();
+    const repoName = this.getRepoName();
+    if (!this.token || !owner || !repoName) return;
     const current = this.linkedPrStatusesSubject.value;
     if (current.has(prNumber)) return; // already fetched
 
-    const base = `${this.apiBase}/repos/${this.org}/${this.repo}`;
+    const base = `${this.apiBase}/repos/${owner}/${repoName}`;
     forkJoin({
       pr: this.http.get<any>(`${base}/pulls/${prNumber}`, { headers: this.headers() }),
       reviews: this.http.get<any[]>(`${base}/pulls/${prNumber}/reviews`, { headers: this.headers() })
@@ -415,10 +431,12 @@ export class GitHubPrService {
         const states = Array.from(latest.values());
         if (states.includes('CHANGES_REQUESTED')) {
           state = 'changes-requested';
-        } else if (states.length > 0 && states.every(s => s === 'APPROVED')) {
-          state = 'approved';
         } else if ((pr.requested_reviewers?.length ?? 0) > 0) {
+          // There are still reviewers who haven't submitted a review yet
           state = 'review-requested';
+        } else if (states.length > 0 && states.every(s => s === 'APPROVED')) {
+          // All requested reviewers have reviewed and all approved
+          state = 'approved';
         } else {
           state = 'open';
         }
