@@ -21,6 +21,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   currentTime = new Date();
   selectedEvent: CalendarEvent | null = null;
   selectedDate = new Date();
+  isMinimized = true;
 
   private destroy$ = new Subject<void>();
 
@@ -148,46 +149,40 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.loadEvents();
   }
 
-  // Timeline-specific methods
-  getTimeMarkers(): string[] {
-    const markers: string[] = [];
-    for (let hour = 0; hour < 24; hour++) {
-      const period = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      markers.push(`${displayHour}${period}`);
-    }
-    return markers;
+  // ─── Horizontal timeline helpers ───────────────────────────────────────────
+
+  getHourArray(): number[] {
+    return Array.from({ length: 24 }, (_, i) => i);
+  }
+
+  getHourLabel(hour: number): string {
+    if (hour === 0) return '12a';
+    if (hour === 12) return '12p';
+    return hour < 12 ? `${hour}a` : `${hour - 12}p`;
   }
 
   getCurrentTimePosition(): number {
     const now = this.currentTime;
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    // Calculate percentage of day elapsed (0-100%)
-    const percentOfDay = ((hours * 60 + minutes) / (24 * 60)) * 100;
-    return percentOfDay;
+    return ((now.getHours() * 60 + now.getMinutes()) / (24 * 60)) * 100;
   }
 
-  getEventPosition(event: CalendarEvent): { top: number; height: number } {
+  getEventHorizontalPosition(event: CalendarEvent): { left: number; width: number } {
     const start = new Date(event.start.dateTime);
     const end = new Date(event.end.dateTime);
-    
-    const startHours = start.getHours();
-    const startMinutes = start.getMinutes();
-    const endHours = end.getHours();
-    const endMinutes = end.getMinutes();
-    
-    // Calculate start position as percentage of day
-    const startPercent = ((startHours * 60 + startMinutes) / (24 * 60)) * 100;
-    
-    // Calculate duration in minutes
-    const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-    const heightPercent = (durationMinutes / (24 * 60)) * 100;
-    
-    return {
-      top: startPercent,
-      height: Math.max(heightPercent, 2) // Minimum 2% height for visibility
-    };
+    const startMinutes = start.getHours() * 60 + start.getMinutes();
+    const endMinutes = end.getHours() * 60 + end.getMinutes();
+    const left = (startMinutes / (24 * 60)) * 100;
+    const width = Math.max(((endMinutes - startMinutes) / (24 * 60)) * 100, 0.5);
+    return { left, width };
+  }
+
+  isEventNearRightEdge(event: CalendarEvent): boolean {
+    return this.getEventHorizontalPosition(event).left > 60;
+  }
+
+  // Kept for backwards compat (unused in new template)
+  getTimeMarkers(): string[] {
+    return this.getHourArray().map(h => this.getHourLabel(h));
   }
 
   getEventDuration(event: CalendarEvent): string {
@@ -223,6 +218,15 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.selectedEvent = null;
   }
 
+  expand(): void {
+    this.isMinimized = false;
+  }
+
+  minimize(): void {
+    this.selectedEvent = null;
+    this.isMinimized = true;
+  }
+
   isEventSelected(event: CalendarEvent): boolean {
     return this.selectedEvent === event;
   }
@@ -252,5 +256,28 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     return this.selectedDate.getFullYear() === today.getFullYear() &&
            this.selectedDate.getMonth() === today.getMonth() &&
            this.selectedDate.getDate() === today.getDate();
+  }
+
+  getNextEvent(): CalendarEvent | null {
+    const now = this.currentTime;
+    const upcoming = this.events
+      .filter(e => new Date(e.start.dateTime) > now)
+      .sort((a, b) => new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime());
+    return upcoming[0] ?? null;
+  }
+
+  getCountdownToNextEvent(): string | null {
+    if (!this.isToday()) return null;
+    const next = this.getNextEvent();
+    if (!next) return null;
+    const diffMs = new Date(next.start.dateTime).getTime() - this.currentTime.getTime();
+    if (diffMs <= 0) return null;
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) {
+      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    }
+    return `${minutes}m`;
   }
 }

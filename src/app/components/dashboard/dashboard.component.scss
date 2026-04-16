@@ -25,6 +25,21 @@ $text-secondary: #6b7280;
     padding: $dashboard-gap-mobile;
   }
 
+  // Full-width horizontal calendar timeline bar
+  .calendar-timeline-bar {
+    background: var(--saf-color-background-default);
+    border-radius: $widget-radius;
+    border: 1px solid $border-color;
+    box-shadow: $widget-shadow;
+    margin-bottom: $dashboard-gap;
+    overflow: visible; // popovers drop below the bar
+
+    @media (max-width: 768px) {
+      margin-bottom: $dashboard-gap-mobile;
+      border-radius: 6px;
+    }
+  }
+
   .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));

@@ -1,63 +1,110 @@
-<div class="outlook-calendar">
-  <!-- Header -->
-  <div class="calendar-header">
-    <div class="header-left">
-      <h3 class="calendar-title">
-        <i class="fas fa-calendar-day"></i>
-        Outlook Calendar
-      </h3>
+<div class="outlook-timeline" [class.is-minimized]="isMinimized">
+
+  <!-- Minimized strip (click anywhere to expand) -->
+  <div class="minimized-strip" *ngIf="isMinimized" (click)="expand()" role="button" tabindex="0" aria-label="Expand calendar timeline" (keydown.enter)="expand()" (keydown.space)="expand()">
+
+    <!-- Watermark icon -->
+    <i class="fas fa-calendar-day strip-watermark" aria-hidden="true"></i>
+    <!-- Tick marks only (no labels) -->
+    <div class="tick-layer">
+      <div
+        *ngFor="let h of getHourArray()"
+        class="tick"
+        [class.tick-major]="h % 6 === 0"
+        [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
+        [style.left.%]="(h / 24) * 100">
+      </div>
     </div>
-    <div class="header-actions">
-      <button 
-        type="button" 
-        class="btn-icon" 
+
+    <!-- Event blocks (no text) -->
+    <div class="events-layer" *ngIf="isConfigured && !loading">
+      <div
+        *ngFor="let event of events"
+        class="event-block"
+        [ngClass]="[getEventStatusClass(event)]"
+        [style.left.%]="getEventHorizontalPosition(event).left"
+        [style.width.%]="getEventHorizontalPosition(event).width">
+      </div>
+    </div>
+
+    <!-- Playhead -->
+    <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
+      <div class="playhead-head"></div>
+      <div class="playhead-line"></div>
+    </div>
+
+    <!-- Countdown to next event -->
+    <div class="next-event-countdown" *ngIf="isConfigured && !loading && getCountdownToNextEvent()" (click)="$event.stopPropagation()">
+      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+      <span>{{ getCountdownToNextEvent() }}</span>
+    </div>
+
+  </div>
+
+  <!-- Compact top bar -->
+  <div class="timeline-top-bar" *ngIf="!isMinimized" (click)="$event.stopPropagation()">
+    <div class="timeline-nav">
+      <i class="fas fa-calendar-day timeline-icon"></i>
+      <button
+        type="button"
+        class="ctl-btn"
+        (click)="previousDay()"
+        [disabled]="loading || !isConfigured"
+        title="Previous Day">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="date-label">{{ selectedDate | date:'EEE, MMM d' }}</span>
+      <button
+        type="button"
+        class="ctl-btn"
+        (click)="nextDay()"
+        [disabled]="loading || !isConfigured"
+        title="Next Day">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button
+        *ngIf="!isToday()"
+        type="button"
+        class="ctl-btn today-btn"
+        (click)="goToToday()"
+        [disabled]="loading || !isConfigured">
+        Today
+      </button>
+    </div>
+    <div class="timeline-actions">
+      <span class="error-hint" *ngIf="error && !loading && isConfigured" title="{{ error }}">
+        <i class="fas fa-exclamation-circle"></i>
+      </span>
+      <button
+        type="button"
+        class="ctl-btn"
         (click)="refresh()"
         [disabled]="loading || !isConfigured"
         title="Refresh">
         <i class="fas fa-sync" [class.spinning]="loading"></i>
       </button>
-      <button 
-        type="button" 
-        class="btn-icon" 
+      <button
+        type="button"
+        class="ctl-btn"
+        [class.active]="showConfig"
         (click)="showConfig = !showConfig"
         title="Settings">
         <i class="fas fa-cog"></i>
       </button>
+      <button
+        type="button"
+        class="ctl-btn collapse-btn"
+        (click)="minimize()"
+        title="Minimize timeline"
+        aria-label="Minimize timeline">
+        <i class="fas fa-chevron-up"></i>
+      </button>
     </div>
-  </div>
-  <div class="date-navigation">
-    <button 
-        type="button" 
-        class="btn-nav" 
-        (click)="previousDay()"
-        [disabled]="loading || !isConfigured"
-        title="Previous Day">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-    <div class="current-date">
-        <span class="date-text">{{ selectedDate | date:'EEEE, MMM d, yyyy' }}</span>
-        <button 
-        *ngIf="!isToday()"
-        type="button" 
-        class="btn-today" 
-        (click)="goToToday()"
-        [disabled]="loading || !isConfigured">
-        Today
-        </button>
-    </div>
-    <button 
-        type="button" 
-        class="btn-nav" 
-        (click)="nextDay()"
-        [disabled]="loading || !isConfigured"
-        title="Next Day">
-        <i class="fas fa-chevron-right"></i>
-    </button>
   </div>
 
   <!-- Configuration Panel -->
-  <div class="config-panel" *ngIf="showConfig">
-    <h4>Outlook Calendar Configuration</h4>
+  <div class="config-panel" *ngIf="!isMinimized && showConfig" (click)="$event.stopPropagation()">
+    <h4>Outlook Calendar</h4>
     <div class="config-form">
       <div class="form-group">
         <label for="accessToken">Microsoft Graph Access Token</label>
@@ -69,164 +116,115 @@
           rows="3"
           class="form-input"></textarea>
         <p class="help-text">
-          Get a token from 
-          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank">
+          Get a token from
+          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
             Graph Explorer
           </a>
           with Calendar.Read permission
         </p>
       </div>
       <div class="config-actions">
-        <button type="button" class="btn-primary" (click)="saveConfiguration()">
-          Save
-        </button>
-        <button type="button" class="btn-secondary" (click)="showConfig = false">
-          Cancel
-        </button>
-        <button 
-          type="button" 
-          class="btn-danger" 
-          (click)="clearConfiguration()"
-          *ngIf="isConfigured">
-          Clear
-        </button>
+        <button type="button" class="btn-primary" (click)="saveConfiguration()">Save</button>
+        <button type="button" class="btn-secondary" (click)="showConfig = false">Cancel</button>
+        <button type="button" class="btn-danger" (click)="clearConfiguration()" *ngIf="isConfigured">Clear</button>
       </div>
     </div>
   </div>
 
-  <!-- Not Configured State -->
-  <div class="not-configured" *ngIf="!isConfigured && !showConfig">
-    <i class="fas fa-calendar-xmark"></i>
-    <p>Configure your Outlook calendar to see today's events</p>
-    <button type="button" class="btn-primary" (click)="showConfig = true">
-      Configure
-    </button>
-  </div>
+  <!-- Timeline strip -->
+  <div class="timeline-strip" *ngIf="!isMinimized && !showConfig" (click)="closePopup()">
 
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading && isConfigured">
-    <i class="fas fa-spinner fa-spin"></i>
-    <p>Loading calendar events...</p>
-  </div>
-
-  <!-- Error State -->
-  <div class="error-state" *ngIf="error && !loading && isConfigured">
-    <i class="fas fa-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button type="button" class="btn-secondary btn-sm" (click)="refresh()">
-      Try Again
-    </button>
-  </div>
-
-  <!-- Events List -->
-  <div class="timeline-container" *ngIf="!loading && !error && isConfigured && !showConfig" (click)="closePopup()">
-    <!-- No Events -->
-    <div class="no-events" *ngIf="events.length === 0">
-      <i class="fas fa-calendar-check"></i>
-      <p>No events scheduled for today</p>
+    <!-- Not configured overlay -->
+    <div class="strip-unconfigured" *ngIf="!isConfigured">
+      <button type="button" class="ctl-btn configure-btn" (click)="showConfig = true; $event.stopPropagation()">
+        <i class="fas fa-plug"></i> Connect Outlook Calendar
+      </button>
     </div>
 
-    <!-- Timeline View -->
-    <div class="timeline-view" *ngIf="events.length > 0">
-      <!-- Time Markers -->
-      <div class="time-markers">
-        <div 
-          *ngFor="let marker of getTimeMarkers(); let i = index" 
-          class="time-marker"
-          [style.top.%]="(i / 24) * 100">
-          <span class="marker-label">{{ marker }}</span>
-          <div class="marker-line"></div>
+    <!-- Hour tick marks -->
+    <div class="tick-layer">
+      <div
+        *ngFor="let h of getHourArray()"
+        class="tick"
+        [class.tick-major]="h % 6 === 0"
+        [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
+        [style.left.%]="(h / 24) * 100">
+        <span class="tick-label" *ngIf="h % 3 === 0">{{ getHourLabel(h) }}</span>
+      </div>
+    </div>
+
+    <!-- Events layer -->
+    <div class="events-layer" *ngIf="isConfigured && !loading">
+      <div
+        *ngFor="let event of events"
+        class="event-block"
+        [ngClass]="[getEventStatusClass(event), isEventSelected(event) ? 'active' : '']"
+        [style.left.%]="getEventHorizontalPosition(event).left"
+        [style.width.%]="getEventHorizontalPosition(event).width"
+        (click)="toggleEventSelection(event, $event)">
+        <span class="event-label">{{ event.subject }}</span>
+      </div>
+    </div>
+
+    <!-- Details popover — centered on the timeline, expands downward on click -->
+    <div class="event-popover" *ngIf="selectedEvent" (click)="$event.stopPropagation()">
+      <div class="popover-header">
+        <div class="popover-title">{{ selectedEvent.subject }}</div>
+        <button type="button" class="popover-close" (click)="closePopup()" aria-label="Close details">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="popover-detail">
+        <i class="fas fa-clock"></i>
+        <div class="detail-text">
+          {{ formatTimeRange(selectedEvent) }}
+          <span class="detail-sub">{{ getEventDuration(selectedEvent) }}</span>
         </div>
       </div>
-
-      <!-- Current Time Indicator -->
-      <div 
-        class="current-time-line" 
-        [style.top.%]="getCurrentTimePosition()">
-        <div class="time-dot"></div>
-        <div class="time-line"></div>
-        <span class="time-label">{{ currentTime | date:'shortTime' }}</span>
+      <div class="popover-detail" *ngIf="selectedEvent.location?.displayName && !selectedEvent.isOnlineMeeting">
+        <i class="fas fa-location-dot"></i>
+        <div class="detail-text">{{ selectedEvent.location?.displayName }}</div>
       </div>
-
-      <!-- Events -->
-      <div class="events-timeline">
-        <div 
-          *ngFor="let event of events" 
-          class="timeline-event"
-          [ngClass]="[getEventStatusClass(event), isEventSelected(event) ? 'active' : '']"
-          [style.top.%]="getEventPosition(event).top"
-          [style.height.%]="getEventPosition(event).height"
-          (click)="toggleEventSelection(event, $event)">
-          
-          <div class="event-bar"></div>
-          
-          <div class="event-content-timeline">
-            <div class="event-time-inline">
-              {{ formatTime(event.start.dateTime) }}
-            </div>
-            <div class="event-subject-timeline">
-              {{ event.subject }}
-            </div>
-            <div class="event-meta-timeline">
-              <span class="duration">{{ getEventDuration(event) }}</span>
-              <span *ngIf="event.isOnlineMeeting" class="teams-badge">
-                <i class="fas fa-video"></i>
-              </span>
-              <span *ngIf="event.location?.displayName && !event.isOnlineMeeting" class="location-badge">
-                <i class="fas fa-location-dot"></i>
-              </span>
-            </div>
-          </div>
-
-          <!-- Event Popup on Hover -->
-          <div class="event-popup" [class.show]="isEventSelected(event)">
-            <div class="popup-header">
-              <i class="fas fa-calendar-day"></i>
-              <div class="popup-title">{{ event.subject }}</div>
-            </div>
-            
-            <div class="popup-detail">
-              <i class="fas fa-clock"></i>
-              <div class="detail-content">
-                {{ formatTimeRange(event) }}
-                <br>
-                <small style="color: var(--saf-color-text-subtle)">{{ getEventDuration(event) }}</small>
-              </div>
-            </div>
-
-            <div class="popup-detail" *ngIf="event.location?.displayName && !event.isOnlineMeeting">
-              <i class="fas fa-location-dot"></i>
-              <div class="detail-content">{{ event.location?.displayName }}</div>
-            </div>
-
-            <div class="popup-detail" *ngIf="event.organizer">
-              <i class="fas fa-user"></i>
-              <div class="detail-content">
-                {{ event.organizer.emailAddress.name }}
-                <br>
-                <small style="color: var(--saf-color-text-subtle)">{{ event.organizer.emailAddress.address }}</small>
-              </div>
-            </div>
-
-            <div class="popup-detail" *ngIf="event.attendees && event.attendees.length > 0">
-              <i class="fas fa-users"></i>
-              <div class="detail-content">
-                {{ event.attendees.length }} attendee{{ event.attendees.length !== 1 ? 's' : '' }}
-              </div>
-            </div>
-
-            <div class="popup-actions" *ngIf="event.isOnlineMeeting && event.onlineMeeting?.joinUrl">
-              <a 
-                [href]="event.onlineMeeting?.joinUrl" 
-                target="_blank"
-                class="teams-join-btn">
-                <i class="fas fa-video"></i>
-                Join Teams Meeting
-              </a>
-            </div>
-          </div>
+      <div class="popover-detail" *ngIf="selectedEvent.organizer">
+        <i class="fas fa-user"></i>
+        <div class="detail-text">
+          {{ selectedEvent.organizer.emailAddress.name }}
+          <span class="detail-sub">{{ selectedEvent.organizer.emailAddress.address }}</span>
         </div>
       </div>
+      <div class="popover-detail" *ngIf="selectedEvent.attendees && selectedEvent.attendees.length > 0">
+        <i class="fas fa-users"></i>
+        <div class="detail-text">
+          {{ selectedEvent.attendees.length }} attendee{{ selectedEvent.attendees.length !== 1 ? 's' : '' }}
+        </div>
+      </div>
+      <div class="popover-actions" *ngIf="selectedEvent.isOnlineMeeting && selectedEvent.onlineMeeting?.joinUrl">
+        <a
+          [href]="selectedEvent.onlineMeeting?.joinUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="join-btn">
+          <i class="fas fa-video"></i> Join Teams Meeting
+        </a>
+      </div>
     </div>
+
+    <!-- Countdown to next event -->
+    <div class="next-event-countdown" *ngIf="isConfigured && !loading && getCountdownToNextEvent()" (click)="$event.stopPropagation()">
+      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+      <span>{{ getCountdownToNextEvent() }}</span>
+    </div>
+
+    <!-- Loading shimmer -->
+    <div class="strip-loading" *ngIf="loading && isConfigured">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+
+    <!-- Playhead -->
+    <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
+      <div class="playhead-head"></div>
+      <div class="playhead-line"></div>
+    </div>
+
   </div>
 </div>
