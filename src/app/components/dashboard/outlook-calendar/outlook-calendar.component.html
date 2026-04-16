@@ -12,7 +12,8 @@
         class="tick"
         [class.tick-major]="h % 6 === 0"
         [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
-        [style.left.%]="(h / 24) * 100">
+        [style.left.%]="(h / 24) * 100"
+        [style.display]="h === 0 ? 'none' : ''">
       </div>
     </div>
 
@@ -148,7 +149,8 @@
         class="tick"
         [class.tick-major]="h % 6 === 0"
         [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
-        [style.left.%]="(h / 24) * 100">
+        [style.left.%]="(h / 24) * 100"
+        [style.display]="h === 0 ? 'none' : ''">
         <span class="tick-label" *ngIf="h % 3 === 0">{{ getHourLabel(h) }}</span>
       </div>
     </div>
