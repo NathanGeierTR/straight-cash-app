@@ -51,6 +51,9 @@ export class MicrosoftCalendarService {
   private eventsSubject = new BehaviorSubject<CalendarEvent[]>([]);
   public events$ = this.eventsSubject.asObservable();
 
+  private weekEventsSubject = new BehaviorSubject<CalendarEvent[]>([]);
+  public weekEvents$ = this.weekEventsSubject.asObservable();
+
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
@@ -71,6 +74,38 @@ export class MicrosoftCalendarService {
     this.accessToken = accessToken;
     this.configuredSubject.next(true);
     this.saveConfiguration();
+  }
+
+  /**
+   * Get calendar events for a date range (does not affect the day-view events$ subject)
+   */
+  getEventsForRange(start: Date, end: Date): Observable<CalendarEvent[]> {
+    if (!this.accessToken) return of([]);
+
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.accessToken}`,
+      'Content-Type': 'application/json',
+      'Prefer': `outlook.timezone="${userTimeZone}"`
+    });
+
+    const startStr = start.toISOString();
+    const endStr   = end.toISOString();
+    const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startStr}&endDateTime=${endStr}&$orderby=start/dateTime&$top=100`;
+
+    return this.http.get<any>(url, { headers }).pipe(
+      map(response => {
+        const events = response.value as CalendarEvent[];
+        this.weekEventsSubject.next(events);
+        return events;
+      }),
+      catchError(error => {
+        if (error.status === 401) {
+          this.clearConfiguration();
+        }
+        return of([]);
+      })
+    );
   }
 
   /**

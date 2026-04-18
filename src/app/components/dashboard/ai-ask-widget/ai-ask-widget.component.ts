@@ -4,8 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { GitHubAIService, ChatMessage } from '../../../services/github-ai.service';
 import { JournalService, JournalEntry } from '../../../services/journal.service';
 import { TaskService, Task } from '../../../services/task.service';
+import { GoalsService, Goal } from '../../../services/goals.service';
 import { AdoService } from '../../../services/ado.service';
 import { CoworkerService } from '../../../services/coworker.service';
+import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 
@@ -44,12 +46,16 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   // Live data
   private journalEntries: JournalEntry[] = [];
   private tasks: Task[] = [];
+  private goals: Goal[] = [];
+  private calendarEvents: CalendarEvent[] = [];
   private destroy$ = new Subject<void>();
 
   constructor(
     private aiService: GitHubAIService,
     private journalService: JournalService,
     private taskService: TaskService,
+    private goalsService: GoalsService,
+    private calendarService: MicrosoftCalendarService,
     private adoService: AdoService,
     private coworkerService: CoworkerService
   ) {}
@@ -65,6 +71,21 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     combineLatest([this.taskService.tasks$])
       .pipe(debounceTime(200), takeUntil(this.destroy$))
       .subscribe(([tasks]) => (this.tasks = tasks));
+
+    this.goalsService.goals$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(goals => (this.goals = goals));
+
+    this.calendarService.weekEvents$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(events => (this.calendarEvents = events));
+
+    // Fetch a 2-week window (past 7 days + next 7 days) for AI context
+    this.calendarService.isConfigured$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(configured => {
+        if (configured) this.fetchCalendarRange();
+      });
 
     this.aiService.error$
       .pipe(takeUntil(this.destroy$))
@@ -170,6 +191,18 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       });
   }
 
+  private fetchCalendarRange(): void {
+    const start = new Date();
+    start.setDate(start.getDate() - 14);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setDate(end.getDate() + 14);
+    end.setHours(23, 59, 59, 999);
+    this.calendarService.getEventsForRange(start, end)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
+  }
+
   // ── Context builders ──────────────────────────────────────────
 
   private buildSystemContext(): string {
@@ -207,6 +240,57 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
         lines.push(line);
       });
       completed.slice(0, 5).forEach(t => lines.push(`- [DONE] ${t.title}`));
+      lines.push('');
+    }
+
+    // Calendar events
+    if (this.calendarEvents.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const past = this.calendarEvents.filter(e => new Date(e.start.dateTime) < today);
+      const upcoming = this.calendarEvents.filter(e => new Date(e.start.dateTime) >= today);
+
+      const formatEvent = (e: CalendarEvent): string => {
+        const start = new Date(e.start.dateTime);
+        const end   = new Date(e.end.dateTime);
+        const dateStr = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeStr = start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                      + '–' + end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        let line = `- ${dateStr} ${timeStr}: ${e.subject}`;
+        if (e.location?.displayName) line += ` @ ${e.location.displayName}`;
+        if (e.isOnlineMeeting) line += ' [Online]';
+        if (e.showAs === 'free') line += ' [Free]';
+        return line;
+      };
+
+      lines.push(`## Outlook Calendar (past 7 days + next 7 days, ${this.calendarEvents.length} event${this.calendarEvents.length !== 1 ? 's' : ''})`);
+      if (past.length > 0) {
+        lines.push(`### Past`);
+        past.forEach(e => lines.push(formatEvent(e)));
+      }
+      if (upcoming.length > 0) {
+        lines.push(`### Upcoming`);
+        upcoming.forEach(e => lines.push(formatEvent(e)));
+      }
+      lines.push('');
+    }
+
+    // Yearly goals
+    if (this.goals.length > 0) {
+      const currentYear = now.getFullYear();
+      const byYear: Record<number, Goal[]> = {};
+      this.goals.forEach(g => {
+        if (!byYear[g.year]) byYear[g.year] = [];
+        byYear[g.year].push(g);
+      });
+      const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
+      lines.push(`## Yearly Goals`);
+      years.forEach(yr => {
+        lines.push(`### ${yr}${yr === currentYear ? ' (current year)' : ''}`);
+        byYear[yr].forEach((g, i) => {
+          lines.push(`${i + 1}. ${g.title}${g.description ? ` — ${g.description}` : ''}`);
+        });
+      });
       lines.push('');
     }
 
@@ -251,6 +335,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     return `Give me a motivational daily briefing based on my dashboard data. Start with a casual, energizing greeting (use some bro-speak). Then provide:
 1. A 1-2 sentence overview of my day
 2. My top 3-5 priorities to focus on
+3. A one-line callout if any of today's tasks connect to my yearly goals
 
 When referencing ADO work items, make them clickable markdown links. Keep it concise and actionable. Respond in plain markdown (no JSON).`;
   }
