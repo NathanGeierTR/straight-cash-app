@@ -1,22 +1,23 @@
 <div class="ado-work-items">
   <div class="widget-header">
-    <h2 class="widget-title">
-        <img src="assets/azure.svg" alt="Azure DevOps Logo" class="ado-logo">
-        ADO items
-    </h2>
-    <span class="multi-project-badge" *ngIf="projects.length > 1">
-        <i class="fas fa-layer-group"></i>
-        <ng-container *ngIf="projects.length > 0">
-          {{ getEnabledProjectCount() }} projects
-        </ng-container>
-    </span>
-    <span class="mock-indicator" *ngIf="usingMockData">
-        <i class="fas fa-flask"></i>
-        Demo Data
-    </span>
-  </div>
-  <div class="widget-toolbar">
-    <div class="widget-actions">
+    <div class="widget-header-title">
+      <h2 class="widget-title">
+          <img src="assets/azure.svg" alt="Azure DevOps Logo" class="ado-logo">
+          ADO items
+      </h2>
+      <span class="multi-project-badge" *ngIf="projects.length > 1">
+          <i class="fas fa-layer-group"></i>
+          <ng-container *ngIf="projects.length > 0">
+            {{ getEnabledProjectCount() }} projects
+          </ng-container>
+      </span>
+      <span class="mock-indicator" *ngIf="usingMockData">
+          <i class="fas fa-flask"></i>
+          Demo Data
+      </span>
+    </div>
+    <div class="widget-toolbar">
+      <div class="widget-actions">
       <button 
         type="button" 
         class="btn-primary"
@@ -67,8 +68,7 @@
         [disabled]="loading">
         <i class="fas fa-sync" [class.fa-spin]="loading"></i>
       </button>
-    </div>
-  </div>
+    </div>    </div>  </div>
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading">
@@ -602,7 +602,7 @@
                 <i class="fas fa-align-right"></i>
                 <i class="fas fa-person-running"></i>
               </span>
-              <span>{{ workItem.fields['System.IterationPath'] }}</span>
+              <span>{{ getSprintLabel(workItem) }}</span>
             </div>
           </div>
 

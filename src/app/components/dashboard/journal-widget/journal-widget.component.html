@@ -1,6 +1,7 @@
 <div class="journal-widget">
   <div class="entry-form">
     <textarea
+      #entryTextarea
       [(ngModel)]="entryText"
       (keydown)="onKeyDown($event)"
       placeholder="Write a journal entry... (Ctrl+Enter to submit)"

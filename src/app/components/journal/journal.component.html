@@ -5,23 +5,34 @@
   </div>
 
   <div class="new-entry-card">
-    <h3>New Entry</h3>
     <textarea
+      #newEntryTextarea
       [(ngModel)]="newEntryText"
       (keydown)="onKeyDown($event)"
-      placeholder="What's on your mind? (Ctrl+Enter to save)"
-      rows="4"
-      class="entry-textarea"
-      [disabled]="isSubmitting">
-    </textarea>
-    <button class="btn-submit" (click)="submitEntry()" [disabled]="!newEntryText.trim() || isSubmitting">
-      <i class="fas fa-paper-plane"></i>
-      {{ isSubmitting ? 'Saving...' : 'Save Entry' }}
-    </button>
+      placeholder="Add journal entry..."
+      class="new-entry-textarea"
+      [disabled]="isSubmitting"></textarea>
+    <div class="new-entry-toolbar">
+      <span class="new-entry-hint"><strong>⌘ Cmd</strong> + <strong>Return</strong> to save</span>
+      <button class="new-entry-send" (click)="submitEntry()" [disabled]="!newEntryText.trim() || isSubmitting" aria-label="Save entry">
+        <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+        <i class="fas fa-circle-notch fa-spin" *ngIf="isSubmitting"></i>
+      </button>
+    </div>
   </div>
 
+  <nav class="pagination" *ngIf="totalPages > 1" aria-label="Journal pages">
+    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Previous page">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Next page">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </nav>
+
   <div class="entries-list" *ngIf="entries.length > 0">
-    <div class="entry-card" *ngFor="let entry of entries">
+    <div class="entry-card" *ngFor="let entry of pagedEntries">
 
       <!-- Edit mode -->
       <ng-container *ngIf="editingId === entry.id; else viewMode">
@@ -83,6 +94,16 @@
 
     </div>
   </div>
+
+  <nav class="pagination" *ngIf="totalPages > 1" aria-label="Journal pages">
+    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Previous page">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Next page">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </nav>
 
   <div class="empty-state" *ngIf="entries.length === 0">
     <i class="fas fa-book-open"></i>

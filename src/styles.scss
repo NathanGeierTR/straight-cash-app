@@ -121,8 +121,17 @@ button {
   
   &-primary {
     color: #fff;
-    background-color: $primary-color;
-    border-color: $primary-color;
+    background-color: var(--saf-color-brand-racing-green-500);
+    border-color: var(--saf-color-brand-racing-green-500);
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 100px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
     
     &:hover {
       background-color: darken($primary-color, 10%);

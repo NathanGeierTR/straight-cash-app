@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JournalService, JournalEntry } from '../../services/journal.service';
+import { NavigationService } from '../../services/navigation.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -12,10 +13,29 @@ import { Subscription } from 'rxjs';
   styleUrl: './journal.component.scss'
 })
 export class JournalComponent implements OnInit, OnDestroy {
+  @ViewChild('newEntryTextarea') private newEntryTextarea!: ElementRef<HTMLTextAreaElement>;
+
   entries: JournalEntry[] = [];
   newEntryText = '';
   isSubmitting = false;
   deletingId: string | null = null;
+
+  // Pagination
+  readonly pageSize = 10;
+  currentPage = 1;
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.entries.length / this.pageSize));
+  }
+
+  get pagedEntries(): JournalEntry[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.entries.slice(start, start + this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = Math.min(Math.max(1, page), this.totalPages);
+  }
 
   // Edit state
   editingId: string | null = null;
@@ -26,12 +46,23 @@ export class JournalComponent implements OnInit, OnDestroy {
 
   private sub?: Subscription;
 
-  constructor(private journalService: JournalService) {}
+  constructor(private journalService: JournalService, private navigationService: NavigationService) {}
+
+  focusNewEntry(): void {
+    setTimeout(() => this.newEntryTextarea?.nativeElement.focus(), 50);
+  }
 
   ngOnInit(): void {
-    this.sub = this.journalService.entries$.subscribe(entries => {
-      this.entries = entries;
-    });
+    this.sub = new Subscription();
+    this.sub.add(
+      this.journalService.entries$.subscribe(entries => {
+        this.entries = entries;
+      })
+    );
+    if (this.navigationService.pendingFocusJournalEntry) {
+      this.navigationService.pendingFocusJournalEntry = false;
+      this.focusNewEntry();
+    }
   }
 
   ngOnDestroy(): void {
@@ -44,6 +75,7 @@ export class JournalComponent implements OnInit, OnDestroy {
     try {
       await this.journalService.addEntry(this.newEntryText);
       this.newEntryText = '';
+      this.currentPage = 1;
     } finally {
       this.isSubmitting = false;
     }

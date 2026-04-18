@@ -145,6 +145,15 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     this.saveChatHistory();
   }
 
+  copiedMsgIndex: number | null = null;
+
+  copyMessage(content: string, index: number): void {
+    navigator.clipboard.writeText(content).then(() => {
+      this.copiedMsgIndex = index;
+      setTimeout(() => { this.copiedMsgIndex = null; }, 1500);
+    });
+  }
+
   // ── Freeform ask ──────────────────────────────────────────────
 
   ask(): void {
@@ -399,7 +408,10 @@ When referencing ADO work items, make them clickable markdown links. Keep it con
   }
 
   formatTimestamp(date: Date): string {
-    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return new Date(date)
+      .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      .replace(/AM$/, 'am')
+      .replace(/PM$/, 'pm');
   }
 
   // ── Persistence ───────────────────────────────────────────────

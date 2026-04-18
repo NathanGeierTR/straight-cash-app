@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JournalService, JournalEntry } from '../../../services/journal.service';
@@ -12,6 +12,8 @@ import { Subscription } from 'rxjs';
   styleUrl: './journal-widget.component.scss'
 })
 export class JournalWidgetComponent implements OnInit, OnDestroy {
+  @ViewChild('entryTextarea') private entryTextarea!: ElementRef<HTMLTextAreaElement>;
+
   entryText = '';
   recentEntries: JournalEntry[] = [];
   isSubmitting = false;
@@ -44,5 +46,9 @@ export class JournalWidgetComponent implements OnInit, OnDestroy {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       this.submitEntry();
     }
+  }
+
+  focusEntry(): void {
+    setTimeout(() => this.entryTextarea?.nativeElement.focus(), 0);
   }
 }

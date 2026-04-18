@@ -742,8 +742,17 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
     });
   }
 
+  getSprintLabel(workItem: AdoWorkItem): string {
+    const iterationPath: string | undefined = workItem.fields['System.IterationPath'];
+    if (!iterationPath) return '';
+    const lastSegment = iterationPath.split('\\').pop() || iterationPath;
+    // Same regex the AdoService uses: extract sprint number from e.g. "2025_S25_Dec03-Dec16"
+    const match = lastSegment.match(/S(\d+)/i);
+    return match ? `Sprint ${parseInt(match[1])}` : lastSegment;
+  }
+
   getSprintInfo(workItem: AdoWorkItem): SprintInfo {
-    const iterationPath = workItem.fields['System.IterationPath'];
+    const iterationPath: string | undefined = workItem.fields['System.IterationPath'];
     
     if (!iterationPath) {
       return {

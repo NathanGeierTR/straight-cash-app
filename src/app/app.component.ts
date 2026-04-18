@@ -6,10 +6,11 @@ import { LoginComponent } from './components/login/login.component';
 import { ConnectionsComponent } from './components/connections/connections.component';
 import { JournalComponent } from './components/journal/journal.component';
 import { GoalsComponent } from './components/goals/goals.component';
+import { TasksComponent } from './components/tasks/tasks.component';
 import { OpenArenaChatComponent } from './components/dashboard/open-arena-chat/open-arena-chat.component';
 import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
 import { AuthService } from './services/auth.service';
-import { NavigationService } from './services/navigation.service';
+import { NavigationService, AppView } from './services/navigation.service';
 import { ToastService } from './services/toast.service';
 import { ToastComponent } from './components/toast/toast.component';
 import { TouchTooltipDirective } from './directives/touch-tooltip.directive';
@@ -19,7 +20,7 @@ import { User } from '@angular/fire/auth';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, GoalsComponent, OpenArenaChatComponent, CommonModule, ToastComponent, TouchTooltipDirective],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, GoalsComponent, TasksComponent, OpenArenaChatComponent, CommonModule, ToastComponent, TouchTooltipDirective],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -30,7 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
   showSetupPrompt = false;
   currentUser: User | null = null;
   authLoaded = false;
-  currentView: 'dashboard' | 'connections' | 'journal' | 'goals' | 'open-arena-chat' = 'dashboard';
+  currentView: 'dashboard' | 'connections' | 'journal' | 'goals' | 'tasks' | 'open-arena-chat' = 'dashboard';
   private subscriptions = new Subscription();
 
   constructor(
@@ -114,7 +115,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe();
   }
 
-  navigateTo(view: 'dashboard' | 'connections' | 'journal' | 'goals' | 'open-arena-chat') {
+  navigateTo(view: AppView) {
     this.currentView = view;
     this.showSetupPrompt = false;
   }

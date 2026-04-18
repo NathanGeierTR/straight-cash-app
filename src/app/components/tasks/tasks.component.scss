@@ -1,0 +1,22 @@
+.tasks-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tasks-header {
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #314b3e;
+    margin: 0;
+
+    i {
+      margin-right: 10px;
+      opacity: 0.8;
+    }
+  }
+}

@@ -44,6 +44,12 @@
           <i class="fas fa-bullseye"></i>
         </button>
 
+        <button class="sidenav-btn" [class.active]="currentView === 'tasks'"
+                (click)="navigateTo('tasks')" data-label="Tasks" aria-label="Tasks"
+                [appTouchTooltip]="'Tasks'" touchTooltipAlign="bottom-right">
+          <i class="fas fa-check-square"></i>
+        </button>
+
         <button class="sidenav-btn" [class.active]="currentView === 'open-arena-chat'"
                 (click)="navigateTo('open-arena-chat')" data-label="Open Arena Chat" aria-label="Open Arena Chat"
                 [appTouchTooltip]="'Open Arena Chat'" touchTooltipAlign="bottom-right">
@@ -92,6 +98,7 @@
       <app-connections *ngIf="currentView === 'connections'"></app-connections>
       <app-journal *ngIf="currentView === 'journal'"></app-journal>
       <app-goals *ngIf="currentView === 'goals'"></app-goals>
+      <app-tasks *ngIf="currentView === 'tasks'"></app-tasks>
       <app-open-arena-chat *ngIf="currentView === 'open-arena-chat'"></app-open-arena-chat>
     </main>
   </div>

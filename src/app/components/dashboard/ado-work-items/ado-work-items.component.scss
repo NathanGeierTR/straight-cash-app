@@ -6,11 +6,20 @@
   gap: 16px;
 
   .widget-header {
-    align-items: center;
-    border-bottom: 2px solid var(--saf-color-line-subtle);
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    border-bottom: 2px solid var(--saf-color-line-subtle);
     padding-bottom: 8px;
+  }
+
+  .widget-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .widget-title {
@@ -35,7 +44,6 @@
   }
 
   .mock-indicator {
-    margin-left: auto;
     background: var(--saf-color-semantic-warning-subtle);
     color: var(--saf-color-semantic-warning-strong);
     padding: 0.25rem 0.5rem;
@@ -56,7 +64,6 @@
   
   .widget-toolbar {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
 
     .widget-actions {
@@ -70,7 +77,7 @@
   .btn-secondary {
     padding: 0.5rem 0.75rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 100px;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -709,7 +716,6 @@
   // Responsive adjustments
   @media (max-width: 768px) {
     .widget-toolbar {
-      padding: 1rem;
       
       .widget-title {
         font-size: 1rem;
