@@ -1,5 +1,5 @@
 // Dashboard Variables
-$dashboard-gap: 32px;
+$dashboard-gap: 40px;
 $dashboard-gap-mobile: 4px;
 $widget-radius: 12px;
 $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -46,12 +46,7 @@ $text-secondary: #6b7280;
   }
 
   .widget {
-    background: var(--saf-color-background-subtle);
-    border-radius: $widget-radius;
-    padding: 1.5rem;
-    box-shadow: $widget-shadow;
-    border: 1px solid $border-color;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 8px;
 
     // &:hover {
     //   transform: translateY(-2px);
@@ -95,7 +90,6 @@ $text-secondary: #6b7280;
   // AI Ask Widget — flush card, no background/border/shadow
   .ai-ask-widget {
     background: none;
-    padding: 0;
     border: none;
     box-shadow: none;
   }

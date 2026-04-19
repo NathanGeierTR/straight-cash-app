@@ -118,6 +118,7 @@ export class AppComponent implements OnInit, OnDestroy {
   navigateTo(view: AppView) {
     this.currentView = view;
     this.showSetupPrompt = false;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   get isRateLimitExceeded(): boolean {

@@ -46,6 +46,8 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   error: string | null = null;
   isConfigured = false;
   conversationHistory: ChatMessage[] = [];
+  conversationExpanded = false;
+  confirmClear = false;
   private shouldScroll = false;
   showSkillsDropdown = false;
 
@@ -120,8 +122,10 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
 
   ngAfterViewChecked(): void {
     if (this.shouldScroll && this.chatContainer) {
-      const el = this.chatContainer.nativeElement;
-      el.scrollTop = el.scrollHeight;
+      if (!this.conversationExpanded) {
+        const el = this.chatContainer.nativeElement;
+        el.scrollTop = el.scrollHeight;
+      }
       this.shouldScroll = false;
     }
   }
@@ -142,6 +146,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     this.conversationHistory = [];
     this.error = null;
     this.question = '';
+    this.confirmClear = false;
     this.saveChatHistory();
   }
 

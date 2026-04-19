@@ -117,19 +117,14 @@ $weekend-color: var(--saf-color-brand-racing-green-100);
 
   &.weekend {
     background: $weekend-color;
+    color: var(--saf-color-brand-racing-green-400);
     opacity: 1;
-  }
-
-  &.in-sprint:not(.today) {
-    outline: 1px solid rgba(255, 255, 255, 0.4);
-    outline-offset: -1px;
   }
 
   &.today {
-    background: $today-color;
     opacity: 1;
-    font-weight: 800;
-    box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.35);
+    outline: 3px solid $today-color;
+    outline-offset: -3px;
 
     @media (max-width: 600px) { cursor: pointer; }
   }
