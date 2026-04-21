@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
@@ -27,7 +27,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private calendarService: MicrosoftCalendarService, private navigationService: NavigationService) {}
+  constructor(private calendarService: MicrosoftCalendarService, private navigationService: NavigationService, private elRef: ElementRef) {}
 
   ngOnInit() {
     // Subscribe to service observables
@@ -100,13 +100,32 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   /**
    * Parse an MS Graph datetime string safely on all browsers, including iOS Safari.
-   * Graph returns up to 7 decimal places (e.g. "2026-04-20T09:00:00.0000000") which
-   * exceeds the ECMAScript ISO 8601 spec (max 3 digits for milliseconds).
-   * iOS Safari's JavaScriptCore returns Invalid Date for the non-standard format.
+   *
+   * Two problems with raw Graph strings:
+   * 1. With `Prefer: outlook.timezone`, Graph returns up to 7 fractional-second digits
+   *    (e.g. "2026-04-20T09:00:00.0000000") — beyond the 3-digit ISO 8601 spec.
+   *    iOS Safari's JavaScriptCore rejects this with Invalid Date.
+   * 2. The same strings have NO timezone designator (no Z, no offset). The ECMAScript
+   *    spec leaves timezone-naive datetime strings implementation-defined; iOS Safari
+   *    treats them as UTC while desktop browsers treat them as local time — causing
+   *    events to appear shifted by the UTC offset on iPhone.
+   *
+   * Fix: truncate to 3 fractional digits, then append the device's explicit UTC offset
+   * so every browser interprets the local time correctly.
    */
   private parseDateTime(dateTimeStr: string): Date {
-    // Truncate fractional seconds beyond 3 digits to produce valid ISO 8601.
-    return new Date(dateTimeStr.replace(/(\.(\d{3}))\d+/, '$1'));
+    // Step 1: truncate fractional seconds to at most 3 digits.
+    let s = dateTimeStr.replace(/(\.(\d{3}))\d+/, '$1');
+    // Step 2: if there is no timezone designator, append the local UTC offset.
+    // Strings that already end with Z or ±HH:MM are left unchanged.
+    if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) {
+      const offsetMin = -new Date().getTimezoneOffset(); // positive = ahead of UTC
+      const sign = offsetMin >= 0 ? '+' : '-';
+      const hh = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, '0');
+      const mm = String(Math.abs(offsetMin) % 60).padStart(2, '0');
+      s += `${sign}${hh}:${mm}`;
+    }
+    return new Date(s);
   }
 
   formatTime(dateTimeString: string, timeZone?: string): string {
@@ -233,6 +252,13 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
       this.selectedEvent = null;
     } else {
       this.selectedEvent = event;
+    }
+  }
+
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: HTMLElement): void {
+    if (this.selectedEvent && !this.elRef.nativeElement.contains(target)) {
+      this.selectedEvent = null;
     }
   }
 

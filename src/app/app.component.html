@@ -7,10 +7,10 @@
 
   <!-- Main content area -->
   <div class="app-content">
-    <header class="topbar" [style.background-image]="'url(assets/green-swirl.png)'">
+    <header class="topbar">
       <div class="topbar-inner">
-        <div class="topbar-title">
-          <h1><span class="brand-orange">TR</span>ack Board</h1>
+        <div class="topbar-title" (click)="navigateTo('dashboard')">
+          <img src="assets/gavel-logo-full.svg" alt="Gavel logo" class="gavel-logo" height="48">
         </div>
 
       </div>
@@ -18,8 +18,6 @@
     <!-- Side navigation -->
     <nav class="sidenav">
       <div class="sidenav-items">
-        <img src="assets/kinesis.svg" height="30" alt="Thomson Reuters kinesis" class="tr-kinesis">
-
         <button class="sidenav-btn" [class.active]="currentView === 'dashboard'"
                 (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard"
                 [appTouchTooltip]="'Dashboard'" touchTooltipAlign="bottom-right">

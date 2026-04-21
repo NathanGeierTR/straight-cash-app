@@ -82,12 +82,11 @@ export class MicrosoftCalendarService {
   getEventsForRange(start: Date, end: Date): Observable<CalendarEvent[]> {
     if (!this.accessToken) return of([]);
 
-    // No Prefer header — let Graph return UTC (Z-suffixed) ISO 8601 strings.
-    // Timezone-naive strings returned by outlook.timezone are misinterpreted
-    // by iOS Safari (treated as UTC instead of local time).
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Prefer': `outlook.timezone="${userTimeZone}"`
     });
 
     const startStr = start.toISOString();
@@ -139,12 +138,11 @@ export class MicrosoftCalendarService {
     const startDateTime = startOfDay.toISOString();
     const endDateTime = endOfDay.toISOString();
 
-    // No Prefer header — let Graph return UTC (Z-suffixed) ISO 8601 strings.
-    // Timezone-naive strings returned by outlook.timezone are misinterpreted
-    // by iOS Safari (treated as UTC instead of local time).
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Prefer': `outlook.timezone="${userTimeZone}"`
     });
 
     const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startDateTime}&endDateTime=${endDateTime}&$orderby=start/dateTime`;

@@ -1,17 +1,17 @@
 {
-  "name": "TRack Board",
-  "short_name": "TRack Board",
+  "name": "Gavel",
+  "short_name": "Gavel",
   "description": "Work productivity web app",
   "id": "/gavel/",
   "start_url": "/gavel/",
   "scope": "/gavel/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#242F29",
-  "background_color": "#242F29",
+  "theme_color": "#acb7b1",
+  "background_color": "#acb7b1",
   "icons": [
     {
-      "src": "assets/TR-app-logo.png",
+      "src": "assets/icon-gavel-iOS.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
