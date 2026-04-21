@@ -158,7 +158,9 @@ export class MicrosoftCalendarService {
         console.error('Failed to fetch calendar events:', error);
         if (error.status === 401) {
           this.clearConfiguration();
-          this.errorSubject.next('Outlook Calendar token expired or invalid. Please reconnect.');
+          this.errorSubject.next('Token expired or invalid. Please reconnect.');
+        } else if (error.status === 403) {
+          this.errorSubject.next('403: Token is missing the Calendars.Read permission. In Graph Explorer, go to Modify Permissions, consent to Calendars.Read, then copy a fresh token.');
         } else {
           const status = error.status ? `HTTP ${error.status}` : 'Network error';
           const detail = error.error?.message || error.error?.error?.message || error.message || 'Unknown error';
