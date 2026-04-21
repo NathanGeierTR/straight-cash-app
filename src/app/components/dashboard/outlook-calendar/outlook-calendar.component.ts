@@ -33,7 +33,22 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     // Subscribe to service observables
     this.calendarService.isConfigured$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(configured => this.isConfigured = configured);
+      .subscribe(configured => {
+        const justBecameConfigured = !this.isConfigured && configured;
+        this.isConfigured = configured;
+
+        // Load events whenever the token becomes available (handles both the case
+        // where the component initialises already-configured and the case where the
+        // user saves the token on the Connections page while the widget is mounted).
+        if (justBecameConfigured) {
+          this.loadEvents();
+
+          // Refresh events every 5 minutes
+          interval(5 * 60 * 1000)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => this.loadEvents());
+        }
+      });
 
     this.calendarService.events$
       .pipe(takeUntil(this.destroy$))
@@ -46,16 +61,6 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.calendarService.error$
       .pipe(takeUntil(this.destroy$))
       .subscribe(error => this.error = error);
-
-    // Load events if configured
-    if (this.calendarService.isConfigured()) {
-      this.loadEvents();
-
-      // Refresh events every 5 minutes
-      interval(5 * 60 * 1000)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => this.loadEvents());
-    }
 
     // Update current time every minute for time indicators
     interval(60 * 1000)
