@@ -189,13 +189,14 @@
     </div>
 
     <!-- Events layer -->
-    <div class="events-layer" *ngIf="isConfigured && !loading">
+    <div class="events-layer" [class.multi-row]="hasOverlappingEvents" *ngIf="isConfigured && !loading">
       <div
         *ngFor="let event of events"
         class="event-block"
         [ngClass]="[getEventStatusClass(event), isEventSelected(event) ? 'active' : '']"
         [style.left.%]="getEventHorizontalPosition(event).left"
         [style.width.%]="getEventHorizontalPosition(event).width"
+        [class.row-1]="getEventRow(event) === 1"
         (click)="toggleEventSelection(event, $event)">
         <span class="event-label">{{ event.subject }}</span>
       </div>

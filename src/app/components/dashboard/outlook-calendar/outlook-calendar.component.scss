@@ -430,6 +430,11 @@ $border-color: #e5e7eb;
   height: 48px; // 28px events + 20px ticks
   width: 100%;
   overflow: visible; // allow popovers to drop below
+  transition: height 0.2s ease;
+
+  &:has(.events-layer.multi-row) {
+    height: 66px; // 46px events + 20px ticks
+  }
 }
 
 .strip-unconfigured {
@@ -507,6 +512,11 @@ $border-color: #e5e7eb;
   left: 0;
   right: 0;
   height: 28px;
+  transition: height 0.2s ease;
+
+  &.multi-row {
+    height: 46px; // two rows of ~20px + 2px gap
+  }
 }
 
 .event-block {
@@ -519,6 +529,12 @@ $border-color: #e5e7eb;
   overflow: visible;
   z-index: 2;
   transition: filter 0.15s;
+
+  // Row 1 (bottom row) — sits below row 0
+  .multi-row &.row-1 {
+    top: 26px;
+    height: 18px;
+  }
 
   &:hover {
     filter: brightness(1.12);

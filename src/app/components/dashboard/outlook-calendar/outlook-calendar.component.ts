@@ -53,7 +53,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
     this.calendarService.events$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(events => this.events = events);
+      .subscribe(events => { this.events = events; this._rowCache = null; });
 
     this.calendarService.loading$
       .pipe(takeUntil(this.destroy$))
@@ -216,6 +216,48 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     const left = (startMinutes / (24 * 60)) * 100;
     const width = Math.max(((endMinutes - startMinutes) / (24 * 60)) * 100, 0.5);
     return { left, width };
+  }
+
+  /**
+   * Assign each event to a row (0 = top, 1 = bottom) so overlapping events
+   * don't stack on top of each other. Uses a greedy interval approach.
+   * Returns a Map keyed by event id → row index.
+   */
+  private _rowCache: { events: CalendarEvent[]; map: Map<string, number> } | null = null;
+
+  getEventRows(): Map<string, number> {
+    if (this._rowCache && this._rowCache.events === this.events) {
+      return this._rowCache.map;
+    }
+    const sorted = [...this.events].sort((a, b) =>
+      this.parseDateTime(a.start.dateTime).getTime() - this.parseDateTime(b.start.dateTime).getTime()
+    );
+    const rowEnd: number[] = []; // tracks the end-minute of the last event on each row
+    const map = new Map<string, number>();
+    for (const ev of sorted) {
+      const start = this.parseDateTime(ev.start.dateTime);
+      const end   = this.parseDateTime(ev.end.dateTime);
+      const startMin = start.getHours() * 60 + start.getMinutes();
+      const endMin   = end.getHours()   * 60 + end.getMinutes();
+      let assigned = -1;
+      for (let r = 0; r < rowEnd.length; r++) {
+        if (rowEnd[r] <= startMin) { assigned = r; break; }
+      }
+      if (assigned === -1) { assigned = rowEnd.length; }
+      rowEnd[assigned] = endMin;
+      map.set(ev.id, assigned);
+    }
+    this._rowCache = { events: this.events, map };
+    return map;
+  }
+
+  /** True when any two events overlap (i.e. need more than one row). */
+  get hasOverlappingEvents(): boolean {
+    return this.getEventRows().size > 0 && Math.max(...Array.from(this.getEventRows().values())) > 0;
+  }
+
+  getEventRow(event: CalendarEvent): number {
+    return this.getEventRows().get(event.id) ?? 0;
   }
 
   isEventNearRightEdge(event: CalendarEvent): boolean {
