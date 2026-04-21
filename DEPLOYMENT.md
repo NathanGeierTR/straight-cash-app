@@ -1,15 +1,15 @@
-# Deployment Guide for Straight Cash App
+# Deployment Guide for Gavel
 
 ## Setup GitHub Pages
 
 1. **Enable GitHub Pages in your repository:**
-   - Go to your repo on GitHub: `https://github.com/NathanGeierTR/straight-cash-app`
+   - Go to your repo on GitHub: `https://github.com/NathanGeierTR/gavel`
    - Click **Settings** → **Pages** (left sidebar)
    - Under **Source**, select **GitHub Actions**
 
 2. **Push your code to trigger deployment:**
    ```bash
-   cd /Users/a6064800/git/straight-cash-app
+   cd /Users/a6064800/git/gavel
    git add .
    git commit -m "Add GitHub Pages deployment"
    git push origin main
@@ -22,16 +22,16 @@
 
 4. **Access your deployed app:**
    - Once deployed, your app will be at:
-   - `https://NathanGeierTR.github.io/straight-cash-app/`
+   - `https://NathanGeierTR.github.io/gavel/`
 
 ## Local Testing
 
 Before deploying, test the production build locally:
 
 ```bash
-cd /Users/a6064800/git/straight-cash-app
-npm run build -- --configuration production --base-href /straight-cash-app/
-npx http-server dist/straight-cash-app/browser -o
+cd /Users/a6064800/git/gavel
+npm run build -- --configuration production --base-href /gavel/
+npx http-server dist/gavel/browser -o
 ```
 
 ## Troubleshooting
@@ -45,6 +45,6 @@ npx http-server dist/straight-cash-app/browser -o
 ## Custom Domain (Optional)
 
 If you want to use a custom domain:
-1. Add a `CNAME` file to `straight-cash-app/src/` with your domain
+1. Add a `CNAME` file to `gavel/src/` with your domain
 2. Configure DNS with your domain registrar
 3. Update GitHub Pages settings to use custom domain

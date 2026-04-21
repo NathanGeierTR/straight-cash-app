@@ -19,7 +19,7 @@ The GitHub AI Chat Widget integrates GitHub's AI Models service (powered by GPT-
 
 1. Visit [GitHub Token Settings](https://github.com/settings/tokens?type=beta)
 2. Click **"Generate new token"** (fine-grained token)
-3. Give your token a descriptive name (e.g., "Straight Cash AI Chat")
+3. Give your token a descriptive name (e.g., "Gavel AI Chat")
 4. Set expiration (recommended: 90 days or custom)
 5. **Required Permissions**:
    - **Account permissions** → Model inference: **Read** access

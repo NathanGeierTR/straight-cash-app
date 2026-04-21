@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "straight-cash-app": {
+    "gavel": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -16,7 +16,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/straight-cash-app",
+            "outputPath": "dist/gavel",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -35,7 +35,7 @@
           },
           "configurations": {
             "production": {
-              "baseHref": "/straight-cash-app/",
+              "baseHref": "/gavel/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -68,10 +68,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "straight-cash-app:build:production"
+              "buildTarget": "gavel:build:production"
             },
             "development": {
-              "buildTarget": "straight-cash-app:build:development"
+              "buildTarget": "gavel:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -79,7 +79,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "straight-cash-app:build"
+            "buildTarget": "gavel:build"
           }
         },
         "test": {

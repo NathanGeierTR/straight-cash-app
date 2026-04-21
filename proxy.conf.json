@@ -7,7 +7,7 @@
       "^/github-api": ""
     },
     "headers": {
-      "User-Agent": "straight-cash-app"
+      "User-Agent": "gavel"
     }
   },
   "/ado-api/**": {
