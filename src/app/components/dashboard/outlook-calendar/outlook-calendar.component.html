@@ -52,33 +52,31 @@
   <!-- Minimized strip (click anywhere to expand) -->
   <div class="minimized-strip" *ngIf="isMinimized && isConfigured" (click)="expand()" role="button" tabindex="0" aria-label="Expand calendar timeline" (keydown.enter)="expand()" (keydown.space)="expand()">
 
-    <!-- Watermark icon -->
-    <i class="fas fa-calendar-day strip-watermark" aria-hidden="true"></i>
+    <i class="fas fa-calendar-day timeline-icon" aria-hidden="true"></i>
     <!-- Tick marks only (no labels) -->
     <div class="tick-layer">
       <div
-        *ngFor="let h of getHourArray()"
+        *ngFor="let h of getMinimizedHourArray()"
         class="tick"
         [class.tick-major]="h % 6 === 0"
         [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
-        [style.left.%]="(h / 24) * 100"
-        [style.display]="h === 0 ? 'none' : ''">
+        [style.left.%]="getMinimizedTickPosition(h)">
       </div>
     </div>
 
     <!-- Event blocks (no text) -->
     <div class="events-layer" *ngIf="isConfigured && !loading">
       <div
-        *ngFor="let event of events"
+        *ngFor="let event of todayTimedEvents"
         class="event-block"
         [ngClass]="[getEventStatusClass(event)]"
-        [style.left.%]="getEventHorizontalPosition(event).left"
-        [style.width.%]="getEventHorizontalPosition(event).width">
+        [style.left.%]="getMinimizedEventPosition(event).left"
+        [style.width.%]="getMinimizedEventPosition(event).width">
       </div>
     </div>
 
-    <!-- Playhead -->
-    <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
+    <!-- Playhead — minimized always shows today, so playhead is always visible -->
+    <div class="playhead" [style.left.%]="getMinimizedCurrentTimePosition()" *ngIf="isConfigured">
       <div class="playhead-line"></div>
     </div>
 
@@ -97,19 +95,19 @@
       <button
         type="button"
         class="ctl-btn"
-        (click)="previousDay()"
+        (click)="previousDay($any($event.currentTarget))"
         [disabled]="loading || !isConfigured"
         title="Previous Day">
         <i class="fas fa-chevron-left"></i>
       </button>
       <span class="date-label">
         {{ getDateLabel() }}
-        <span class="date-badge" *ngIf="getDateBadge()">{{ getDateBadge() }}</span>
+        <span *ngIf="getDateBadge()">({{ getDateBadge() }})</span>
       </span>
       <button
         type="button"
         class="ctl-btn"
-        (click)="nextDay()"
+        (click)="nextDay($any($event.currentTarget))"
         [disabled]="loading || !isConfigured"
         title="Next Day">
         <i class="fas fa-chevron-right"></i>
@@ -117,11 +115,12 @@
       <button
         *ngIf="!isToday()"
         type="button"
-        class="ctl-btn today-btn"
+        class="today-btn btn-secondary"
         (click)="goToToday()"
         [disabled]="loading || !isConfigured"
         title="Go to today">
-        <i class="fas fa-clock-rotate-left"></i>
+        <i class="fas fa-arrow-right"></i>
+        Today
       </button>
     </div>
     <div class="timeline-actions">
@@ -197,12 +196,11 @@
     <!-- Hour tick marks -->
     <div class="tick-layer">
       <div
-        *ngFor="let h of getHourArray()"
+        *ngFor="let h of getExpandedHourArray()"
         class="tick"
         [class.tick-major]="h % 6 === 0"
         [class.tick-mid]="h % 3 === 0 && h % 6 !== 0"
-        [style.left.%]="(h / 24) * 100"
-        [style.display]="h === 0 ? 'none' : ''">
+        [style.left.%]="getExpandedTickPosition(h)">
         <span class="tick-label" *ngIf="h % 3 === 0">{{ getHourLabel(h) }}</span>
       </div>
     </div>
@@ -213,8 +211,8 @@
         *ngFor="let event of timedEvents"
         class="event-block"
         [ngClass]="[getEventStatusClass(event), isEventSelected(event) ? 'active' : '']"
-        [style.left.%]="getEventHorizontalPosition(event).left"
-        [style.width.%]="getEventHorizontalPosition(event).width"
+        [style.left.%]="getExpandedEventPosition(event).left"
+        [style.width.%]="getExpandedEventPosition(event).width"
         [class.row-1]="getEventRow(event) === 1"
         (click)="toggleEventSelection(event, $event)">
         <span class="event-label">{{ event.subject }}</span>
@@ -276,7 +274,7 @@
     </div>
 
     <!-- Playhead -->
-    <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
+    <div class="playhead" [style.left.%]="getExpandedCurrentTimePosition()" *ngIf="isConfigured && isToday()">
       <div class="playhead-line"></div>
     </div>
 

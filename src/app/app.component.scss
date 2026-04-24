@@ -4,7 +4,7 @@
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --topbar-height: calc(36px + env(safe-area-inset-top));
+  --topbar-height: calc(40px + env(safe-area-inset-top));
 }
 
 // ── App shell layout ────────────────────────────────────────────
@@ -163,7 +163,7 @@
   color: #fff;
   display: flex;
   height: var(--topbar-height);
-  padding: 0 16px;
+  padding: 4px 16px 0;
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: cover;

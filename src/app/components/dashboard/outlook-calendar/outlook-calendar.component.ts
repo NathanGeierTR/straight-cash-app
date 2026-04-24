@@ -14,6 +14,7 @@ import { Subject, takeUntil, interval } from 'rxjs';
 })
 export class OutlookCalendarComponent implements OnInit, OnDestroy {
   events: CalendarEvent[] = [];
+  todayTimedEvents: CalendarEvent[] = [];
   loading = false;
   error: string | null = null;
   isConfigured = false;
@@ -27,6 +28,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   showErrorDetail = false;
 
   private destroy$ = new Subject<void>();
+  private _pendingFocusBtn: HTMLButtonElement | null = null;
 
   constructor(private calendarService: MicrosoftCalendarService, private navigationService: NavigationService, private elRef: ElementRef) {}
 
@@ -43,11 +45,15 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
         // user saves the token on the Connections page while the widget is mounted).
         if (justBecameConfigured) {
           this.loadEvents();
+          this.loadTodayTimedEvents();
 
           // Refresh events every 5 minutes
           interval(5 * 60 * 1000)
             .pipe(takeUntil(this.destroy$))
-            .subscribe(() => this.loadEvents());
+            .subscribe(() => {
+              this.loadEvents();
+              this.loadTodayTimedEvents();
+            });
         }
       });
 
@@ -57,7 +63,14 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
     this.calendarService.loading$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(loading => this.loading = loading);
+      .subscribe(loading => {
+        this.loading = loading;
+        if (!loading && this._pendingFocusBtn) {
+          const btn = this._pendingFocusBtn;
+          this._pendingFocusBtn = null;
+          setTimeout(() => btn.focus());
+        }
+      });
 
     this.calendarService.error$
       .pipe(takeUntil(this.destroy$))
@@ -76,6 +89,19 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   loadEvents() {
     this.calendarService.getEventsForDate(this.selectedDate).subscribe();
+  }
+
+  loadTodayTimedEvents() {
+    const today = new Date();
+    const start = new Date(today);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(today);
+    end.setHours(23, 59, 59, 999);
+    this.calendarService.getEventsForRange(start, end)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(events => {
+        this.todayTimedEvents = events.filter(e => !e.isAllDay);
+      });
   }
 
   saveConfiguration() {
@@ -218,6 +244,79 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     return { left, width };
   }
 
+  // ─── Zoomed timeline window ────────────────────────────────────────────────
+
+  /**
+   * Returns a visible time window [startMin, endMin] in minutes from midnight for
+   * the given events. Pads 1 hour before the earliest start and 1 hour after the
+   * latest end, snapped to whole-hour boundaries and clamped to [0, 1440].
+   * Falls back to the full 24-hour day when there are no events.
+   */
+  private computeTimelineWindow(events: CalendarEvent[]): { startMin: number; endMin: number } {
+    let startMin = 420;  // 7am default
+    let endMin   = 1020; // 5pm default
+    for (const e of events) {
+      const start    = this.parseDateTime(e.start.dateTime);
+      const end      = this.parseDateTime(e.end.dateTime);
+      const startMin_ = start.getHours() * 60 + start.getMinutes();
+      const endMin_   = end.getHours()   * 60 + end.getMinutes();
+      if (startMin_ < startMin) startMin = Math.max(0,    startMin_ - 30);
+      if (endMin_   > endMin)   endMin   = Math.min(1440, endMin_   + 30);
+    }
+    return { startMin, endMin };
+  }
+
+  get expandedTimelineWindow(): { startMin: number; endMin: number } {
+    return this.computeTimelineWindow(this.timedEvents);
+  }
+
+  get minimizedTimelineWindow(): { startMin: number; endMin: number } {
+    return this.computeTimelineWindow(this.todayTimedEvents);
+  }
+
+  private getZoomedEventPosition(event: CalendarEvent, win: { startMin: number; endMin: number }): { left: number; width: number } {
+    const start = this.parseDateTime(event.start.dateTime);
+    const end   = this.parseDateTime(event.end.dateTime);
+    const startMin = start.getHours() * 60 + start.getMinutes();
+    const endMin   = end.getHours()   * 60 + end.getMinutes();
+    const span  = win.endMin - win.startMin;
+    const left  = ((startMin - win.startMin) / span) * 100;
+    const width = Math.max(((endMin - startMin) / span) * 100, 0.5);
+    return { left: Math.max(0, left), width };
+  }
+
+  private getZoomedTimePosition(win: { startMin: number; endMin: number }): number {
+    const now    = this.currentTime;
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const span   = win.endMin - win.startMin;
+    return Math.min(100, Math.max(0, ((nowMin - win.startMin) / span) * 100));
+  }
+
+  private getZoomedHourArray(win: { startMin: number; endMin: number }): number[] {
+    const hours: number[] = [];
+    for (let h = win.startMin / 60; h <= win.endMin / 60; h++) {
+      hours.push(h);
+    }
+    return hours;
+  }
+
+  private getZoomedTickPosition(hour: number, win: { startMin: number; endMin: number }): number {
+    const span = win.endMin - win.startMin;
+    return ((hour * 60 - win.startMin) / span) * 100;
+  }
+
+  // Convenience accessors for the expanded timeline strip
+  getExpandedEventPosition(event: CalendarEvent)  { return this.getZoomedEventPosition(event, this.expandedTimelineWindow); }
+  getExpandedCurrentTimePosition()                { return this.getZoomedTimePosition(this.expandedTimelineWindow); }
+  getExpandedHourArray()                          { return this.getZoomedHourArray(this.expandedTimelineWindow); }
+  getExpandedTickPosition(hour: number)           { return this.getZoomedTickPosition(hour, this.expandedTimelineWindow); }
+
+  // Convenience accessors for the minimized timeline strip
+  getMinimizedEventPosition(event: CalendarEvent) { return this.getZoomedEventPosition(event, this.minimizedTimelineWindow); }
+  getMinimizedCurrentTimePosition()               { return this.getZoomedTimePosition(this.minimizedTimelineWindow); }
+  getMinimizedHourArray()                         { return this.getZoomedHourArray(this.minimizedTimelineWindow); }
+  getMinimizedTickPosition(hour: number)          { return this.getZoomedTickPosition(hour, this.minimizedTimelineWindow); }
+
   /**
    * Assign each event to a row (0 = top, 1 = bottom) so overlapping events
    * don't stack on top of each other. Uses a greedy interval approach.
@@ -314,6 +413,13 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.selectedEvent) {
+      this.selectedEvent = null;
+    }
+  }
+
   closePopup(): void {
     this.selectedEvent = null;
   }
@@ -331,17 +437,19 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     return this.selectedEvent === event;
   }
 
-  previousDay(): void {
+  previousDay(btn?: HTMLButtonElement): void {
     this.selectedDate = new Date(this.selectedDate);
     this.selectedDate.setDate(this.selectedDate.getDate() - 1);
     this.selectedEvent = null;
+    this._pendingFocusBtn = btn ?? null;
     this.loadEvents();
   }
 
-  nextDay(): void {
+  nextDay(btn?: HTMLButtonElement): void {
     this.selectedDate = new Date(this.selectedDate);
     this.selectedDate.setDate(this.selectedDate.getDate() + 1);
     this.selectedEvent = null;
+    this._pendingFocusBtn = btn ?? null;
     this.loadEvents();
   }
 

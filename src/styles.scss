@@ -61,6 +61,11 @@ $breakpoint-xl: 1200px;
   box-sizing: border-box;
 }
 
+:focus-visible {
+  outline: 2px solid var(--saf-color-orange-400);
+  outline-offset: 1px;
+}
+
 body {
   margin: 0;
   font-family: "Source Sans 3", sans-serif;

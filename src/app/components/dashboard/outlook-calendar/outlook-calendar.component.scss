@@ -151,6 +151,10 @@ $border-color: #e5e7eb;
   cursor: pointer;
   overflow: visible;
 
+  .timeline-icon {
+    margin-left: 8px;
+  }
+
   // Event blocks sit higher and are slightly slimmer in minimized mode
   .events-layer {
     height: 100%;
@@ -174,17 +178,6 @@ $border-color: #e5e7eb;
   }
 }
 
-.strip-watermark {
-  position: absolute;
-  left: 6px;
-  top: 4px;
-  font-size: 16px;
-  color: var(--saf-color-text-subtle);
-  opacity: 0.35;
-  pointer-events: none;
-  z-index: 1;
-}
-
 .next-event-countdown {
   position: absolute;
   top: 4px; // sits just above the tick layer
@@ -195,7 +188,6 @@ $border-color: #e5e7eb;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--saf-color-text-subtle);
-  opacity: 0.7;
   pointer-events: none;
   z-index: 3;
   white-space: nowrap;
@@ -203,7 +195,8 @@ $border-color: #e5e7eb;
 
   i {
     font-size: 0.625rem;
-    color: var(--saf-color-brand-sky-400);
+    color: var(--saf-color-brand-racing-green-400);
+    transform: translateY(-1px);
   }
 
   .is-minimized & {
@@ -228,12 +221,37 @@ $border-color: #e5e7eb;
   align-items: center;
   gap: 4px;
 }
+.timeline-nav .ctl-btn {
+  width: 32px;
+  height: 32px;
+  justify-content: center;
+
+  &:hover {
+    background: none;
+    border-color: transparent;
+  }
+} 
+.timeline-actions {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+
+  .collapse-btn {
+    display: inline-flex;
+    justify-content: flex-end;
+    padding-right: 12px;
+    width: 100%;
+
+    &:hover {
+      background: none;
+      border-color: transparent;
+    }
+  }
+}
 
 .timeline-icon {
-  color: var(--saf-color-brand-sky-500);
+  color: var(--saf-color-brand-racing-green-500);
   font-size: 0.75rem;
   margin-right: 4px;
-  opacity: 0.8;
 }
 
 .date-label {
@@ -247,19 +265,6 @@ $border-color: #e5e7eb;
   gap: 5px;
 }
 
-.date-badge {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--saf-color-brand-sky-500);
-  background: color-mix(in srgb, var(--saf-color-brand-sky-400) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--saf-color-brand-sky-400) 35%, transparent);
-  border-radius: 3px;
-  padding: 1px 4px;
-  line-height: 1.4;
-}
-
 .ctl-btn {
   display: inline-flex;
   align-items: center;
@@ -271,7 +276,6 @@ $border-color: #e5e7eb;
   cursor: pointer;
   font-size: 0.6875rem;
   color: var(--saf-color-text-subtle);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
   line-height: 1.6;
 
@@ -294,18 +298,6 @@ $border-color: #e5e7eb;
     background: var(--saf-color-background-subtle);
     border-color: var(--saf-color-brand-sky-400);
     color: var(--saf-color-brand-sky-500);
-  }
-}
-
-.today-btn {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  justify-content: center;
-  color: var(--saf-color-brand-sky-500);
-
-  i {
-    font-size: 0.75rem;
   }
 }
 
@@ -434,10 +426,20 @@ $border-color: #e5e7eb;
 }
 
 .btn-secondary {
-  background: var(--saf-color-background-subtle);
-  color: var(--saf-color-text-default);
+  background: var(--saf-color-background-default);
+  color: var(--saf-color-text-strong);
   border: 1px solid var(--saf-color-line-subtle);
-  &:hover { background: var(--saf-color-background-default); }
+  padding: 0.5rem 0.75rem;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &:hover { 
+    background: var(--saf-color-background-strong);
+  }
 }
 
 .btn-danger {
@@ -494,7 +496,7 @@ $border-color: #e5e7eb;
     filter: brightness(1.08);
   }
 
-  &.happening-now { background: var(--saf-color-orange-400); }
+  &.happening-now { background: var(--saf-color-brand-racing-green-400); }
   &.upcoming      { background: var(--saf-color-brand-racing-green-400); }
   &.past          { background: var(--saf-color-brand-racing-green-300); opacity: 0.65; }
 }
@@ -624,7 +626,7 @@ $border-color: #e5e7eb;
   }
 
   &.happening-now {
-    background: var(--saf-color-orange-400);
+    background: var(--saf-color-brand-racing-green-400);
   }
 
   &.upcoming {

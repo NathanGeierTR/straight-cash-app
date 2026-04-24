@@ -69,7 +69,6 @@ $weekend-color: var(--saf-color-brand-racing-green-100);
 .strip-icon {
   font-size: 0.75rem;
   color: var(--saf-color-brand-racing-green-500);
-  opacity: 0.8;
 }
 
 .sprint-name {
@@ -114,6 +113,7 @@ $weekend-color: var(--saf-color-brand-racing-green-100);
   background: $weekday-color;
   opacity: 0.85;
   user-select: none;
+  padding-top: 2px; // vertical centering numbers
 
   &.weekend {
     background: $weekend-color;
