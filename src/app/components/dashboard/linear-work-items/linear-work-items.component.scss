@@ -42,14 +42,7 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  background: linear-gradient(
-    135deg,
-    var(--saf-color-brand-orange-400),
-    var(--saf-color-brand-orange-700)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--saf-color-brand-racing-green-600);
 
   i {
     color: var(--saf-color-brand-racing-green-600);
@@ -67,16 +60,84 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid $border-color;
 }
 
-// ─── Toolbar ──────────────────────────────────────────────────────────────────
+// ─── Toolbar & actions menu ───────────────────────────────────────────────────
 .widget-toolbar {
   display: flex;
   align-items: center;
+}
 
-  .widget-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+.actions-menu-container {
+  position: relative;
+}
+
+.btn-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid $border-color;
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.12s;
+
+  &:hover, &.active {
+    background: var(--saf-color-background-default);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--saf-color-orange-300);
+    outline-offset: 2px;
+  }
+}
+
+.actions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--saf-color-background-default, #fff);
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  padding: 4px;
+  animation: menu-in 0.1s ease;
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--saf-color-text-default);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+
+  i { width: 14px; text-align: center; color: var(--saf-color-text-subtle); font-size: 0.8rem; }
+
+  &:hover:not(:disabled) {
+    background: var(--saf-color-background-subtle);
+  }
+
+  &:disabled { opacity: 0.45; cursor: default; }
 }
 
 .btn-primary,
@@ -191,25 +252,183 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
 }
 
-.issue-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+.issue-item {
   border-radius: 8px;
   border: 1px solid transparent;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: border-color 0.12s;
 
-  &:hover, &:focus-visible {
-    background: var(--saf-color-background-subtle);
+  &:hover {
     border-color: $border-color;
-    outline: none;
   }
 
   &.is-overdue {
     background: var(--saf-color-semantic-error-subtle);
     border-color: var(--saf-color-semantic-error);
+  }
+
+  &.expanded {
+    border-color: $border-color;
+    background: var(--saf-color-background-subtle);
+
+    .summary-chevron { transform: rotate(180deg); }
+  }
+}
+
+// ─── Summary row ──────────────────────────────────────────────────────────────
+.issue-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-subtle);
+    outline: none;
+  }
+
+  .issue-item.expanded & {
+    background: transparent;
+  }
+}
+
+.issue-summary-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.summary-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--saf-color-text-default);
+  transition: transform 0.18s ease;
+}
+
+// ─── Open in Linear button ────────────────────────────────────────────────────
+.open-issue-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-color;
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  text-decoration: none;
+  transition: background 0.12s;
+
+  i { font-size: 14px; }
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-default);
+    outline: none;
+  }
+}
+
+// ─── Expanded details ─────────────────────────────────────────────────────────
+.issue-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid $border-color;
+  background-color: var(--saf-color-brand-racing-green-100);
+}
+
+.issue-identifier {
+  color: var(--saf-color-brand-racing-green-700);
+  font-size: 16px;
+  word-break: normal;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--saf-color-text-subtle);
+  flex-wrap: wrap;
+
+  .meta-sep { opacity: 0.5; }
+  .meta-cycle i { margin-right: 3px; font-size: 0.65rem; }
+}
+
+.detail-state-row {
+  font-size: 0.78rem;
+}
+
+.state-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  .state-dot {
+    width: 9px;
+    height: 9px;
+    position: static;
+  }
+}
+
+.priority-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+
+  &.priority-urgent { color: #ef4444; }
+  &.priority-high   { color: #f97316; }
+  &.priority-medium { color: #eab308; }
+  &.priority-low    { color: #6b7280; }
+  &.priority-none   { color: #d1d5db; }
+
+  i { font-size: 0.65rem; }
+}
+
+.detail-tags {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+// ─── Issue description (rendered Markdown) ────────────────────────────────────
+.issue-description {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--saf-color-background-default, #fff);
+  border: 1px solid var(--saf-color-border-subtle, #e5e7eb);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--saf-color-text-default);
+  overflow-x: auto;
+
+  // Markdown element resets scoped to this container
+  p       { margin: 0 0 0.5em; &:last-child { margin-bottom: 0; } }
+  h1, h2, h3, h4 { font-size: 0.88rem; font-weight: 700; margin: 0.6em 0 0.3em; }
+  ul, ol  { margin: 0.25em 0 0.5em 1.25em; padding: 0; }
+  li      { margin-bottom: 0.15em; }
+  code    { font-size: 0.78rem; background: var(--saf-color-background-subtle, #f5f5f5); border-radius: 3px; padding: 1px 5px; font-family: monospace; }
+  pre     { background: var(--saf-color-background-subtle, #f5f5f5); border-radius: 6px; padding: 8px 10px; overflow-x: auto; code { background: none; padding: 0; } }
+  a       { color: var(--saf-color-interactive-default, #314b3e); }
+  blockquote { border-left: 3px solid $border-color; margin: 0.5em 0; padding: 0 0.75em; color: var(--saf-color-text-subtle); }
+  hr      { border: none; border-top: 1px solid $border-color; margin: 0.5em 0; }
+  img     { max-width: 100%; border-radius: 4px; }
+
+  &--empty {
+    color: var(--saf-color-text-subtle);
+    font-style: italic;
+    background: transparent;
+    border-color: transparent;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 }
 
@@ -227,7 +446,7 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   &.priority-none   { color: #d1d5db; }
 }
 
-// ─── State dot ────────────────────────────────────────────────────────────────
+// ─── State dot & state icon ───────────────────────────────────────────────────
 .state-dot {
   flex-shrink: 0;
   width: 10px;
@@ -239,23 +458,14 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   &.state-started  { border-radius: 3px; }
 }
 
-// ─── Issue content ────────────────────────────────────────────────────────────
-.issue-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.state-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  line-height: 1;
 }
 
-.issue-top {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.issue-identifier {
+// ─── Issue identifier & title ────────────────────────────────────────────────.issue-identifier {
+.issue-item {
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--saf-color-text-subtle);
@@ -264,24 +474,12 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .issue-title {
-  font-size: 0.88rem;
+  font-size: 12px;
   font-weight: 500;
   color: var(--saf-color-text-default);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.issue-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: var(--saf-color-text-subtle);
-  flex-wrap: wrap;
-
-  .meta-sep { opacity: 0.5; }
-  .meta-cycle i { margin-right: 3px; font-size: 0.65rem; }
 }
 
 // ─── Labels ───────────────────────────────────────────────────────────────────
@@ -322,19 +520,8 @@ $widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   color: var(--saf-color-text-subtle);
 }
 
-// ─── External link icon ───────────────────────────────────────────────────────
-.ext-icon {
-  flex-shrink: 0;
-  font-size: 0.65rem;
-  color: var(--saf-color-text-subtle);
-  opacity: 0;
-  transition: opacity 0.12s;
-
-  .issue-row:hover & { opacity: 0.6; }
-}
-
 // ─── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .issue-row { padding: 6px 8px; }
+  .issue-summary { padding: 6px 8px; }
   .issue-title { font-size: 0.82rem; }
 }

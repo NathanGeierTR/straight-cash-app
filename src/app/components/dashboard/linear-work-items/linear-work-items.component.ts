@@ -1,5 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { marked } from 'marked';
 import { LinearService, LinearIssue } from '../../../services/linear.service';
 import { NavigationService } from '../../../services/navigation.service';
 import { Subject, interval } from 'rxjs';
@@ -23,7 +25,8 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
 
   constructor(
     private linearService: LinearService,
-    private navigationService: NavigationService
+    private navigationService: NavigationService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -36,7 +39,7 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
           this.loadIssues();
           interval(5 * 60 * 1000)
             .pipe(takeUntil(this.destroy$))
-            .subscribe(() => this.loadIssues());
+            .subscribe(() => this.linearService.fetchMyIssues(this.showCompleted).subscribe());
         }
       });
 
@@ -63,15 +66,72 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
   }
 
   loadIssues(): void {
-    this.linearService.fetchMyIssues().subscribe();
+    this.linearService.fetchMyIssues(this.showCompleted).subscribe();
   }
 
   goToConnections(): void {
     this.navigationService.navigateTo('connections');
   }
 
+  menuOpen = false;
+  itemsHidden = false;
+  showCompleted = localStorage.getItem('linear-show-completed') === 'true';
+
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+  }
+
+  toggleItemVisibility(): void {
+    this.itemsHidden = !this.itemsHidden;
+    this.closeMenu();
+  }
+
+  toggleShowCompleted(): void {
+    this.showCompleted = !this.showCompleted;
+    localStorage.setItem('linear-show-completed', String(this.showCompleted));
+    this.closeMenu();
+    this.loadIssues();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.actions-menu-container')) {
+      this.menuOpen = false;
+    }
+  }
+
+  expandedIssues = new Set<string>();
+
+  toggleIssue(id: string): void {
+    if (this.expandedIssues.has(id)) {
+      this.expandedIssues.delete(id);
+    } else {
+      this.expandedIssues.add(id);
+    }
+  }
+
+  isIssueExpanded(id: string): boolean {
+    return this.expandedIssues.has(id);
+  }
+
   openIssue(url: string): void {
     window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  shortIdentifier(identifier: string): string {
+    const idx = identifier.indexOf('-');
+    return idx !== -1 ? identifier.slice(idx + 1) : identifier;
+  }
+
+  renderDescription(md: string | null): SafeHtml {
+    if (!md?.trim()) return this.sanitizer.sanitize(1, '') ?? '';
+    const html = marked.parse(md, { async: false }) as string;
+    return this.sanitizer.sanitize(1, html) ?? '';
   }
 
   getPriorityLabel(priority: number): string {
@@ -83,7 +143,7 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
   }
 
   getPriorityIcon(priority: number): string {
-    const icons = ['fa-minus', 'fa-angles-up', 'fa-angle-up', 'fa-equals', 'fa-angle-down'];
+    const icons = ['fa-temperature-empty', 'fa-temperature-full', 'fa-temperature-three-quarters', 'fa-temperature-half', 'fa-temperature-quarter'];
     return icons[priority] ?? 'fa-minus';
   }
 
@@ -105,5 +165,16 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
       cancelled: 'state-cancelled',
     };
     return map[type] ?? 'state-backlog';
+  }
+
+  getStateIcon(type: string, name: string): string | null {
+    if (type === 'completed') return 'fa-circle-check';
+    if (name.toLowerCase().includes('review')) return 'fa-circle-half-stroke';
+    return null;
+  }
+
+  getStateIconColor(type: string, name: string, fallback: string): string {
+    if (name.toLowerCase().includes('review')) return '#43bc58';
+    return fallback;
   }
 }

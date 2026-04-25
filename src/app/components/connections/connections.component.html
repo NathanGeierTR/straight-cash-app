@@ -7,6 +7,63 @@
 
   <div class="connections-grid">
 
+    <!-- ── Linear ────────────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="linearConnected" [class.expanded]="isExpanded('linear')">
+      <div class="card-header" (click)="toggleCard('linear')" (keydown.enter)="toggleCard('linear')" (keydown.space)="toggleCard('linear'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('linear')">
+        <div class="service-identity">
+          <img src="assets/linear-logo.svg" alt="Linear logo" height="28" class="card-icon linear-icon">
+          <div>
+            <h3>Linear</h3>
+            <span class="service-description">Issues &amp; work items assigned to you</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-container">
+            <span class="status-badge" [class.connected]="linearConnected" [class.disconnected]="!linearConnected">
+              <i class="fas" [class.fa-circle-check]="linearConnected" [class.fa-circle-xmark]="!linearConnected"></i>
+              {{ linearConnected ? 'Connected' : 'Not connected' }}
+            </span>
+          </div>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
+          <i class="fas fa-circle-check verified-icon"></i>
+          Signed in as <strong>{{ linearViewerName }}</strong>
+        </div>
+        <div class="help-link">
+          <a href="https://linear.app/settings/api" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> linear.app/settings/api
+          </a>
+          <span class="scope-note">Settings → API → <strong>Personal API keys</strong> → Create key</span>
+        </div>
+
+        <div class="form-group">
+          <label for="linear-api-key">Personal API Key</label>
+          <input
+            id="linear-api-key"
+            type="password"
+            [(ngModel)]="linearApiKey"
+            placeholder="lin_api_xxxxxxxxxxxx"
+            class="token-input"
+            autocomplete="off"
+            (keydown.enter)="saveLinear()">
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveLinear()" [disabled]="!linearApiKey.trim()">
+          <i class="fas" [class.fa-check]="linearSaved" [class.fa-save]="!linearSaved"></i>
+          {{ linearSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectLinear()" [disabled]="!linearConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
     <!-- ── GitHub AI ─────────────────────────────────────────── -->
     <div class="connection-card" [class.connected]="githubConnected" [class.expanded]="isExpanded('github-ai')">
       <div class="card-header" (click)="toggleCard('github-ai')" (keydown.enter)="toggleCard('github-ai')" (keydown.space)="toggleCard('github-ai'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('github-ai')">
@@ -23,18 +80,18 @@
             <i class="fas" [class.fa-circle-check]="githubConnected" [class.fa-circle-xmark]="!githubConnected"></i>
             {{ githubConnected ? 'Connected' : 'Not connected' }}
             </span>
-            <div class="api-counter-row" *ngIf="githubConnected">
-                <div class="counter-display">
-                <i class="fab fa-github"></i>
-                <span><strong>{{ githubCallsUsed }}</strong> API call{{ githubCallsUsed !== 1 ? 's' : '' }} used</span>
-                </div>
-            </div>
           </div>
           <i class="fas fa-chevron-down toggle-chevron"></i>
         </div>
       </div>
 
       <div class="card-body">
+        <div class="api-counter-row" *ngIf="githubConnected">
+          <div class="counter-display">
+            <i class="fab fa-github"></i>
+            <span><strong>{{ githubCallsUsed }}</strong> API call{{ githubCallsUsed !== 1 ? 's' : '' }} used</span>
+          </div>
+        </div>
         <div class="help-link">
           <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> github.com/settings/tokens
@@ -68,6 +125,77 @@
         <button class="btn-reset-counter" (click)="resetApiCounter()" *ngIf="githubConnected">
           <i class="fas fa-redo"></i> Reset counter
         </button>
+      </div>
+    </div>
+
+    <!-- ── Outlook Calendar ───────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="calendarConnected" [class.expanded]="isExpanded('outlook-cal')">
+      <div class="card-header" (click)="toggleCard('outlook-cal')" (keydown.enter)="toggleCard('outlook-cal')" (keydown.space)="toggleCard('outlook-cal'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('outlook-cal')">
+        <div class="service-identity">
+          <i class="fas fa-calendar-alt card-icon calendar-icon"></i>
+          <div>
+            <h3>Outlook Calendar</h3>
+            <span class="service-description">Today's meetings and schedule</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="calendarConnected" [class.disconnected]="!calendarConnected">
+            <i class="fas" [class.fa-circle-check]="calendarConnected" [class.fa-circle-xmark]="!calendarConnected"></i>
+            {{ calendarConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
+          </a>
+          <span class="scope-note">Sign in → consent scope: <code>Calendars.Read</code> → copy your access token</span>
+        </div>
+
+        <div class="form-group">
+          <label for="calendar-token">Microsoft Graph Access Token</label>
+          <textarea id="calendar-token" [(ngModel)]="calendarToken"
+                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..." rows="3" class="token-input"
+                    autocomplete="off"></textarea>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveCalendar()" [disabled]="!calendarToken.trim()">
+          <i class="fas" [class.fa-check]="calendarSaved" [class.fa-save]="!calendarSaved"></i>
+          {{ calendarSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectCalendar()" [disabled]="!calendarConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Firebase (read-only) ───────────────────────────────── -->
+    <div class="connection-card connected read-only" [class.expanded]="isExpanded('firebase')">
+      <div class="card-header" (click)="toggleCard('firebase')" (keydown.enter)="toggleCard('firebase')" (keydown.space)="toggleCard('firebase'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('firebase')">
+        <div class="service-identity">
+          <i class="fas fa-fire card-icon firebase-icon"></i>
+          <div>
+            <h3>Firebase</h3>
+            <span class="service-description">Authentication &amp; Firestore database</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-badge connected">
+            <i class="fas fa-circle-check"></i> Connected
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ado-note">
+          <i class="fas fa-lock"></i>
+          Firebase credentials are injected at build time via GitHub Secrets and cannot be changed here.
+        </div>
       </div>
     </div>
 
@@ -242,51 +370,7 @@
       </div>
     </div>
 
-    <!-- ── Outlook Calendar ───────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="calendarConnected" [class.expanded]="isExpanded('outlook-cal')">
-      <div class="card-header" (click)="toggleCard('outlook-cal')" (keydown.enter)="toggleCard('outlook-cal')" (keydown.space)="toggleCard('outlook-cal'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('outlook-cal')">
-        <div class="service-identity">
-          <i class="fas fa-calendar-alt card-icon calendar-icon"></i>
-          <div>
-            <h3>Outlook Calendar</h3>
-            <span class="service-description">Today's meetings and schedule</span>
-          </div>
-        </div>
-        <div class="header-right">
-          <span class="status-badge" [class.connected]="calendarConnected" [class.disconnected]="!calendarConnected">
-            <i class="fas" [class.fa-circle-check]="calendarConnected" [class.fa-circle-xmark]="!calendarConnected"></i>
-            {{ calendarConnected ? 'Connected' : 'Not connected' }}
-          </span>
-          <i class="fas fa-chevron-down toggle-chevron"></i>
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div class="help-link">
-          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
-            <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
-          </a>
-          <span class="scope-note">Sign in → consent scope: <code>Calendars.Read</code> → copy your access token</span>
-        </div>
-
-        <div class="form-group">
-          <label for="calendar-token">Microsoft Graph Access Token</label>
-          <textarea id="calendar-token" [(ngModel)]="calendarToken"
-                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..." rows="3" class="token-input"
-                    autocomplete="off"></textarea>
-        </div>
-      </div>
-
-      <div class="card-actions">
-        <button class="btn-save" (click)="saveCalendar()" [disabled]="!calendarToken.trim()">
-          <i class="fas" [class.fa-check]="calendarSaved" [class.fa-save]="!calendarSaved"></i>
-          {{ calendarSaved ? 'Saved!' : 'Save' }}
-        </button>
-        <button class="btn-disconnect" (click)="disconnectCalendar()" [disabled]="!calendarConnected">
-          <i class="fas fa-unlink"></i> Disconnect
-        </button>
-      </div>
-    </div>
+    
 
     <!-- ── Microsoft Teams Presence ──────────────────────────── -->
     <div class="connection-card" [class.connected]="teamsConnected" [class.expanded]="isExpanded('ms-teams')">
@@ -333,88 +417,5 @@
         </button>
       </div>
     </div>
-
-    <!-- ── Firebase (read-only) ───────────────────────────────── -->
-    <div class="connection-card connected read-only" [class.expanded]="isExpanded('firebase')">
-      <div class="card-header" (click)="toggleCard('firebase')" (keydown.enter)="toggleCard('firebase')" (keydown.space)="toggleCard('firebase'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('firebase')">
-        <div class="service-identity">
-          <i class="fas fa-fire card-icon firebase-icon"></i>
-          <div>
-            <h3>Firebase</h3>
-            <span class="service-description">Authentication &amp; Firestore database</span>
-          </div>
-        </div>
-        <div class="header-right">
-          <span class="status-badge connected">
-            <i class="fas fa-circle-check"></i> Connected
-          </span>
-          <i class="fas fa-chevron-down toggle-chevron"></i>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="ado-note">
-          <i class="fas fa-lock"></i>
-          Firebase credentials are injected at build time via GitHub Secrets and cannot be changed here.
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Linear ────────────────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="linearConnected" [class.expanded]="isExpanded('linear')">
-      <div class="card-header" (click)="toggleCard('linear')" (keydown.enter)="toggleCard('linear')" (keydown.space)="toggleCard('linear'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('linear')">
-        <div class="service-identity">
-          <i class="fas fa-layer-group card-icon linear-icon"></i>
-          <div>
-            <h3>Linear</h3>
-            <span class="service-description">Issues &amp; work items assigned to you</span>
-          </div>
-        </div>
-        <div class="header-right">
-          <div class="status-container">
-            <span class="status-badge" [class.connected]="linearConnected" [class.disconnected]="!linearConnected">
-              <i class="fas" [class.fa-circle-check]="linearConnected" [class.fa-circle-xmark]="!linearConnected"></i>
-              {{ linearConnected ? 'Connected' : 'Not connected' }}
-            </span>
-            <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
-              <i class="fas fa-circle-check verified-icon"></i>
-              Signed in as <strong>{{ linearViewerName }}</strong>
-            </div>
-          </div>
-          <i class="fas fa-chevron-down toggle-chevron"></i>
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div class="help-link">
-          <a href="https://linear.app/settings/api" target="_blank" rel="noopener noreferrer">
-            <i class="fas fa-external-link-alt"></i> linear.app/settings/api
-          </a>
-          <span class="scope-note">Settings → API → <strong>Personal API keys</strong> → Create key</span>
-        </div>
-
-        <div class="form-group">
-          <label for="linear-api-key">Personal API Key</label>
-          <input
-            id="linear-api-key"
-            type="password"
-            [(ngModel)]="linearApiKey"
-            placeholder="lin_api_xxxxxxxxxxxx"
-            class="token-input"
-            autocomplete="off"
-            (keydown.enter)="saveLinear()">
-        </div>
-      </div>
-
-      <div class="card-actions">
-        <button class="btn-save" (click)="saveLinear()" [disabled]="!linearApiKey.trim()">
-          <i class="fas" [class.fa-check]="linearSaved" [class.fa-save]="!linearSaved"></i>
-          {{ linearSaved ? 'Saved!' : 'Save' }}
-        </button>
-        <button class="btn-disconnect" (click)="disconnectLinear()" [disabled]="!linearConnected">
-          <i class="fas fa-unlink"></i> Disconnect
-        </button>
-      </div>
-    </div>
-
   </div>
 </div>

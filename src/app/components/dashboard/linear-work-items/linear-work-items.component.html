@@ -4,23 +4,52 @@
   <div class="widget-header">
     <div class="widget-header-title">
       <h2 class="widget-title">
-        <i class="fas fa-layer-group" aria-hidden="true"></i>
+        <img src="assets/linear-logo.svg" alt="Linear logo" height="20" class="widget-icon">
         Linear
       </h2>
-      <span class="viewer-badge" *ngIf="viewerName">{{ viewerName }}</span>
     </div>
 
     <div class="widget-toolbar">
-      <div class="widget-actions">
+      <div class="actions-menu-container">
         <button
           type="button"
-          class="btn-secondary"
-          (click)="loadIssues()"
-          [disabled]="loading || !isConfigured"
-          title="Refresh issues">
-          <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading"></i>
-          Refresh
+          class="btn-menu-trigger"
+          (click)="toggleMenu(); $event.stopPropagation()"
+          [attr.aria-expanded]="menuOpen"
+          aria-label="Widget actions"
+          [class.active]="menuOpen">
+          <i class="fas fa-ellipsis" aria-hidden="true"></i>
         </button>
+
+        <div class="actions-dropdown" *ngIf="menuOpen" role="menu">
+          <button
+            type="button"
+            class="menu-item"
+            role="menuitem"
+            (click)="loadIssues(); closeMenu()"
+            [disabled]="loading || !isConfigured">
+            <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading" aria-hidden="true"></i>
+            Refresh
+          </button>
+          <button
+            type="button"
+            class="menu-item"
+            role="menuitem"
+            (click)="toggleItemVisibility()"
+            [disabled]="!isConfigured">
+            <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
+            {{ itemsHidden ? 'Show items' : 'Hide all' }}
+          </button>
+          <button
+            type="button"
+            class="menu-item"
+            role="menuitem"
+            (click)="toggleShowCompleted()"
+            [disabled]="!isConfigured">
+            <i class="fas" [class.fa-circle-check]="!showCompleted" [class.fa-circle-xmark]="showCompleted" aria-hidden="true"></i>
+            {{ showCompleted ? 'Hide completed' : 'Show completed' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -55,73 +84,130 @@
   </div>
 
   <!-- ── Issue list ─────────────────────────────────────────── -->
-  <div class="issue-list" *ngIf="isConfigured && issues.length > 0">
+  <div class="issue-list" *ngIf="isConfigured && issues.length > 0 && !itemsHidden">
     <div
       *ngFor="let issue of issues"
-      class="issue-row"
+      class="issue-item"
       [class.is-overdue]="isOverdue(issue)"
-      (click)="openIssue(issue.url)"
-      role="button"
-      tabindex="0"
-      [attr.aria-label]="issue.identifier + ': ' + issue.title"
-      (keydown.enter)="openIssue(issue.url)"
-      (keydown.space)="openIssue(issue.url)">
+      [class.expanded]="isIssueExpanded(issue.id)">
 
-      <!-- Priority icon -->
-      <span class="priority-icon {{ getPriorityClass(issue.priority) }}" [title]="getPriorityLabel(issue.priority)">
-        <i class="fas {{ getPriorityIcon(issue.priority) }}" aria-hidden="true"></i>
-      </span>
+      <!-- ── Summary row (always visible) ─────────────────── -->
+      <div
+        class="issue-summary"
+        (click)="toggleIssue(issue.id)"
+        (keydown.enter)="toggleIssue(issue.id)"
+        (keydown.space)="toggleIssue(issue.id); $event.preventDefault()"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isIssueExpanded(issue.id)"
+        [attr.aria-label]="issue.identifier + ': ' + issue.title">
 
-      <!-- State dot -->
-      <span
-        class="state-dot {{ getStateClass(issue.state.type) }}"
-        [style.background-color]="issue.state.color"
-        [title]="issue.state.name">
-      </span>
+        <!-- State dot -->
+        <ng-container *ngIf="getStateIcon(issue.state.type, issue.state.name) as icon; else dotTpl">
+          <i class="fas {{ icon }} state-icon {{ getStateClass(issue.state.type) }}"
+             [style.color]="getStateIconColor(issue.state.type, issue.state.name, issue.state.color)"
+             [title]="issue.state.name"
+             aria-hidden="true"></i>
+        </ng-container>
+        <ng-template #dotTpl>
+          <span
+            class="state-dot {{ getStateClass(issue.state.type) }}"
+            [style.background-color]="issue.state.color"
+            [title]="issue.state.name">
+          </span>
+        </ng-template>
 
-      <!-- Main content -->
-      <div class="issue-content">
-        <div class="issue-top">
-          <span class="issue-identifier">{{ issue.identifier }}</span>
+        <!-- Identifier + title -->
+        <div class="issue-summary-content">
+          <span class="issue-identifier">{{ shortIdentifier(issue.identifier) }}</span>
           <span class="issue-title">{{ issue.title }}</span>
         </div>
-        <div class="issue-meta">
-          <span class="meta-team">{{ issue.team.name }}</span>
-          <span class="meta-sep" *ngIf="issue.project">·</span>
-          <span class="meta-project" *ngIf="issue.project">{{ issue.project.name }}</span>
-          <span class="meta-sep" *ngIf="issue.cycle">·</span>
-          <span class="meta-cycle" *ngIf="issue.cycle">
-            <i class="fas fa-rotate" aria-hidden="true"></i>{{ issue.cycle.name }}
+
+        <!-- Overdue badge (shown inline in summary) -->
+        <span class="due-date overdue" *ngIf="issue.dueDate && isOverdue(issue)">
+          <i class="fas fa-calendar-day" aria-hidden="true"></i>
+          {{ formatDate(issue.dueDate) }}
+        </span>
+
+        <!-- Open in Linear (stops row click from firing) -->
+        <a
+          [href]="issue.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="open-issue-btn"
+          (click)="$event.stopPropagation()"
+          [attr.aria-label]="'Open ' + issue.identifier + ' in Linear'">
+          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+        </a>
+
+        <!-- Expand chevron -->
+        <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </div>
+
+      <!-- ── Expanded details ───────────────────────────────── -->
+      <div class="issue-details" *ngIf="isIssueExpanded(issue.id)">
+
+        <!-- State + priority row -->
+        <div class="detail-row detail-state-row">
+          <span class="state-label">
+            <ng-container *ngIf="getStateIcon(issue.state.type, issue.state.name) as icon; else detailDotTpl">
+              <i class="fas {{ icon }} state-icon {{ getStateClass(issue.state.type) }}"
+                 [style.color]="getStateIconColor(issue.state.type, issue.state.name, issue.state.color)"
+                 aria-hidden="true"></i>
+            </ng-container>
+            <ng-template #detailDotTpl>
+              <span class="state-dot {{ getStateClass(issue.state.type) }}" [style.background-color]="issue.state.color"></span>
+            </ng-template>
+            {{ issue.state.name }}
           </span>
-          <!-- Labels -->
-          <ng-container *ngIf="issue.labels.nodes.length > 0">
+          <span class="meta-sep">·</span>
+          <span class="priority-label {{ getPriorityClass(issue.priority) }}">
+            <i class="fas {{ getPriorityIcon(issue.priority) }}" aria-hidden="true"></i>
+            {{ getPriorityLabel(issue.priority) }}
+          </span>
+        </div>
+
+        <!-- Team / project / cycle -->
+        <div class="detail-row detail-meta">
+          <span class="meta-team">{{ issue.team.name }}</span>
+          <ng-container *ngIf="issue.project">
             <span class="meta-sep">·</span>
-            <span
-              *ngFor="let label of issue.labels.nodes"
-              class="label-chip"
-              [style.background-color]="label.color + '33'"
-              [style.border-color]="label.color"
-              [style.color]="label.color">
-              {{ label.name }}
+            <span class="meta-project">{{ issue.project.name }}</span>
+          </ng-container>
+          <ng-container *ngIf="issue.cycle">
+            <span class="meta-sep">·</span>
+            <span class="meta-cycle">
+              <i class="fas fa-rotate" aria-hidden="true"></i>{{ issue.cycle.name || 'Cycle ' + issue.cycle.number }}
             </span>
           </ng-container>
         </div>
+
+        <!-- Labels + due date + estimate -->
+        <div class="detail-row detail-tags" *ngIf="issue.labels.nodes.length > 0 || issue.dueDate || issue.estimate !== null">
+          <span
+            *ngFor="let label of issue.labels.nodes"
+            class="label-chip"
+            [style.background-color]="label.color + '33'"
+            [style.border-color]="label.color"
+            [style.color]="label.color">
+            {{ label.name }}
+          </span>
+          <span class="due-date" *ngIf="issue.dueDate && !isOverdue(issue)">
+            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+            {{ formatDate(issue.dueDate) }}
+          </span>
+          <span class="estimate" *ngIf="issue.estimate !== null" [title]="issue.estimate + ' points'">
+            {{ issue.estimate }}
+          </span>
+        </div>
+
+        <!-- Description -->
+        <div class="issue-description" *ngIf="issue.description?.trim()" [innerHTML]="renderDescription(issue.description)"></div>
+        <div class="issue-description issue-description--empty" *ngIf="!issue.description?.trim()">
+          <i class="fas fa-file-lines" aria-hidden="true"></i> No description
+        </div>
+
       </div>
-
-      <!-- Due date -->
-      <span class="due-date" *ngIf="issue.dueDate" [class.overdue]="isOverdue(issue)">
-        <i class="fas fa-calendar-day" aria-hidden="true"></i>
-        {{ formatDate(issue.dueDate) }}
-      </span>
-
-      <!-- Estimate -->
-      <span class="estimate" *ngIf="issue.estimate !== null" [title]="issue.estimate + ' points'">
-        {{ issue.estimate }}
-      </span>
-
-      <!-- External link indicator -->
-      <i class="fas fa-arrow-up-right-from-square ext-icon" aria-hidden="true"></i>
-
     </div>
   </div>
 

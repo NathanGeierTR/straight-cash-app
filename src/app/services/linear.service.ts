@@ -8,6 +8,7 @@ export interface LinearIssue {
   id: string;
   identifier: string;
   title: string;
+  description: string | null;
   priority: number; // 0=none,1=urgent,2=high,3=medium,4=low
   url: string;
   updatedAt: string;
@@ -132,20 +133,23 @@ export class LinearService {
     );
   }
 
-  fetchMyIssues(): Observable<LinearIssue[]> {
+  fetchMyIssues(includeCompleted = false): Observable<LinearIssue[]> {
     if (!this.apiKey) return of([]);
+
+    const excludedStates = includeCompleted ? '["cancelled"]' : '["completed", "cancelled"]';
 
     const query = `
       query MyIssues {
         viewer {
           assignedIssues(
-            filter: { state: { type: { nin: ["completed", "cancelled"] } } }
+            filter: { state: { type: { nin: ${excludedStates} } } }
             orderBy: updatedAt
           ) {
             nodes {
               id
               identifier
               title
+              description
               priority
               url
               updatedAt
