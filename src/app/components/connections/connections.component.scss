@@ -59,9 +59,22 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.25rem 1.5rem 0;
+  padding: 1.25rem 1.5rem;
   gap: 1rem;
   flex-wrap: wrap;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 10px 10px 0 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--saf-color-background-subtle, #f9f9f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--saf-color-orange-300);
+    outline-offset: -2px;
+  }
 }
 
 .service-identity {
@@ -100,7 +113,32 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-left: auto;
+  flex-shrink: 0;
+}
+
+.toggle-chevron {
+  font-size: 0.85rem;
+  color: var(--saf-color-text-subtle);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.connection-card.expanded .toggle-chevron {
+  transform: rotate(180deg);
+}
+
+.connection-card:not(.expanded) {
+  .card-body,
+  .card-actions {
+    display: none;
+  }
 }
 
 .status-badge {
@@ -369,7 +407,68 @@
   }
 }
 
+// ── Widget visibility toggle ─────────────────────────────────────
+
+.widget-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--saf-color-border-subtle, #e8e8e8);
+  margin-bottom: 0.25rem;
+  cursor: default;
+  gap: 0.75rem;
+}
+
+.widget-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--saf-color-text-default);
+
+  i { color: var(--saf-color-text-subtle); font-size: 0.8rem; }
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--saf-color-border-default, #ccc);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &.on {
+    background: var(--saf-color-brand-racing-green-600, #1a5c3a);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--saf-color-orange-300);
+    outline-offset: 2px;
+  }
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+
+  .toggle-switch.on & {
+    transform: translateX(18px);
+  }
+}
+
 // ── Inline config fields (org / repo / diagnostics) ─────────────
+
 
 .config-row {
   margin-top: 0.75rem;

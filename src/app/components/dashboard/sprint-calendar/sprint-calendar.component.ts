@@ -37,6 +37,10 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
   error: string | null = null;
   showPopover = false;
 
+  private retryCount = 0;
+  private readonly MAX_RETRIES = 3;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor(private linearService: LinearService) {}
 
   ngOnInit() {
@@ -65,20 +69,28 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.retryTimer) { clearTimeout(this.retryTimer); }
   }
 
   loadCycle() {
     this.loading = true;
-    this.linearService.fetchActiveCycle().subscribe(() => (this.loading = false));
+    this.linearService.silentlyRefreshCycle().subscribe(() => (this.loading = false));
   }
 
   private applyLinearCycle(cycle: LinearCycle | null) {
+    if (this.retryTimer) { clearTimeout(this.retryTimer); this.retryTimer = null; }
     if (!cycle) {
       this.currentSprint = null;
       this.monthDays = [];
       this.error = this.linearService.isConfigured() ? 'No active cycle' : null;
+      // Auto-retry a few times — the API occasionally returns null transiently
+      if (this.linearService.isConfigured() && this.retryCount < this.MAX_RETRIES) {
+        this.retryCount++;
+        this.retryTimer = setTimeout(() => this.loadCycle(), 15_000);
+      }
       return;
     }
+    this.retryCount = 0;
     this.error = null;
     this.currentSprint = {
       number: cycle.number,

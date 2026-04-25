@@ -8,8 +8,8 @@
   <div class="connections-grid">
 
     <!-- ── GitHub AI ─────────────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="githubConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="githubConnected" [class.expanded]="isExpanded('github-ai')">
+      <div class="card-header" (click)="toggleCard('github-ai')" (keydown.enter)="toggleCard('github-ai')" (keydown.space)="toggleCard('github-ai'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('github-ai')">
         <div class="service-identity">
           <i class="fab fa-github card-icon"></i>
           <div>
@@ -17,7 +17,8 @@
             <span class="service-description">AI chat, ADO title generation &amp; scrum updates</span>
           </div>
         </div>
-        <div class="status-container">
+        <div class="header-right">
+          <div class="status-container">
             <span class="status-badge" [class.connected]="githubConnected" [class.disconnected]="!githubConnected">
             <i class="fas" [class.fa-circle-check]="githubConnected" [class.fa-circle-xmark]="!githubConnected"></i>
             {{ githubConnected ? 'Connected' : 'Not connected' }}
@@ -27,10 +28,9 @@
                 <i class="fab fa-github"></i>
                 <span><strong>{{ githubCallsUsed }}</strong> API call{{ githubCallsUsed !== 1 ? 's' : '' }} used</span>
                 </div>
-                <button class="btn-reset-counter" (click)="resetApiCounter()">
-                <i class="fas fa-redo"></i> Reset counter
-                </button>
             </div>
+          </div>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
         </div>
       </div>
 
@@ -65,12 +65,15 @@
         <button class="btn-disconnect" (click)="disconnectGitHub()" [disabled]="!githubConnected">
           <i class="fas fa-unlink"></i> Disconnect
         </button>
+        <button class="btn-reset-counter" (click)="resetApiCounter()" *ngIf="githubConnected">
+          <i class="fas fa-redo"></i> Reset counter
+        </button>
       </div>
     </div>
 
     <!-- ── GitHub Pull Requests ──────────────────────────────── -->
-    <div class="connection-card" [class.connected]="githubPrConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="githubPrConnected" [class.expanded]="isExpanded('github-pr')">
+      <div class="card-header" (click)="toggleCard('github-pr')" (keydown.enter)="toggleCard('github-pr')" (keydown.space)="toggleCard('github-pr'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('github-pr')">
         <div class="service-identity">
           <i class="fab fa-github card-icon"></i>
           <div>
@@ -78,10 +81,13 @@
             <span class="service-description">PRs assigned to you or awaiting your review</span>
           </div>
         </div>
-        <span class="status-badge" [class.connected]="githubPrConnected" [class.disconnected]="!githubPrConnected">
-          <i class="fas" [class.fa-circle-check]="githubPrConnected" [class.fa-circle-xmark]="!githubPrConnected"></i>
-          {{ githubPrConnected ? 'Connected' : 'Not connected' }}
-        </span>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="githubPrConnected" [class.disconnected]="!githubPrConnected">
+            <i class="fas" [class.fa-circle-check]="githubPrConnected" [class.fa-circle-xmark]="!githubPrConnected"></i>
+            {{ githubPrConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
       </div>
 
       <div class="card-body">
@@ -185,8 +191,8 @@
     </div>
 
     <!-- ── Azure DevOps ───────────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="adoConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="adoConnected" [class.expanded]="isExpanded('ado')">
+      <div class="card-header" (click)="toggleCard('ado')" (keydown.enter)="toggleCard('ado')" (keydown.space)="toggleCard('ado'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('ado')">
         <div class="service-identity">
           <i class="fab fa-microsoft card-icon ado-icon"></i>
           <div>
@@ -194,13 +200,26 @@
             <span class="service-description">Work items, sprints &amp; board tracking</span>
           </div>
         </div>
-        <span class="status-badge" [class.connected]="adoConnected" [class.disconnected]="!adoConnected">
-          <i class="fas" [class.fa-circle-check]="adoConnected" [class.fa-circle-xmark]="!adoConnected"></i>
-          {{ adoConnected ? adoProjects.length + ' project' + (adoProjects.length !== 1 ? 's' : '') : 'Not connected' }}
-        </span>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="adoConnected" [class.disconnected]="!adoConnected">
+            <i class="fas" [class.fa-circle-check]="adoConnected" [class.fa-circle-xmark]="!adoConnected"></i>
+            {{ adoConnected ? adoProjects.length + ' project' + (adoProjects.length !== 1 ? 's' : '') : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
       </div>
 
       <div class="card-body">
+        <label class="widget-toggle-row" (click)="$event.stopPropagation()">
+          <div class="widget-toggle-label">
+            <i class="fas fa-table-columns"></i>
+            <span>Show ADO widget on dashboard</span>
+          </div>
+          <div class="toggle-switch" [class.on]="adoWidgetVisible" (click)="toggleAdoWidget()" role="switch" aria-label="Show ADO widget on dashboard" [attr.aria-checked]="adoWidgetVisible" tabindex="0" (keydown.enter)="toggleAdoWidget()" (keydown.space)="toggleAdoWidget(); $event.preventDefault()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </label>
+
         <div class="help-link">
           <a href="https://dev.azure.com" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> dev.azure.com
@@ -224,8 +243,8 @@
     </div>
 
     <!-- ── Outlook Calendar ───────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="calendarConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="calendarConnected" [class.expanded]="isExpanded('outlook-cal')">
+      <div class="card-header" (click)="toggleCard('outlook-cal')" (keydown.enter)="toggleCard('outlook-cal')" (keydown.space)="toggleCard('outlook-cal'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('outlook-cal')">
         <div class="service-identity">
           <i class="fas fa-calendar-alt card-icon calendar-icon"></i>
           <div>
@@ -233,10 +252,13 @@
             <span class="service-description">Today's meetings and schedule</span>
           </div>
         </div>
-        <span class="status-badge" [class.connected]="calendarConnected" [class.disconnected]="!calendarConnected">
-          <i class="fas" [class.fa-circle-check]="calendarConnected" [class.fa-circle-xmark]="!calendarConnected"></i>
-          {{ calendarConnected ? 'Connected' : 'Not connected' }}
-        </span>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="calendarConnected" [class.disconnected]="!calendarConnected">
+            <i class="fas" [class.fa-circle-check]="calendarConnected" [class.fa-circle-xmark]="!calendarConnected"></i>
+            {{ calendarConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
       </div>
 
       <div class="card-body">
@@ -267,8 +289,8 @@
     </div>
 
     <!-- ── Microsoft Teams Presence ──────────────────────────── -->
-    <div class="connection-card" [class.connected]="teamsConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="teamsConnected" [class.expanded]="isExpanded('ms-teams')">
+      <div class="card-header" (click)="toggleCard('ms-teams')" (keydown.enter)="toggleCard('ms-teams')" (keydown.space)="toggleCard('ms-teams'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('ms-teams')">
         <div class="service-identity">
           <i class="fas fa-users card-icon teams-icon"></i>
           <div>
@@ -276,10 +298,13 @@
             <span class="service-description">Coworker availability &amp; timezone status</span>
           </div>
         </div>
-        <span class="status-badge" [class.connected]="teamsConnected" [class.disconnected]="!teamsConnected">
-          <i class="fas" [class.fa-circle-check]="teamsConnected" [class.fa-circle-xmark]="!teamsConnected"></i>
-          {{ teamsConnected ? 'Connected' : 'Not connected' }}
-        </span>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="teamsConnected" [class.disconnected]="!teamsConnected">
+            <i class="fas" [class.fa-circle-check]="teamsConnected" [class.fa-circle-xmark]="!teamsConnected"></i>
+            {{ teamsConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
       </div>
 
       <div class="card-body">
@@ -310,8 +335,8 @@
     </div>
 
     <!-- ── Firebase (read-only) ───────────────────────────────── -->
-    <div class="connection-card connected read-only">
-      <div class="card-header">
+    <div class="connection-card connected read-only" [class.expanded]="isExpanded('firebase')">
+      <div class="card-header" (click)="toggleCard('firebase')" (keydown.enter)="toggleCard('firebase')" (keydown.space)="toggleCard('firebase'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('firebase')">
         <div class="service-identity">
           <i class="fas fa-fire card-icon firebase-icon"></i>
           <div>
@@ -319,9 +344,12 @@
             <span class="service-description">Authentication &amp; Firestore database</span>
           </div>
         </div>
-        <span class="status-badge connected">
-          <i class="fas fa-circle-check"></i> Connected
-        </span>
+        <div class="header-right">
+          <span class="status-badge connected">
+            <i class="fas fa-circle-check"></i> Connected
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
       </div>
       <div class="card-body">
         <div class="ado-note">
@@ -332,8 +360,8 @@
     </div>
 
     <!-- ── Linear ────────────────────────────────────────────── -->
-    <div class="connection-card" [class.connected]="linearConnected">
-      <div class="card-header">
+    <div class="connection-card" [class.connected]="linearConnected" [class.expanded]="isExpanded('linear')">
+      <div class="card-header" (click)="toggleCard('linear')" (keydown.enter)="toggleCard('linear')" (keydown.space)="toggleCard('linear'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('linear')">
         <div class="service-identity">
           <i class="fas fa-layer-group card-icon linear-icon"></i>
           <div>
@@ -341,15 +369,18 @@
             <span class="service-description">Issues &amp; work items assigned to you</span>
           </div>
         </div>
-        <div class="status-container">
-          <span class="status-badge" [class.connected]="linearConnected" [class.disconnected]="!linearConnected">
-            <i class="fas" [class.fa-circle-check]="linearConnected" [class.fa-circle-xmark]="!linearConnected"></i>
-            {{ linearConnected ? 'Connected' : 'Not connected' }}
-          </span>
-          <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
-            <i class="fas fa-circle-check verified-icon"></i>
-            Signed in as <strong>{{ linearViewerName }}</strong>
+        <div class="header-right">
+          <div class="status-container">
+            <span class="status-badge" [class.connected]="linearConnected" [class.disconnected]="!linearConnected">
+              <i class="fas" [class.fa-circle-check]="linearConnected" [class.fa-circle-xmark]="!linearConnected"></i>
+              {{ linearConnected ? 'Connected' : 'Not connected' }}
+            </span>
+            <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
+              <i class="fas fa-circle-check verified-icon"></i>
+              Signed in as <strong>{{ linearViewerName }}</strong>
+            </div>
           </div>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
         </div>
       </div>
 

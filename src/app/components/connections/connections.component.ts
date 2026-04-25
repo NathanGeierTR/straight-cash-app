@@ -46,12 +46,28 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   // Azure DevOps (status-only — full config lives in the ADO widget)
   adoConnected = false;
   adoProjects: { organization: string; project: string }[] = [];
+  adoWidgetVisible = true;
 
   // Linear
   linearApiKey = '';
   linearConnected = false;
   linearSaved = false;
   linearViewerName: string | null = null;
+
+  // Collapsible cards
+  expandedCards = new Set<string>();
+
+  toggleCard(id: string): void {
+    if (this.expandedCards.has(id)) {
+      this.expandedCards.delete(id);
+    } else {
+      this.expandedCards.add(id);
+    }
+  }
+
+  isExpanded(id: string): boolean {
+    return this.expandedCards.has(id);
+  }
 
   constructor(
     private aiService: GitHubAIService,
@@ -111,6 +127,7 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     } catch {
       this.adoProjects = [];
     }
+    this.adoWidgetVisible = localStorage.getItem('ado-widget-visible') !== 'false';
 
     // Linear
     this.linearApiKey = localStorage.getItem('linear-api-key') || '';
@@ -225,6 +242,12 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
 
   verifyPrToken(): void {
     this.githubPrService.verifyToken();
+  }
+
+  // ADO widget visibility
+  toggleAdoWidget(): void {
+    this.adoWidgetVisible = !this.adoWidgetVisible;
+    localStorage.setItem('ado-widget-visible', String(this.adoWidgetVisible));
   }
 
   // Linear

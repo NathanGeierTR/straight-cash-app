@@ -32,11 +32,13 @@ import { NavigationService } from '../../services/navigation.service';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   currentTime = new Date();
+  showAdoWidget = true;
   private timeInterval?: number;
 
   constructor(private navigationService: NavigationService) {}
 
   ngOnInit() {
+    this.showAdoWidget = localStorage.getItem('ado-widget-visible') !== 'false';
     this.timeInterval = window.setInterval(() => {
       this.currentTime = new Date();
     }, 1000);

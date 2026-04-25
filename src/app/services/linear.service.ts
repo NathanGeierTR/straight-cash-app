@@ -177,9 +177,7 @@ export class LinearService {
           .filter((c): c is NonNullable<LinearIssue['cycle']> => c !== null)
           .find(c => new Date(c.startsAt) <= today && new Date(c.endsAt) >= today)
           ?? null;
-        if (activeCycle && !this.activeCycleSubject.value) {
-          this.activeCycleSubject.next(activeCycle);
-        }
+        this.activeCycleSubject.next(activeCycle);
       }),
       catchError(err => {
         const msg = err.message ?? 'Failed to load Linear issues';
@@ -225,14 +223,49 @@ export class LinearService {
         return cycles[0] ?? null;
       }),
       tap(cycle => {
-        this.activeCycleSubject.next(cycle);
+        // Only overwrite the subject if we actually found a cycle;
+        // a null result from the team API should not clear a cycle derived from issues.
+        if (cycle !== null) {
+          this.activeCycleSubject.next(cycle);
+        }
       }),
-      catchError(err => {
-        console.error('[Linear] fetchActiveCycle error:', err);
-        this.activeCycleSubject.next(null);
-        return of(null);
-      })
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Lightweight cycle refresh: re-derives the active cycle from the cycle fields
+   * on assigned issues without touching loadingSubject or issuesSubject.
+   * Safe to call from background timers shared with other widgets.
+   */
+  silentlyRefreshCycle(): Observable<LinearCycle | null> {
+    if (!this.apiKey) return of(null);
+
+    const query = `
+      query SilentCycleRefresh {
+        viewer {
+          assignedIssues(
+            filter: { state: { type: { nin: ["completed", "cancelled"] } } }
+          ) {
+            nodes {
+              cycle { id name number startsAt endsAt progress team { name } }
+            }
+          }
+        }
+      }
+    `;
+
+    return this.gql<{ viewer: { assignedIssues: { nodes: { cycle: LinearIssue['cycle'] }[] } } }>(query).pipe(
+      map(d => {
+        const today = new Date();
+        return d.viewer.assignedIssues.nodes
+          .map(n => n.cycle)
+          .filter((c): c is NonNullable<LinearIssue['cycle']> => c !== null)
+          .find(c => new Date(c.startsAt) <= today && new Date(c.endsAt) >= today)
+          ?? null;
+      }),
+      tap(cycle => this.activeCycleSubject.next(cycle)),
+      catchError(() => of(this.activeCycleSubject.value))
     );
   }
 }
-    
