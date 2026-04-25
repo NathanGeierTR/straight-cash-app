@@ -27,13 +27,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
       
       - name: Configure npm registry
         run: echo "registry=https://registry.npmjs.org/" > ~/.npmrc
       
+      - name: Debug npm config
+        run: |
+          echo "--- ~/.npmrc ---"
+          cat ~/.npmrc
+          echo "--- npm config list ---"
+          npm config list
+          echo "--- NPM env vars ---"
+          env | grep -i npm || echo "(none)"
+      
       - name: Install dependencies
         run: npm ci
+      
+      - name: Show npm debug log
+        if: failure()
+        run: cat /home/runner/.npm/_logs/*.log 2>/dev/null | tail -200
       
       - name: Inject Firebase config
         run: |
