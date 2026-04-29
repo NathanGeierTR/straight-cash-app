@@ -200,6 +200,10 @@ $text-secondary: #6b7280;
     }
   }
 
+  .linear-widget ::ng-deep .widget-title {
+    color: var(--saf-color-text-heavy);
+  }
+
 // Keyframes for button tooltips
 @keyframes fadeIn {
   from {

@@ -10,47 +10,36 @@
     </div>
 
     <div class="widget-toolbar">
-      <div class="actions-menu-container">
-        <button
-          type="button"
-          class="btn-menu-trigger"
-          (click)="toggleMenu(); $event.stopPropagation()"
-          [attr.aria-expanded]="menuOpen"
-          aria-label="Widget actions"
-          [class.active]="menuOpen">
-          <i class="fas fa-ellipsis" aria-hidden="true"></i>
-        </button>
-
-        <div class="actions-dropdown" *ngIf="menuOpen" role="menu">
-          <button
-            type="button"
-            class="menu-item"
-            role="menuitem"
-            (click)="loadIssues(); closeMenu()"
-            [disabled]="loading || !isConfigured">
-            <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading" aria-hidden="true"></i>
-            Refresh
-          </button>
-          <button
-            type="button"
-            class="menu-item"
-            role="menuitem"
-            (click)="toggleItemVisibility()"
-            [disabled]="!isConfigured">
-            <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
-            {{ itemsHidden ? 'Show items' : 'Hide all' }}
-          </button>
-          <button
-            type="button"
-            class="menu-item"
-            role="menuitem"
-            (click)="toggleShowCompleted()"
-            [disabled]="!isConfigured">
-            <i class="fas" [class.fa-circle-check]="!showCompleted" [class.fa-circle-xmark]="showCompleted" aria-hidden="true"></i>
-            {{ showCompleted ? 'Hide completed' : 'Show completed' }}
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleShowCompleted()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="showCompleted ? 'Hide completed' : 'Show completed'"
+        tooltipAlign="top"
+        [attr.aria-label]="showCompleted ? 'Hide completed' : 'Show completed'">
+        <i class="fas fa-check" [class.fa-check-crossed]="showCompleted" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleItemVisibility()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="itemsHidden ? 'Show items' : 'Hide all'"
+        tooltipAlign="top"
+        [attr.aria-label]="itemsHidden ? 'Show items' : 'Hide all'">
+        <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="loadIssues()"
+        [disabled]="loading || !isConfigured"
+        [appTouchTooltip]="'Refresh'"
+        tooltipAlign="top"
+        aria-label="Refresh">
+        <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 

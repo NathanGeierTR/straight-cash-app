@@ -163,6 +163,61 @@ button {
   }
 }
 
+a:-webkit-any-link {
+  color: var(--saf-color-brand-orange-400);
+  text-decoration: none;
+}
+
+.btn-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--saf-color-line-subtle);
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.12s;
+
+  &:hover:not(:disabled) {
+    background: var(--saf-color-background-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--saf-color-orange-300);
+    outline-offset: 2px;
+  }
+
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+
+.fa-circle { // for circle without solid fill
+  border: 2px solid rgb(168, 168, 168);
+  border-radius: 99px;
+  background-color: white;
+  height: 12px;
+  width: 12px;
+}
+.fas.fa-circle::before {
+  content: "";
+}
+
+.fa-check-crossed::after {
+  content: "";
+  position: absolute;
+  border-right: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+  border-radius: 2px;
+  height: 20px;
+  transform: rotate(-52deg) translate(0px, -8px);
+  box-shadow: -.5px 0px 0px 1px white;
+}
+
 :root {
     --saf-color-background-default: #ffffff;
     --saf-color-background-subtle: #fafafa;

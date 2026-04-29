@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
@@ -74,36 +74,17 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
     this.navigationService.navigateTo('connections');
   }
 
-  menuOpen = false;
   itemsHidden = false;
   showCompleted = localStorage.getItem('linear-show-completed') === 'true';
 
-  toggleMenu(): void {
-    this.menuOpen = !this.menuOpen;
-  }
-
-  closeMenu(): void {
-    this.menuOpen = false;
-  }
-
   toggleItemVisibility(): void {
     this.itemsHidden = !this.itemsHidden;
-    this.closeMenu();
   }
 
   toggleShowCompleted(): void {
     this.showCompleted = !this.showCompleted;
     localStorage.setItem('linear-show-completed', String(this.showCompleted));
-    this.closeMenu();
     this.loadIssues();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.actions-menu-container')) {
-      this.menuOpen = false;
-    }
   }
 
   expandedIssues = new Set<string>();
