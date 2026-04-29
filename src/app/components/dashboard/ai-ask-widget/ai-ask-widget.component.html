@@ -59,7 +59,7 @@
         </div>
       </ng-container>
       <ng-container *ngIf="conversationHistory.length > 0">
-        <!-- Initial broom button -->
+        <!-- Initial eraser button -->
         <button
           *ngIf="!confirmClear"
           type="button"
@@ -69,7 +69,7 @@
           [appTouchTooltip]="'Clear conversation'"
           tooltipAlign="top"
           aria-label="Clear conversation">
-          <i class="fas fa-broom"></i>
+          <i class="fas fa-eraser"></i>
         </button>
         <!-- Confirm row -->
         <div *ngIf="confirmClear" class="clear-confirm-row">
@@ -127,6 +127,84 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
+
+    </div>
+  </div>
+
+  <!-- ── View Browser Panel ─────────────────────────────────────── -->
+  <div class="view-browser-panel" *ngIf="showViewBrowser">
+    <div class="vbp-header">
+      <span class="vbp-title">
+        <i class="fas fa-filter"></i>
+        <ng-container *ngIf="!selectedView">Select a Linear View</ng-container>
+        <ng-container *ngIf="selectedView">{{ selectedView.name }}</ng-container>
+      </span>
+      <div class="vbp-header-actions">
+        <button *ngIf="selectedView" type="button" class="vbp-back-btn" (click)="clearSelectedView()">
+          <i class="fas fa-chevron-left"></i> Views
+        </button>
+        <button type="button" class="vbp-close-btn" (click)="closeViewBrowser()" aria-label="Close view browser">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- View selector -->
+    <div class="vbp-view-list" *ngIf="!selectedView">
+      <div class="vbp-loading" *ngIf="viewBrowserViewsLoading">
+        <i class="fas fa-circle-notch fa-spin"></i> Loading views&hellip;
+      </div>
+      <div class="vbp-error" *ngIf="viewBrowserViewsError">
+        <i class="fas fa-exclamation-triangle"></i> {{ viewBrowserViewsError }}
+      </div>
+      <div class="vbp-empty" *ngIf="!viewBrowserViewsLoading && !viewBrowserViewsError && viewBrowserViews.length === 0">
+        <i class="fas fa-inbox"></i> No saved views found in Linear.
+      </div>
+      <button
+        *ngFor="let view of viewBrowserViews"
+        type="button"
+        class="vbp-view-item"
+        (click)="selectView(view)">
+        <span class="vbp-view-name">{{ view.name }}</span>
+        <span class="vbp-view-desc" *ngIf="view.description">{{ view.description }}</span>
+        <i class="fas fa-chevron-right vbp-view-chevron"></i>
+      </button>
+    </div>
+
+    <!-- Issue list -->
+    <div class="vbp-issue-list" *ngIf="selectedView">
+      <div class="vbp-loading" *ngIf="viewBrowserIssuesLoading">
+        <i class="fas fa-circle-notch fa-spin"></i> Fetching issues&hellip;
+      </div>
+      <div class="vbp-error" *ngIf="viewBrowserIssuesError">
+        <i class="fas fa-exclamation-triangle"></i> {{ viewBrowserIssuesError }}
+      </div>
+      <div class="vbp-empty" *ngIf="!viewBrowserIssuesLoading && !viewBrowserIssuesError && viewBrowserIssues.length === 0">
+        <i class="fas fa-inbox"></i> No issues in this view.
+      </div>
+      <a
+        *ngFor="let issue of viewBrowserIssues"
+        class="vbp-issue-row"
+        [href]="issue.url"
+        target="_blank"
+        rel="noopener noreferrer">
+        <span class="vbp-issue-id">{{ issue.identifier }}</span>
+        <span class="vbp-issue-title">{{ issue.title }}</span>
+        <span class="vbp-issue-state">{{ issue.state.name }}</span>
+      </a>
+    </div>
+
+    <div class="vbp-footer" *ngIf="selectedView && !viewBrowserIssuesLoading && viewBrowserIssues.length > 0">
+      <span class="vbp-count">{{ viewBrowserIssues.length }} issue{{ viewBrowserIssues.length !== 1 ? 's' : '' }}</span>
+      <button
+        type="button"
+        class="vbp-suggest-btn"
+        (click)="suggestPicks()"
+        [disabled]="anySkillLoading">
+        <i class="fas fa-wand-sparkles" *ngIf="!anySkillLoading"></i>
+        <i class="fas fa-circle-notch fa-spin" *ngIf="anySkillLoading"></i>
+        Suggest picks for me
+      </button>
     </div>
   </div>
 

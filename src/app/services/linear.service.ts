@@ -39,6 +39,12 @@ export interface LinearViewer {
   email: string;
 }
 
+export interface LinearCustomView {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 export interface LinearCycle {
   id: string;
   name: string;
@@ -270,6 +276,72 @@ export class LinearService {
       }),
       tap(cycle => this.activeCycleSubject.next(cycle)),
       catchError(() => of(this.activeCycleSubject.value))
+    );
+  }
+
+  /**
+   * Fetch the current viewer's saved custom views.
+   */
+  fetchCustomViews(): Observable<LinearCustomView[]> {
+    if (!this.apiKey) return of([]);
+
+    const query = `
+      query CustomViews {
+        customViews {
+          nodes {
+            id
+            name
+            description
+          }
+        }
+      }
+    `;
+
+    return this.gql<{ customViews: { nodes: LinearCustomView[] } }>(query).pipe(
+      map(d => d.customViews.nodes),
+      catchError(err => { throw err; })
+    );
+  }
+
+  /**
+   * Fetch all issues belonging to a saved custom view.
+   */
+  fetchViewIssues(viewId: string): Observable<{ name: string; issues: LinearIssue[] }> {
+    if (!this.apiKey) return of({ name: '', issues: [] });
+
+    const query = `
+      query ViewIssues($id: String!) {
+        customView(id: $id) {
+          id
+          name
+          issues {
+            nodes {
+              id
+              identifier
+              title
+              description
+              priority
+              url
+              updatedAt
+              dueDate
+              estimate
+              state { name color type }
+              team { name }
+              labels { nodes { name color } }
+              project { name }
+              cycle { id name number startsAt endsAt progress team { name } }
+            }
+          }
+        }
+      }
+    `;
+
+    return this.gql<{ customView: { id: string; name: string; issues: { nodes: LinearIssue[] } } }>(
+      query,
+      { id: viewId }
+    ).pipe(
+      map(d => ({ name: d.customView.name, issues: d.customView.issues.nodes })),
+      catchError(err => { throw err; })
     );
   }
 }

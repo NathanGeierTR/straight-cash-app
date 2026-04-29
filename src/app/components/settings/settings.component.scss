@@ -1,0 +1,131 @@
+$green: #314b3e;
+$border-color: #e5e7eb;
+
+.settings-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.settings-header {
+  margin-bottom: 32px;
+}
+
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--saf-color-text-default, #111);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i { color: $green; font-size: 1.3rem; }
+}
+
+.settings-subtitle {
+  font-size: 0.875rem;
+  color: #888;
+  margin: 0;
+}
+
+.settings-section {
+  background: var(--saf-color-background-default, #fff);
+  border: 1px solid $border-color;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--saf-color-text-default, #111);
+  margin: 0 0 6px;
+}
+
+.section-desc {
+  font-size: 0.85rem;
+  color: #777;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.01em;
+}
+
+.field-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  line-height: 1.55;
+  resize: vertical;
+  color: var(--saf-color-text-default, #222);
+  background: var(--saf-color-background-subtle, #fafafa);
+  transition: border-color 0.15s;
+  outline: none;
+
+  &:focus { border-color: $green; background: #fff; }
+  &::placeholder { color: #bbb; }
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: #bbb;
+  margin: 0;
+  text-align: right;
+}
+
+.save-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: $green;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+
+  &:hover:not(:disabled) { background: darken($green, 8%); transform: scale(1.02); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.save-success {
+  font-size: 0.82rem;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.save-error {
+  font-size: 0.82rem;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

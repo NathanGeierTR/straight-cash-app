@@ -264,7 +264,7 @@
   border: none;
   background: #fff;
   color: var(--saf-color-green-500);
-  font-size: 0.75rem;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -760,6 +760,218 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
+}
+
+// ── View Browser Panel ──────────────────────────────────────────
+
+.view-browser-panel {
+  width: 100%;
+  background: var(--saf-color-background-default, #fff);
+  border-radius: 18px;
+  border: 1px solid var(--saf-color-border-subtle, #e4e4e4);
+  box-shadow: rgba(0, 0, 0, 0.055) 0px 4px 16px 0px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  animation: fade-up 0.25s ease both;
+}
+
+.vbp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--saf-color-border-subtle, #e4e4e4);
+  gap: 8px;
+}
+
+.vbp-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--saf-color-text-default, #222);
+  i { color: var(--saf-color-brand-racing-green-600, #314b3e); }
+}
+
+.vbp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vbp-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--saf-color-text-subtle, #888);
+  background: transparent;
+  border: 1px solid var(--saf-color-border-subtle, #e0e0e0);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: var(--saf-color-background-hover, #f0f0f0);
+    color: var(--saf-color-text-default, #333);
+  }
+}
+
+.vbp-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--saf-color-text-subtle, #999);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: var(--saf-color-background-hover, #f0f0f0);
+    color: var(--saf-color-text-default, #333);
+  }
+}
+
+.vbp-view-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.vbp-issue-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--saf-color-border-subtle, #ddd);
+    border-radius: 4px;
+  }
+}
+
+.vbp-loading, .vbp-error, .vbp-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  font-size: 0.82rem;
+  color: var(--saf-color-text-subtle, #888);
+  i { flex-shrink: 0; }
+}
+
+.vbp-error { color: #c0392b; }
+
+.vbp-view-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--saf-color-border-subtle, #f0f0f0);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--saf-color-background-hover, #f5f5f5); }
+}
+
+.vbp-view-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--saf-color-text-default, #222);
+  flex: 1;
+}
+
+.vbp-view-desc {
+  font-size: 0.78rem;
+  color: var(--saf-color-text-subtle, #888);
+  flex: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vbp-view-chevron {
+  font-size: 0.7rem;
+  color: var(--saf-color-text-subtle, #bbb);
+  flex-shrink: 0;
+}
+
+.vbp-issue-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--saf-color-border-subtle, #f0f0f0);
+  text-decoration: none;
+  transition: background 0.15s;
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--saf-color-background-hover, #f5f5f5); }
+}
+
+.vbp-issue-id {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--saf-color-brand-racing-green-600, #314b3e);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 58px;
+}
+
+.vbp-issue-title {
+  font-size: 0.83rem;
+  color: var(--saf-color-text-default, #333);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vbp-issue-state {
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle, #888);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vbp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--saf-color-border-subtle, #e4e4e4);
+  gap: 8px;
+}
+
+.vbp-count {
+  font-size: 0.78rem;
+  color: var(--saf-color-text-subtle, #888);
+}
+
+.vbp-suggest-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--saf-color-brand-racing-green-600, #314b3e);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  &:hover:not(:disabled) { opacity: 0.85; }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 @keyframes fade-up {

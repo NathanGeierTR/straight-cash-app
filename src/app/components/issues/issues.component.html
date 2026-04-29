@@ -1,0 +1,452 @@
+<div class="issues-page">
+
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <div class="issues-header">
+    <div class="issues-header-title">
+      <h2>
+        <img src="assets/linear-logo.svg" alt="Linear" height="22" class="header-icon">
+        Issues
+      </h2>
+    </div>
+    
+    <!-- ── Not configured ─────────────────────────────────────────── -->
+    <div class="not-configured-card" *ngIf="!isConfigured">
+        <i class="fas fa-plug-circle-xmark"></i>
+        <p>Connect your Linear account to browse issues.</p>
+        <button type="button" class="btn-primary" (click)="goToConnections()">
+            <i class="fas fa-plug"></i> Connect Linear
+        </button>
+    </div>
+
+    <!-- ── AI query card ───────────────────────────────────────────── -->
+    <div *ngIf="isConfigured && isAIConfigured">
+
+      <!-- Messages: shown above the input card when there is conversation -->
+      <div class="conversation-wrapper" #aiMessagesContainer [class.expanded]="conversationExpanded" *ngIf="messages.length > 0 || aiLoading || aiError">
+        <div class="conversation-fade-top" *ngIf="!conversationExpanded"></div>
+        <button
+          type="button"
+          class="conversation-toggle-btn"
+          (click)="toggleConversationExpanded()"
+          [attr.aria-label]="conversationExpanded ? 'Collapse conversation' : 'Expand full conversation'">
+          <i class="fas" [class.fa-chevron-up]="!conversationExpanded" [class.fa-chevron-down]="conversationExpanded"></i>
+        </button>
+
+        <div class="ai-messages">
+        <div
+          class="ai-message"
+          *ngFor="let msg of messages"
+          [class.ai-message--user]="msg.role === 'user'"
+          [class.ai-message--assistant]="msg.role === 'assistant'">
+          <div class="ai-message-meta">
+            <span class="ai-message-sender">{{ msg.role === 'user' ? 'You' : 'Agent' }}</span>
+            <span class="ai-message-time">{{ formatTimestamp(msg.timestamp) }}</span>
+          </div>
+          <div
+            class="ai-message-text"
+            [innerHTML]="msg.role === 'assistant' ? formatAIResponse(msg.content) : msg.content"></div>
+          <div class="ai-message-actions" *ngIf="msg.role === 'assistant'">
+            <button
+              type="button"
+              class="ai-copy-btn"
+              (click)="copyMessage(msg.content)"
+              [appTouchTooltip]="'Copy'"
+              tooltipAlign="top"
+              aria-label="Copy response">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="ai-typing-indicator" *ngIf="aiLoading">
+          <div class="ai-message-meta">
+            <span class="ai-message-sender ai-message-sender--agent">Agent</span>
+          </div>
+          <div class="ai-typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="ai-error" *ngIf="aiError">
+          <i class="fas fa-exclamation-triangle"></i> {{ aiError }}
+        </div>
+        </div><!-- /.ai-messages -->
+      </div><!-- /.conversation-wrapper -->
+
+      <!-- Input card -->
+      <div class="ai-card-label">
+        <i class="fas fa-wand-sparkles"></i>
+        <span>Ask the agent</span>
+        <button
+          *ngIf="messages.length > 0"
+          type="button"
+          class="ai-clear-btn"
+          (click)="clearAI()"
+          [appTouchTooltip]="'Clear conversation'"
+          tooltipAlign="top"
+          aria-label="Clear conversation">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+
+      <div class="ai-card">
+        <div class="ai-input-wrap">
+          <textarea
+            #aiTextarea
+            class="ai-textarea"
+            [(ngModel)]="aiQuery"
+            (keydown)="onAIKeydown($event)"
+            (input)="autoGrow(aiTextarea)"
+            placeholder="{{ activeIssues.length === 0 ? 'Load issues to query with AI…' : 'e.g. Which of these should I pick up next?' }}"
+            [disabled]="aiLoading || activeIssues.length === 0"
+            aria-label="Ask AI about these issues"></textarea>
+          <button
+            type="button"
+            class="ai-send-btn"
+            (click)="runAIQuery()"
+            [disabled]="!aiQuery.trim() || aiLoading || activeIssues.length === 0"
+            aria-label="Send">
+            <i class="fas fa-paper-plane" *ngIf="!aiLoading"></i>
+            <i class="fas fa-circle-notch fa-spin" *ngIf="aiLoading"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI not configured nudge -->
+    <div class="ai-nudge" *ngIf="isConfigured && !isAIConfigured">
+        <i class="fab fa-github"></i>
+        <span>Connect a GitHub AI token to query these issues with AI.</span>
+        <button type="button" class="btn-link" (click)="goToConnections()">Set up →</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'assigned'"
+        (click)="switchTab('assigned')">
+        <i class="fas fa-user-check"></i>
+        Assigned to me
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'view'"
+        (click)="switchTab('view')">
+        <i class="fas fa-filter"></i>
+        Views
+      </button>
+      <span class="issue-count" *ngIf="isConfigured && activeCount > 0">
+        {{ activeCount }} {{ activeCount === 1 ? 'issue' : 'issues' }}
+      </span>
+    </div>
+  </div>
+
+  <ng-container *ngIf="isConfigured">
+
+    <!-- ── Assigned toolbar ─────────────────────────────────────── -->
+    <div class="list-toolbar" *ngIf="activeTab === 'assigned'">
+      <div class="search-input-wrap">
+        <i class="fas fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="filterText"
+          placeholder="Filter issues…"
+          aria-label="Filter issues">
+      </div>
+      <button
+        type="button"
+        class="toolbar-toggle-btn"
+        [class.active]="showCompleted"
+        (click)="toggleShowCompleted()"
+        [appTouchTooltip]="showCompleted ? 'Hide completed' : 'Show completed'"
+        tooltipAlign="top">
+        <i class="fas" [class.fa-eye]="showCompleted" [class.fa-eye-slash]="!showCompleted"></i>
+        {{ showCompleted ? 'Completed on' : 'Completed off' }}
+      </button>
+      <button
+        type="button"
+        class="toolbar-icon-btn"
+        (click)="loadAssigned()"
+        [disabled]="assignedLoading"
+        [appTouchTooltip]="'Refresh'"
+        tooltipAlign="top"
+        aria-label="Refresh issues">
+        <i class="fas fa-rotate" [class.fa-spin]="assignedLoading"></i>
+      </button>
+    </div>
+
+    <!-- ── View toolbar ─────────────────────────────────────────── -->
+    <div class="list-toolbar" *ngIf="activeTab === 'view'">
+      <!-- View selector -->
+      <div class="view-selector-container">
+        <button
+          type="button"
+          class="view-selector-btn"
+          [class.open]="viewSelectorOpen"
+          (click)="toggleViewSelector()">
+          <i class="fas fa-filter"></i>
+          <span>{{ selectedView ? selectedView.name : 'Select a view…' }}</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="view-selector-dropdown" *ngIf="viewSelectorOpen">
+          <div class="view-dropdown-loading" *ngIf="viewsLoading">
+            <i class="fas fa-circle-notch fa-spin"></i> Loading…
+          </div>
+          <div class="view-dropdown-error" *ngIf="viewsError">
+            <i class="fas fa-exclamation-triangle"></i> {{ viewsError }}
+          </div>
+          <div class="view-dropdown-empty" *ngIf="!viewsLoading && !viewsError && customViews.length === 0">
+            <i class="fas fa-inbox"></i> No saved views found.
+          </div>
+          <button
+            *ngFor="let view of customViews"
+            type="button"
+            class="view-dropdown-item"
+            [class.selected]="selectedView?.id === view.id"
+            (click)="selectView(view)">
+            <span class="view-item-main">
+              <span class="view-item-name">{{ view.name }}</span>
+              <span class="view-item-desc" *ngIf="view.description">{{ view.description }}</span>
+            </span>
+            <button
+              type="button"
+              class="view-favorite-btn"
+              [class.active]="isFavorited(view)"
+              (click)="toggleFavorite(view, $event)"
+              [attr.aria-label]="isFavorited(view) ? 'Remove from favorites' : 'Add to favorites'"
+              [appTouchTooltip]="isFavorited(view) ? 'Unfavorite' : 'Favorite'"
+              tooltipAlign="top">
+              <i class="fas fa-star" *ngIf="isFavorited(view)"></i>
+              <i class="far fa-star" *ngIf="!isFavorited(view)"></i>
+            </button>
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="selectedView">
+        <div class="search-input-wrap">
+          <i class="fas fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="filterText"
+            placeholder="Filter issues…"
+            aria-label="Filter issues">
+        </div>
+        <button
+          type="button"
+          class="toolbar-icon-btn"
+          (click)="selectView(selectedView)"
+          [disabled]="viewIssuesLoading"
+          [appTouchTooltip]="'Refresh'"
+          tooltipAlign="top"
+          aria-label="Refresh">
+          <i class="fas fa-rotate" [class.fa-spin]="viewIssuesLoading"></i>
+        </button>
+      </ng-container>
+    </div>
+
+    <!-- ── Favorites quick-access ──────────────────────────────── -->
+    <div class="favorites-row" *ngIf="activeTab === 'view' && favoritedViews.length > 0">
+      <button
+        *ngFor="let view of favoritedViews"
+        type="button"
+        class="favorite-badge"
+        [class.active]="selectedView?.id === view.id"
+        (click)="selectView(view)"
+        [appTouchTooltip]="view.name"
+        tooltipAlign="top">
+        <i class="fas fa-star"></i>
+        {{ view.name }}
+      </button>
+    </div>
+
+    <!-- ── Assigned errors/loading ──────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'assigned'">
+      <div class="error-banner" *ngIf="assignedError && !assignedLoading">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ assignedError }}</span>
+        <button type="button" class="btn-retry" (click)="loadAssigned()">
+          <i class="fas fa-rotate"></i> Retry
+        </button>
+      </div>
+
+      <div class="skeleton-list" *ngIf="assignedLoading && assignedIssues.length === 0">
+        <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5]"></div>
+      </div>
+
+      <div class="empty-state" *ngIf="!assignedLoading && !assignedError && filteredAssigned.length === 0 && assignedIssues.length > 0">
+        <i class="fas fa-magnifying-glass"></i>
+        <p>No issues match your filter.</p>
+      </div>
+      <div class="empty-state" *ngIf="!assignedLoading && !assignedError && assignedIssues.length === 0">
+        <i class="fas fa-circle-check"></i>
+        <p>No open issues assigned to you.</p>
+      </div>
+    </ng-container>
+
+    <!-- ── View errors/loading ───────────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'view' && selectedView">
+      <div class="error-banner" *ngIf="viewIssuesError && !viewIssuesLoading">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ viewIssuesError }}</span>
+        <button type="button" class="btn-retry" (click)="selectView(selectedView)">
+          <i class="fas fa-rotate"></i> Retry
+        </button>
+      </div>
+
+      <div class="skeleton-list" *ngIf="viewIssuesLoading && viewIssues.length === 0">
+        <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5]"></div>
+      </div>
+
+      <div class="empty-state" *ngIf="!viewIssuesLoading && !viewIssuesError && filteredViewIssues.length === 0 && viewIssues.length > 0">
+        <i class="fas fa-magnifying-glass"></i>
+        <p>No issues match your filter.</p>
+      </div>
+      <div class="empty-state" *ngIf="!viewIssuesLoading && !viewIssuesError && viewIssues.length === 0">
+        <i class="fas fa-inbox"></i>
+        <p>This view has no issues.</p>
+      </div>
+    </ng-container>
+
+    <div class="empty-state" *ngIf="activeTab === 'view' && !selectedView && !viewsLoading">
+      <i class="fas fa-filter"></i>
+      <p>Select a Linear view above to browse its issues.</p>
+    </div>
+
+    <!-- ── Issue list ──────────────────────────────────────────── -->
+    <div class="issue-list" *ngIf="activeIssues.length > 0">
+      <div
+        *ngFor="let issue of activeIssues"
+        class="issue-item"
+        [class.is-overdue]="isOverdue(issue)"
+        [class.expanded]="isExpanded(issue.id)">
+
+        <!-- Summary row -->
+        <div
+          class="issue-summary"
+          (click)="toggleIssue(issue.id)"
+          (keydown.enter)="toggleIssue(issue.id)"
+          (keydown.space)="toggleIssue(issue.id); $event.preventDefault()"
+          role="button"
+          tabindex="0"
+          [attr.aria-expanded]="isExpanded(issue.id)"
+          [attr.aria-label]="issue.identifier + ': ' + issue.title">
+
+          <!-- State icon or dot -->
+          <ng-container *ngIf="getStateIcon(issue.state.type, issue.state.name) as icon; else dotTpl">
+            <i class="fas {{ icon }} state-icon {{ getStateClass(issue.state.type) }}"
+               [style.color]="getStateIconColor(issue.state.type, issue.state.name, issue.state.color)"
+               [appTouchTooltip]="issue.state.name"
+               tooltipAlign="top"
+               aria-hidden="true"></i>
+          </ng-container>
+          <ng-template #dotTpl>
+            <span
+              class="state-dot {{ getStateClass(issue.state.type) }}"
+              [style.background-color]="issue.state.color"
+              [appTouchTooltip]="issue.state.name"
+              tooltipAlign="top">
+            </span>
+          </ng-template>
+
+          <!-- Identifier + title -->
+          <div class="issue-summary-content">
+            <span class="issue-identifier">{{ issue.identifier }}</span>
+            <span class="issue-title">{{ issue.title }}</span>
+          </div>
+
+          <!-- Overdue badge -->
+          <span class="due-date overdue" *ngIf="issue.dueDate && isOverdue(issue)">
+            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+            {{ formatDate(issue.dueDate) }}
+          </span>
+
+          <!-- Open in Linear -->
+          <a
+            [href]="issue.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="open-issue-btn"
+            (click)="$event.stopPropagation()"
+            [attr.aria-label]="'Open ' + issue.identifier + ' in Linear'">
+            <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          </a>
+
+          <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+        </div>
+
+        <!-- Expanded details -->
+        <div class="issue-details" *ngIf="isExpanded(issue.id)">
+          <!-- State + priority -->
+          <div class="detail-row detail-state-row">
+            <span class="state-label">
+              <ng-container *ngIf="getStateIcon(issue.state.type, issue.state.name) as icon; else detailDotTpl">
+                <i class="fas {{ icon }} state-icon {{ getStateClass(issue.state.type) }}"
+                   [style.color]="getStateIconColor(issue.state.type, issue.state.name, issue.state.color)"
+                   aria-hidden="true"></i>
+              </ng-container>
+              <ng-template #detailDotTpl>
+                <span class="state-dot {{ getStateClass(issue.state.type) }}" [style.background-color]="issue.state.color"></span>
+              </ng-template>
+              {{ issue.state.name }}
+            </span>
+            <span class="meta-sep">·</span>
+            <span class="priority-label {{ getPriorityClass(issue.priority) }}">
+              <i class="fas {{ getPriorityIcon(issue.priority) }}" aria-hidden="true"></i>
+              {{ getPriorityLabel(issue.priority) }}
+            </span>
+          </div>
+
+          <!-- Team / project / cycle -->
+          <div class="detail-row detail-meta">
+            <span class="meta-team">{{ issue.team.name }}</span>
+            <ng-container *ngIf="issue.project">
+              <span class="meta-sep">·</span>
+              <span class="meta-project">{{ issue.project.name }}</span>
+            </ng-container>
+            <ng-container *ngIf="issue.cycle">
+              <span class="meta-sep">·</span>
+              <span class="meta-cycle">
+                <i class="fas fa-rotate" aria-hidden="true"></i>{{ issue.cycle.name || 'Cycle ' + issue.cycle.number }}
+              </span>
+            </ng-container>
+          </div>
+
+          <!-- Labels + due + estimate -->
+          <div class="detail-row detail-tags" *ngIf="issue.labels.nodes.length > 0 || issue.dueDate || issue.estimate !== null">
+            <span
+              *ngFor="let label of issue.labels.nodes"
+              class="label-chip"
+              [style.background-color]="label.color + '33'"
+              [style.border-color]="label.color"
+              [style.color]="label.color">
+              {{ label.name }}
+            </span>
+            <span class="due-date" *ngIf="issue.dueDate && !isOverdue(issue)">
+              <i class="fas fa-calendar-day" aria-hidden="true"></i>
+              {{ formatDate(issue.dueDate) }}
+            </span>
+            <span class="estimate" *ngIf="issue.estimate !== null" [title]="issue.estimate + ' points'">
+              {{ issue.estimate }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          <div class="issue-description" *ngIf="issue.description?.trim()" [innerHTML]="renderDescription(issue.description)"></div>
+          <div class="issue-description issue-description--empty" *ngIf="!issue.description?.trim()">
+            <i class="fas fa-file-lines" aria-hidden="true"></i> No description
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>

@@ -9,7 +9,7 @@ import { GoalsService, Goal } from '../../../services/goals.service';
 import { AdoService } from '../../../services/ado.service';
 import { CoworkerService } from '../../../services/coworker.service';
 import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
-import { LinearService, LinearIssue } from '../../../services/linear.service';
+import { LinearService, LinearIssue, LinearCustomView } from '../../../services/linear.service';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { TouchTooltipDirective } from '../../../directives/touch-tooltip.directive';
@@ -67,16 +67,27 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // Skills
   skills: Skill[] = [
-    { id: 'daily-summary', label: 'Daily Summary',  icon: 'fas fa-wand-sparkles', description: 'Motivational overview + top priorities for today', loading: false },
-    { id: 'scrum-update',  label: 'Scrum Update',   icon: 'fas fa-users',          description: 'Standup update drafted from journal entries',   loading: false },
-    { id: 'sprint-retro',  label: 'Sprint Retro',   icon: 'fas fa-chart-bar',      description: 'Retro board suggestions based on your sprint activity', loading: false },
-    { id: 'branch-name',   label: 'Branch Name',    icon: 'fas fa-code-branch',    description: 'Generate a git branch name from a Linear issue', loading: false },
+    { id: 'daily-summary', label: 'Daily Summary',  icon: 'fas fa-wand-sparkles',        description: 'Motivational overview + top priorities for today', loading: false },
+    { id: 'scrum-update',  label: 'Scrum Update',   icon: 'fas fa-users',                description: 'Standup update drafted from journal entries',   loading: false },
+    { id: 'sprint-retro',  label: 'Sprint Retro',   icon: 'fas fa-chart-bar',            description: 'Retro board suggestions based on your sprint activity', loading: false },
+    { id: 'branch-name',   label: 'Branch Name',    icon: 'fas fa-code-branch',          description: 'Generate a git branch name from a Linear issue', loading: false },
+    { id: 'view-triage',   label: 'Issue Suggestions', icon: 'fas fa-magnifying-glass-chart', description: 'Recommend issues from a Linear view that fit your engineering profile', loading: false },
   ];
 
   // Branch name skill state
   showBranchPicker = false;
   branchIssues: LinearIssue[] = [];
   private linearIssues: LinearIssue[] = [];
+
+  // View browser panel state
+  showViewBrowser = false;
+  viewBrowserViews: LinearCustomView[] = [];
+  viewBrowserViewsLoading = false;
+  viewBrowserViewsError: string | null = null;
+  selectedView: LinearCustomView | null = null;
+  viewBrowserIssues: LinearIssue[] = [];
+  viewBrowserIssuesLoading = false;
+  viewBrowserIssuesError: string | null = null;
 
   // Live data
   private journalEntries: JournalEntry[] = [];
@@ -222,6 +233,12 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
 
+    if (skillId === 'view-triage') {
+      this.showSkillsDropdown = false;
+      this.openViewBrowser();
+      return;
+    }
+
     const skill = this.skills.find(s => s.id === skillId);
     if (!skill) return;
 
@@ -260,13 +277,17 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // ── Core send ─────────────────────────────────────────────────
 
-  private sendMessage(userText: string, skill?: Skill): void {
+  private sendMessage(
+    userText: string,
+    skill?: Skill,
+    options?: { systemPrompt?: string; skipHistory?: boolean }
+  ): void {
     this.error = null;
     if (!skill) this.loading = true;
 
     const systemMsg: ChatMessage = {
       role: 'system',
-      content: this.buildSystemContext(),
+      content: options?.systemPrompt ?? this.buildSystemContext(),
       timestamp: new Date()
     };
 
@@ -276,7 +297,8 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       timestamp: new Date(),
       ...(skill ? { skillLabel: skill.label, skillDescription: skill.description, skillPrompt: userText } : {})
     };
-    const historyForApi = [systemMsg, ...this.conversationHistory, userMsg];
+    const priorHistory = options?.skipHistory ? [] : this.conversationHistory;
+    const historyForApi = [systemMsg, ...priorHistory, userMsg];
 
     // Show user turn immediately
     this.conversationHistory = [...this.conversationHistory, userMsg];
@@ -457,6 +479,109 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   cancelBranchPicker(): void {
     this.showBranchPicker = false;
     this.shouldScroll = true;
+  }
+
+  openViewBrowser(): void {
+    if (!this.linearService.isConfigured()) {
+      this.error = 'Connect Linear first to use Issue Suggestions.';
+      return;
+    }
+    this.showViewBrowser = true;
+    if (this.viewBrowserViews.length === 0) {
+      this.viewBrowserViewsLoading = true;
+      this.viewBrowserViewsError = null;
+      this.linearService.fetchCustomViews().subscribe({
+        next: views => {
+          this.viewBrowserViews = views;
+          this.viewBrowserViewsLoading = false;
+        },
+        error: (err) => {
+          this.viewBrowserViewsError = err.message ?? 'Failed to load Linear views';
+          this.viewBrowserViewsLoading = false;
+        }
+      });
+    }
+  }
+
+  selectView(view: LinearCustomView): void {
+    this.selectedView = view;
+    this.viewBrowserIssues = [];
+    this.viewBrowserIssuesLoading = true;
+    this.viewBrowserIssuesError = null;
+    this.linearService.fetchViewIssues(view.id).subscribe({
+      next: ({ issues }) => {
+        this.viewBrowserIssues = issues;
+        this.viewBrowserIssuesLoading = false;
+      },
+      error: (err) => {
+        this.viewBrowserIssuesError = err.message ?? 'Failed to load view issues';
+        this.viewBrowserIssuesLoading = false;
+      }
+    });
+  }
+
+  clearSelectedView(): void {
+    this.selectedView = null;
+    this.viewBrowserIssues = [];
+    this.viewBrowserIssuesError = null;
+  }
+
+  closeViewBrowser(): void {
+    this.showViewBrowser = false;
+    this.selectedView = null;
+    this.viewBrowserIssues = [];
+    this.viewBrowserIssuesError = null;
+  }
+
+  suggestPicks(): void {
+    if (!this.selectedView || this.viewBrowserIssues.length === 0 || this.anySkillLoading) return;
+    const skill = this.skills.find(s => s.id === 'view-triage')!;
+    skill.loading = true;
+    this.error = null;
+    const now = new Date();
+    const systemPrompt = `You are a helpful AI assistant helping an engineer choose the best Linear issues to pick up next. Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Be concise and use markdown.`;
+    this.sendMessage(this.buildViewTriagePrompt(), skill, { systemPrompt, skipHistory: true });
+  }
+
+  private buildViewTriagePrompt(): string {
+    const viewName = this.selectedView?.name ?? 'Selected View';
+    const viewIssues = this.viewBrowserIssues;
+    const MAX_VIEW_ISSUES = 50;
+    const MAX_PROFILE_ISSUES = 10;
+    const truncated = viewIssues.length > MAX_VIEW_ISSUES;
+    const displayIssues = truncated ? viewIssues.slice(0, MAX_VIEW_ISSUES) : viewIssues;
+    const priorities = ['', 'Urgent', 'High', 'Medium', 'Low'];
+
+    const lines: string[] = [
+      `Recommend 3–5 issues from the Linear view "${viewName}" that best match my engineering profile.`
+    ];
+
+    if (this.linearIssues.length > 0) {
+      lines.push(`\n## My Profile (current assignments)`);
+      this.linearIssues.slice(0, MAX_PROFILE_ISSUES).forEach(i => {
+        const tags = [
+          i.project?.name,
+          ...i.labels.nodes.map(l => l.name)
+        ].filter(Boolean).join(', ');
+        lines.push(`- ${i.identifier}: ${i.title}${tags ? ` [${tags}]` : ''}`);
+      });
+    }
+
+    lines.push(`\n## View: "${viewName}" (${viewIssues.length} issues${truncated ? `, showing first ${MAX_VIEW_ISSUES}` : ''})`);
+    displayIssues.forEach(i => {
+      const tags = [
+        i.project?.name,
+        ...i.labels.nodes.map(l => l.name)
+      ].filter(Boolean).join(', ');
+      const prio = i.priority > 0 && i.priority < priorities.length ? priorities[i.priority] : '';
+      const est = i.estimate != null ? `${i.estimate}pt` : '';
+      const meta = [prio, est, i.state.name].filter(Boolean).join(' | ');
+      lines.push(`- [${i.identifier}](${i.url}): ${i.title}${tags ? ` [${tags}]` : ''}${meta ? ` (${meta})` : ''}`);
+    });
+
+    lines.push(`\nRespond with a numbered list. For each of your 3–5 picks: link the issue identifier (e.g. [LIN-123](url)), give a 1-sentence skill-match reason, and note any complexity or risk. Order best-fit first.`);
+
+    return lines.join('\n');
   }
 
   private buildBranchNamePrompt(issue: LinearIssue): string {

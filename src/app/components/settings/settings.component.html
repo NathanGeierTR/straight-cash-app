@@ -1,0 +1,53 @@
+<div class="settings-page">
+  <div class="settings-header">
+    <h1 class="settings-title">
+      <i class="fas fa-user"></i>
+      Settings
+    </h1>
+    <p class="settings-subtitle">Manage your personal preferences and profile.</p>
+  </div>
+
+  <div class="settings-section">
+    <h2 class="section-title">AI Profile</h2>
+    <p class="section-desc">
+      Describe your role, skills, and focus areas. The AI will use this when recommending which
+      issues are good candidates for you to pick up.
+    </p>
+
+    <div class="field-group">
+      <label class="field-label" for="jobDescription">
+        Role &amp; Skillset
+      </label>
+      <textarea
+        id="jobDescription"
+        class="field-textarea"
+        [(ngModel)]="jobDescription"
+        placeholder="e.g. Senior frontend engineer focused on React and TypeScript. I work on the design system team and typically pick up UI bugs, accessibility improvements, and component refactors. I avoid backend/infra work."
+        rows="6"
+        maxlength="2000"
+        aria-describedby="jobDescriptionHint"></textarea>
+      <p class="field-hint" id="jobDescriptionHint">
+        {{ jobDescription.length }} / 2000 characters
+      </p>
+    </div>
+
+    <div class="save-row">
+      <button
+        type="button"
+        class="btn-save"
+        (click)="save()"
+        [disabled]="saving">
+        <i class="fas fa-circle-notch fa-spin" *ngIf="saving"></i>
+        <i class="fas fa-floppy-disk" *ngIf="!saving"></i>
+        {{ saving ? 'Saving…' : 'Save' }}
+      </button>
+
+      <span class="save-success" *ngIf="saved">
+        <i class="fas fa-check-circle"></i> Saved
+      </span>
+      <span class="save-error" *ngIf="saveError">
+        <i class="fas fa-exclamation-triangle"></i> {{ saveError }}
+      </span>
+    </div>
+  </div>
+</div>

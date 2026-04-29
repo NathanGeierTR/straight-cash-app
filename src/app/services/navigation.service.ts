@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-export type AppView = 'dashboard' | 'connections' | 'journal' | 'goals' | 'tasks' | 'open-arena-chat';
+export type AppView = 'dashboard' | 'connections' | 'journal' | 'goals' | 'tasks' | 'open-arena-chat' | 'issues' | 'settings';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationService {

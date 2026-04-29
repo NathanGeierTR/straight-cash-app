@@ -48,6 +48,12 @@
           <i class="fas fa-sticky-note"></i>
         </button>
 
+        <button class="sidenav-btn" [class.active]="currentView === 'issues'"
+                (click)="navigateTo('issues')" data-label="Issues" aria-label="Issues"
+                [appTouchTooltip]="'Issues'" tooltipAlign="bottom-right" tooltipAlignMd="right">
+          <i class="fas fa-list-check"></i>
+        </button>
+
         <button class="sidenav-btn" [class.active]="currentView === 'open-arena-chat'"
                 (click)="navigateTo('open-arena-chat')" data-label="Open Arena Chat" aria-label="Open Arena Chat"
                 [appTouchTooltip]="'Open Arena Chat'" tooltipAlign="bottom-right" tooltipAlignMd="right">
@@ -72,10 +78,26 @@
                 [class.disconnected]="!isAIConnected || hasTokenError"></span>
         </button>
 
-        <button class="sidenav-btn" (click)="logout()" data-label="Sign Out" aria-label="Sign Out"
-                [appTouchTooltip]="'Sign Out'" tooltipAlign="bottom-left" tooltipAlignMd="right">
-          <i class="fas fa-sign-out-alt"></i>
-        </button>
+        <!-- User menu -->
+        <div class="user-menu-wrap"
+             dropdownAlign="down-right"
+             dropdownAlignMd="up-left">
+          <button class="sidenav-btn" (click)="toggleUserMenu($event)" [class.active]="currentView === 'settings'"
+                  data-label="Account" aria-label="Account" aria-haspopup="true" [attr.aria-expanded]="showUserMenu"
+                  [appTouchTooltip]="'Account'" tooltipAlign="bottom-left" tooltipAlignMd="right">
+            <i class="fas fa-user"></i>
+          </button>
+
+          <div class="user-dropdown" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+            <button class="user-dropdown-item" (click)="navigateTo('settings'); showUserMenu = false">
+              <i class="fas fa-sliders"></i> Settings
+            </button>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item user-dropdown-item--danger" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i> Sign out
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Setup Prompt Popover -->
@@ -96,6 +118,8 @@
       <app-journal *ngIf="currentView === 'journal'"></app-journal>
       <app-goals *ngIf="currentView === 'goals'"></app-goals>
       <app-tasks *ngIf="currentView === 'tasks'"></app-tasks>
+      <app-issues *ngIf="currentView === 'issues'"></app-issues>
+      <app-settings *ngIf="currentView === 'settings'"></app-settings>
       <app-open-arena-chat *ngIf="currentView === 'open-arena-chat'"></app-open-arena-chat>
     </main>
   </div>
