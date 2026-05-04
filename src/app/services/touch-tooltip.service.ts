@@ -6,7 +6,6 @@ export type TooltipAlign = 'top' | 'top-right' | 'right' | 'bottom-right' | 'bot
 export class TouchTooltipService implements OnDestroy {
   private el: HTMLSpanElement | null = null;
   private dismissHandler: (() => void) | null = null;
-  private scheduleTimer: ReturnType<typeof setTimeout> | null = null;
 
   private ensure(): void {
     if (this.el) return;
@@ -17,15 +16,20 @@ export class TouchTooltipService implements OnDestroy {
     this.el = span;
   }
 
-  /** Show on tap — defers the dismiss listener so the current touchend doesn't immediately dismiss. */
+  private autoHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Show on tap — displays briefly then auto-hides. Does NOT block the click event. */
   showOnTap(rect: DOMRect, label: string, align: TooltipAlign = 'top'): void {
     this.clearDismissListener();
+    if (this.autoHideTimer !== null) {
+      clearTimeout(this.autoHideTimer);
+      this.autoHideTimer = null;
+    }
     this.showForElement(rect, label, align);
-    this.scheduleTimer = setTimeout(() => {
-      this.scheduleTimer = null;
-      this.dismissHandler = () => this.hide();
-      document.addEventListener('touchstart', this.dismissHandler, { once: true, capture: true });
-    }, 0);
+    this.autoHideTimer = setTimeout(() => {
+      this.autoHideTimer = null;
+      this.hide();
+    }, 1500);
   }
 
   showForElement(rect: DOMRect, label: string, align: TooltipAlign = 'top'): void {
@@ -84,7 +88,6 @@ export class TouchTooltipService implements OnDestroy {
   }
 
   private clearDismissListener(): void {
-    if (this.scheduleTimer !== null) { clearTimeout(this.scheduleTimer); this.scheduleTimer = null; }
     if (this.dismissHandler) {
       document.removeEventListener('touchstart', this.dismissHandler, { capture: true });
       this.dismissHandler = null;
@@ -93,11 +96,13 @@ export class TouchTooltipService implements OnDestroy {
 
   hide(): void {
     this.clearDismissListener();
+    if (this.autoHideTimer !== null) { clearTimeout(this.autoHideTimer); this.autoHideTimer = null; }
     if (this.el) this.el.style.display = 'none';
   }
 
   ngOnDestroy(): void {
     this.clearDismissListener();
+    if (this.autoHideTimer !== null) { clearTimeout(this.autoHideTimer); this.autoHideTimer = null; }
     this.el?.remove();
   }
 }
