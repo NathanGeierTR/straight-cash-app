@@ -1,0 +1,682 @@
+// ─── Shared vars ─────────────────────────────────────────────────────────────
+$border-color: #e5e7eb;
+$radius: 12px;
+$widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$unread-color: var(--saf-color-brand-sky-500, #0ea5e9);
+
+// ─── Host ─────────────────────────────────────────────────────────────────────
+:host {
+  display: block;
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.outlook-mail {
+  border-radius: $radius;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.widget-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  padding-bottom: 8px;
+}
+
+.widget-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--saf-color-brand-sky-700, #0369a1);
+
+  .widget-icon {
+    color: var(--saf-color-brand-sky-600, #0284c7);
+    font-size: 1.1rem;
+  }
+}
+
+.unread-badge {
+  background: $unread-color;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+// ─── Toolbar ─────────────────────────────────────────────────────────────────
+.widget-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// btn-menu-toggle is global (styles.scss)
+
+// ─── Not configured ───────────────────────────────────────────────────────────
+.not-configured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  color: var(--saf-color-text-subtle);
+  text-align: center;
+
+  i { font-size: 2rem; }
+  p { margin: 0; font-size: 0.9rem; }
+}
+
+.btn-primary {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--saf-color-brand-orange-400);
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--saf-color-semantic-error-subtle);
+  color: var(--saf-color-semantic-error-strong);
+  font-size: 0.85rem;
+
+  .btn-retry {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+
+.skeleton-row {
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--saf-color-background-subtle) 25%,
+    var(--saf-color-line-subtle) 50%,
+    var(--saf-color-background-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.9rem;
+
+  i { font-size: 1.5rem; color: var(--saf-color-semantic-success); }
+  p { margin: 0; }
+}
+
+// ─── Message list ─────────────────────────────────────────────────────────────
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-item {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.12s;
+
+  &:hover {
+    border-color: $border-color;
+  }
+
+  &.is-unread {
+    .message-sender { font-weight: 700; }
+    .message-subject { font-weight: 600; }
+  }
+
+  &.expanded {
+    border-color: $border-color;
+    background: var(--saf-color-background-subtle);
+
+    .summary-chevron { transform: rotate(180deg); }
+  }
+}
+
+// ─── Summary row ──────────────────────────────────────────────────────────────
+.message-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-subtle);
+    outline: none;
+  }
+
+  .message-item.expanded & {
+    background: transparent;
+  }
+}
+
+.message-summary-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.message-sender {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--saf-color-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-subject {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--saf-color-text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-time {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+}
+
+.importance-icon {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: #dc2626;
+}
+
+.attachment-icon {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+}
+
+.summary-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--saf-color-text-default);
+  transition: transform 0.18s ease;
+}
+
+// ─── Open in Outlook button ───────────────────────────────────────────────────
+.open-issue-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-color;
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  text-decoration: none;
+  transition: background 0.12s;
+
+  i { font-size: 14px; }
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-default);
+    outline: none;
+  }
+}
+
+// ─── Unread dot ───────────────────────────────────────────────────────────────
+.unread-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid $border-color;
+  transition: background 0.15s, border-color 0.15s;
+
+  &.is-unread {
+    background: $unread-color;
+    border-color: $unread-color;
+  }
+}
+
+// ─── Expanded details ─────────────────────────────────────────────────────────
+.message-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid $border-color;
+  background-color: #eff6ff; // sky-50 equivalent
+}
+
+// ─── Detail rows ──────────────────────────────────────────────────────────────
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--saf-color-text-subtle);
+  flex-wrap: wrap;
+
+  .meta-sep { opacity: 0.5; }
+}
+
+.detail-meta-row {
+  font-size: 0.78rem;
+}
+
+.meta-icon {
+  font-size: 0.9rem;
+  color: var(--saf-color-brand-sky-500, #0ea5e9);
+}
+
+.detail-sender {
+  font-weight: 600;
+  color: var(--saf-color-text-default);
+}
+
+.detail-address {
+  color: var(--saf-color-text-subtle);
+  font-size: 0.72rem;
+}
+
+.detail-time {
+  color: var(--saf-color-text-subtle);
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+.detail-badges {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.badge-attachment {
+  background: var(--saf-color-background-subtle);
+  border-color: $border-color;
+  color: var(--saf-color-text-subtle);
+}
+
+.badge-important {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+// ─── Message body ─────────────────────────────────────────────────────────────
+.message-body {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--saf-color-background-default, #fff);
+  border: 1px solid var(--saf-color-border-subtle, #e5e7eb);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--saf-color-text-default);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+
+  // Scoped HTML element resets (for rendered email bodies)
+  p       { margin: 0 0 0.5em; &:last-child { margin-bottom: 0; } }
+  h1, h2, h3, h4 { font-size: 0.88rem; font-weight: 700; margin: 0.6em 0 0.3em; }
+  ul, ol  { margin: 0.25em 0 0.5em 1.25em; padding: 0; }
+  li      { margin-bottom: 0.15em; }
+  a       { color: var(--saf-color-interactive-default, #0369a1); }
+  img     { max-width: 100%; border-radius: 4px; }
+  table   { font-size: inherit; border-collapse: collapse; }
+  td, th  { padding: 4px 8px; border: 1px solid $border-color; }
+  blockquote {
+    border-left: 3px solid $border-color;
+    margin: 0.5em 0;
+    padding: 0 0.75em;
+    color: var(--saf-color-text-subtle);
+  }
+  hr { border: none; border-top: 1px solid $border-color; margin: 0.5em 0; }
+  div { max-width: 100%; }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .message-summary { padding: 6px 8px; }
+  .message-subject { font-size: 0.82rem; }
+}
+
+
+// ─── Not Configured ───────────────────────────────────────────────────────────
+
+.not-configured-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.875rem;
+
+  .widget-icon {
+    font-size: 1rem;
+  }
+
+  .label {
+    flex: 1;
+  }
+
+  .btn-connect {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--saf-color-line-subtle);
+    background: var(--saf-color-background-subtle);
+    color: var(--saf-color-text-default);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--saf-color-background-muted);
+    }
+  }
+}
+
+// ─── Widget Header ────────────────────────────────────────────────────────────
+
+.widget-header {
+  align-items: center;
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding-bottom: 8px;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--saf-color-text-subtle);
+
+    i { font-size: 0.9rem; }
+
+    .widget-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--saf-color-text-default);
+    }
+
+    .unread-badge {
+      background: var(--saf-color-brand-sky-500);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      min-width: 18px;
+      text-align: center;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .error-hint {
+    color: #ef4444;
+    font-size: 0.85rem;
+    cursor: default;
+  }
+
+  .btn-refresh {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--saf-color-text-subtle);
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover:not([disabled]) {
+      color: var(--saf-color-brand-sky-500);
+      background: var(--saf-color-background-subtle);
+    }
+
+    &[disabled] { opacity: 0.4; cursor: default; }
+  }
+}
+
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+
+.loading-state {
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .skeleton-row {
+    height: 52px;
+    border-radius: 6px;
+    background: linear-gradient(90deg,
+      var(--saf-color-background-subtle) 25%,
+      var(--saf-color-background-muted, #f3f4f6) 50%,
+      var(--saf-color-background-subtle) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Empty / Error ────────────────────────────────────────────────────────────
+
+.empty-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.875rem;
+
+  i { font-size: 1.5rem; }
+}
+
+.error-state {
+  color: #ef4444;
+}
+
+// ─── Message List ─────────────────────────────────────────────────────────────
+
+.message-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid $border-color;
+  transition: background 0.12s;
+  outline-offset: -2px;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover,
+  &:focus {
+    background: var(--saf-color-background-subtle);
+
+    .open-icon { opacity: 1; }
+  }
+
+  &.unread {
+    background: color-mix(in srgb, var(--saf-color-brand-sky-500) 5%, transparent);
+
+    .unread-dot {
+      background: var(--saf-color-brand-sky-500);
+    }
+
+    .sender { font-weight: 700; }
+    .msg-subject { font-weight: 600; }
+  }
+
+  &.important .msg-subject { color: #dc2626; }
+}
+
+.unread-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.msg-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.sender {
+  font-size: 0.82rem;
+  color: var(--saf-color-text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.timestamp {
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+  flex-shrink: 0;
+}
+
+.msg-subject {
+  font-size: 0.82rem;
+  color: var(--saf-color-text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+
+  .importance-icon {
+    color: #dc2626;
+    font-size: 0.7rem;
+    margin-right: 4px;
+  }
+
+  .attachment-icon {
+    color: var(--saf-color-text-subtle);
+    font-size: 0.7rem;
+    margin-right: 4px;
+  }
+}
+
+.msg-preview {
+  font-size: 0.76rem;
+  color: var(--saf-color-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.open-icon {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--saf-color-text-subtle);
+  opacity: 0;
+  margin-top: 4px;
+  transition: opacity 0.12s;
+}

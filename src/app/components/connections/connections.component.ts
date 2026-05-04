@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import { GitHubAIService } from '../../services/github-ai.service';
 import { GitHubPrService, DiagnosticInfo } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
+import { MicrosoftMailService } from '../../services/microsoft-mail.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
 import { LinearService } from '../../services/linear.service';
 
@@ -30,6 +31,12 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   calendarConnected = false;
   calendarSaved = false;
   calendarTokenExpiry: Date | null = null;
+
+  // Outlook Mail
+  mailToken = '';
+  mailConnected = false;
+  mailSaved = false;
+  mailTokenExpiry: Date | null = null;
 
   // Microsoft Teams
   teamsToken = '';
@@ -74,6 +81,7 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     private aiService: GitHubAIService,
     private githubPrService: GitHubPrService,
     private calendarService: MicrosoftCalendarService,
+    private mailService: MicrosoftMailService,
     private teamsService: MicrosoftTeamsService,
     private linearService: LinearService
   ) {}
@@ -100,6 +108,13 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.calendarConnected = !!this.calendarToken;
     this.calendarService.tokenExpiry$.pipe(takeUntil(this.destroy$)).subscribe(exp => {
       this.calendarTokenExpiry = exp;
+    });
+
+    // Outlook Mail
+    this.mailToken = localStorage.getItem('outlook-mail-token') || '';
+    this.mailConnected = !!this.mailToken;
+    this.mailService.tokenExpiry$.pipe(takeUntil(this.destroy$)).subscribe(exp => {
+      this.mailTokenExpiry = exp;
     });
 
     // Microsoft Teams
@@ -185,6 +200,23 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.calendarToken = '';
     this.calendarConnected = false;
     this.calendarTokenExpiry = null;
+  }
+
+  // Outlook Mail
+  saveMail(): void {
+    const token = this.mailToken.trim();
+    if (!token) return;
+    this.mailService.initialize(token);
+    this.mailConnected = true;
+    this.mailSaved = true;
+    setTimeout(() => (this.mailSaved = false), 3000);
+  }
+
+  disconnectMail(): void {
+    this.mailService.clearConfiguration();
+    this.mailToken = '';
+    this.mailConnected = false;
+    this.mailTokenExpiry = null;
   }
 
   // Microsoft Teams

@@ -6,6 +6,8 @@ import { AdoWorkItemsComponent } from './ado-work-items/ado-work-items.component
 import { GitHubAiChatComponent } from './github-ai-chat/github-ai-chat.component';
 import { CoworkerTimezonesComponent } from './coworker-timezones/coworker-timezones.component';
 import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.component';
+import { OutlookMailComponent } from './outlook-mail/outlook-mail.component';
+import { TeamsChatWidgetComponent } from './teams-chat-widget/teams-chat-widget.component';
 import { TimekeepingComponent } from './timekeeping/timekeeping.component';
 import { GithubPrWidgetComponent } from './github-pr-widget/github-pr-widget.component';
 import { AiAskWidgetComponent } from './ai-ask-widget/ai-ask-widget.component';
@@ -23,6 +25,8 @@ import { NavigationService } from '../../services/navigation.service';
     GitHubAiChatComponent,
     CoworkerTimezonesComponent,
     OutlookCalendarComponent,
+    OutlookMailComponent,
+    TeamsChatWidgetComponent,
     TimekeepingComponent,
     AiAskWidgetComponent,
     LinearWorkItemsComponent

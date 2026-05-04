@@ -185,6 +185,63 @@
       </div>
     </div>
 
+    <!-- ── Outlook Mail ───────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="mailConnected" [class.expanded]="isExpanded('outlook-mail')">
+      <div class="card-header" (click)="toggleCard('outlook-mail')" (keydown.enter)="toggleCard('outlook-mail')" (keydown.space)="toggleCard('outlook-mail'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('outlook-mail')">
+        <div class="service-identity">
+          <i class="fas fa-envelope card-icon mail-icon"></i>
+          <div>
+            <h3>Outlook Mail</h3>
+            <span class="service-description">Inbox preview on your dashboard</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="mailConnected" [class.disconnected]="!mailConnected">
+            <i class="fas" [class.fa-circle-check]="mailConnected" [class.fa-circle-xmark]="!mailConnected"></i>
+            {{ mailConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div *ngIf="mailConnected && mailTokenExpiry" class="token-expiry-banner"
+             [class.expiry-warning]="mailTokenExpiry.getTime() - now() < 15 * 60 * 1000"
+             [class.expiry-expired]="mailTokenExpiry.getTime() < now()">
+          <i class="fas fa-clock"></i>
+          <span *ngIf="mailTokenExpiry.getTime() > now()">
+            Token expires at {{ mailTokenExpiry | date:'h:mm a' }}
+            ({{ minutesUntil(mailTokenExpiry) }} min remaining)
+          </span>
+          <span *ngIf="mailTokenExpiry.getTime() <= now()">
+            Token expired — paste a new one below.
+          </span>
+        </div>
+        <div class="help-link">
+          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
+          </a>
+          <span class="scope-note">Sign in → consent scope: <code>Mail.Read</code> → copy your access token</span>
+        </div>
+        <div class="form-group">
+          <label for="mail-token">Microsoft Graph Access Token</label>
+          <textarea id="mail-token" [(ngModel)]="mailToken"
+                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..." rows="3" class="token-input"
+                    autocomplete="off"></textarea>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveMail()" [disabled]="!mailToken.trim()">
+          <i class="fas" [class.fa-check]="mailSaved" [class.fa-save]="!mailSaved"></i>
+          {{ mailSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectMail()" [disabled]="!mailConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
     <!-- ── Firebase (read-only) ───────────────────────────────── -->
     <div class="connection-card connected read-only" [class.expanded]="isExpanded('firebase')">
       <div class="card-header" (click)="toggleCard('firebase')" (keydown.enter)="toggleCard('firebase')" (keydown.space)="toggleCard('firebase'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('firebase')">
@@ -407,7 +464,7 @@
           <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
           </a>
-          <span class="scope-note">Sign in → consent scope: <code>Presence.Read.All</code> → copy your access token</span>
+          <span class="scope-note">Sign in → consent scopes: <code>Presence.Read.All</code> <code>Chat.Read</code> → copy your access token</span>
         </div>
         <div class="form-group">
           <label for="teams-token">Microsoft Graph Access Token</label>

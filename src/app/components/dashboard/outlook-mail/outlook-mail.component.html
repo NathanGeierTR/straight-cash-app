@@ -1,0 +1,157 @@
+<div class="outlook-mail">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="widget-header">
+    <div class="widget-header-title">
+      <h2 class="widget-title">
+        <i class="fas fa-envelope widget-icon" aria-hidden="true"></i>
+        Inbox
+        <span *ngIf="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
+      </h2>
+    </div>
+
+    <div class="widget-toolbar">
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleShowUnreadOnly()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="showUnreadOnly ? 'Show all mail' : 'Show unread only'"
+        tooltipAlign="top"
+        [attr.aria-label]="showUnreadOnly ? 'Show all mail' : 'Show unread only'">
+        <i class="fas" [class.fa-envelope-open]="showUnreadOnly" [class.fa-envelope]="!showUnreadOnly" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleItemVisibility()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="itemsHidden ? 'Show messages' : 'Hide all'"
+        tooltipAlign="top"
+        [attr.aria-label]="itemsHidden ? 'Show messages' : 'Hide all'">
+        <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="loadMessages()"
+        [disabled]="loading || !isConfigured"
+        [appTouchTooltip]="'Refresh'"
+        tooltipAlign="top"
+        aria-label="Refresh">
+        <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Not connected ──────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fas fa-plug-circle-xmark"></i>
+    <p>Connect your Outlook account to see your inbox.</p>
+    <button type="button" class="btn-primary" (click)="goToConnections()">
+      <i class="fas fa-plug"></i> Connect Outlook Mail
+    </button>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────── -->
+  <div class="error-banner" *ngIf="error && !loading && isConfigured">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ error }}</span>
+    <button type="button" class="btn-retry" (click)="loadMessages()">
+      <i class="fas fa-rotate"></i> Retry
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ───────────────────────────────────── -->
+  <div class="skeleton-list" *ngIf="loading && messages.length === 0">
+    <div class="skeleton-row" *ngFor="let _ of [1,2,3,4]"></div>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!loading && isConfigured && filteredMessages.length === 0 && !error">
+    <i class="fas fa-inbox"></i>
+    <p>{{ showUnreadOnly ? 'No unread messages.' : 'Inbox is empty.' }}</p>
+  </div>
+
+  <!-- ── Message list ───────────────────────────────────────── -->
+  <div class="message-list" *ngIf="isConfigured && filteredMessages.length > 0 && !itemsHidden">
+    <div
+      *ngFor="let msg of filteredMessages"
+      class="message-item"
+      [class.is-unread]="!msg.isRead"
+      [class.expanded]="isMessageExpanded(msg.id)">
+
+      <!-- ── Summary row (always visible) ─────────────────── -->
+      <div
+        class="message-summary"
+        (click)="toggleMessage(msg)"
+        (keydown.enter)="toggleMessage(msg)"
+        (keydown.space)="toggleMessage(msg); $event.preventDefault()"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isMessageExpanded(msg.id)"
+        [attr.aria-label]="(msg.isRead ? '' : 'Unread: ') + msg.subject + ' from ' + msg.from.emailAddress.name">
+
+        <!-- Unread dot -->
+        <span class="unread-dot" [class.is-unread]="!msg.isRead" aria-hidden="true"></span>
+
+        <!-- Sender + subject -->
+        <div class="message-summary-content">
+          <span class="message-sender">{{ msg.from.emailAddress.name || msg.from.emailAddress.address }}</span>
+          <span class="message-subject">{{ msg.subject || '(no subject)' }}</span>
+        </div>
+
+        <!-- Timestamp -->
+        <span class="message-time">{{ formatTime(msg.receivedDateTime) }}</span>
+
+        <!-- Importance flag -->
+        <i *ngIf="msg.importance === 'high'" class="fas fa-exclamation importance-icon" aria-label="High importance"></i>
+
+        <!-- Attachment clip -->
+        <i *ngIf="msg.hasAttachments" class="fas fa-paperclip attachment-icon" aria-label="Has attachments"></i>
+
+        <!-- Open in Outlook (stops row click) -->
+        <a
+          [href]="msg.webLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="open-issue-btn"
+          (click)="$event.stopPropagation()"
+          [attr.aria-label]="'Open in Outlook: ' + msg.subject">
+          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+        </a>
+
+        <!-- Expand chevron -->
+        <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </div>
+
+      <!-- ── Expanded details ───────────────────────────────── -->
+      <div class="message-details" *ngIf="isMessageExpanded(msg.id)">
+
+        <!-- From + date row -->
+        <div class="detail-row detail-meta-row">
+          <i class="fas fa-user-circle meta-icon" aria-hidden="true"></i>
+          <span class="detail-sender">{{ msg.from.emailAddress.name }}</span>
+          <span class="detail-address">&lt;{{ msg.from.emailAddress.address }}&gt;</span>
+          <span class="meta-sep">·</span>
+          <span class="detail-time">{{ formatFullTime(msg.receivedDateTime) }}</span>
+        </div>
+
+        <!-- Badges row -->
+        <div class="detail-row detail-badges" *ngIf="msg.hasAttachments || msg.importance === 'high'">
+          <span class="badge badge-attachment" *ngIf="msg.hasAttachments">
+            <i class="fas fa-paperclip" aria-hidden="true"></i> Attachments
+          </span>
+          <span class="badge badge-important" *ngIf="msg.importance === 'high'">
+            <i class="fas fa-exclamation" aria-hidden="true"></i> High importance
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="message-body" [innerHTML]="renderBody(msg)"></div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

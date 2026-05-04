@@ -1,11 +1,64 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, forkJoin, of, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 export interface TeamsPresence {
   availability: 'Available' | 'AvailableIdle' | 'Away' | 'BeRightBack' | 'Busy' | 'BusyIdle' | 'DoNotDisturb' | 'Offline' | 'PresenceUnknown';
   activity: string;
+}
+
+export interface TeamsChatMember {
+  id: string;
+  displayName: string | null;
+  email: string | null;
+  userId: string | null;
+}
+
+export interface TeamsChatMessage {
+  id: string;
+  createdDateTime: string;
+  from: {
+    user?: { displayName: string; id: string };
+    application?: { displayName: string };
+  } | null;
+  body: {
+    contentType: 'text' | 'html';
+    content: string;
+  };
+  messageType: string;
+  deletedDateTime: string | null;
+}
+
+export interface TeamsChat {
+  id: string;
+  chatType: 'oneOnOne' | 'group' | 'meeting' | 'unknownFutureValue';
+  topic: string | null;
+  createdDateTime: string;
+  lastUpdatedDateTime: string;
+  members: TeamsChatMember[];
+  lastMessagePreview: {
+    id: string;
+    createdDateTime: string;
+    body: { content: string; contentType: string };
+    from: { user?: { displayName: string; id: string } } | null;
+    isDeleted: boolean;
+  } | null;
+  viewpoint?: {
+    unreadMessageCount: number;
+  };
+  /** Messages loaded on demand when the chat is expanded. */
+  messages?: TeamsChatMessage[];
+}
+
+export interface TeamsChannel {
+  id: string;
+  displayName: string;
+  membershipType: 'standard' | 'private' | 'shared' | 'unknownFutureValue';
+  teamId: string;
+  teamDisplayName: string;
+  messages?: TeamsChatMessage[];
+  loadError?: string;
 }
 
 export interface TeamsUser {
@@ -29,6 +82,9 @@ export class MicrosoftTeamsService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+  private currentUserIdSubject = new BehaviorSubject<string | null>(null);
+  currentUserId$ = this.currentUserIdSubject.asObservable();
+
   constructor(private http: HttpClient) {
     this.loadToken();
   }
@@ -38,6 +94,7 @@ export class MicrosoftTeamsService {
     if (token) {
       this.accessTokenSubject.next(token);
       this.isAuthenticatedSubject.next(true);
+      this.fetchCurrentUserId();
     }
   }
 
@@ -45,12 +102,19 @@ export class MicrosoftTeamsService {
     localStorage.setItem(this.TOKEN_STORAGE_KEY, token);
     this.accessTokenSubject.next(token);
     this.isAuthenticatedSubject.next(true);
+    this.fetchCurrentUserId();
   }
 
   clearAccessToken(): void {
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
     this.accessTokenSubject.next(null);
     this.isAuthenticatedSubject.next(false);
+    this.currentUserIdSubject.next(null);
+  }
+
+  private fetchCurrentUserId(): void {
+    this.http.get<{ id: string }>(`${this.GRAPH_API_URL}/me?$select=id`, { headers: this.getHeaders() })
+      .subscribe({ next: u => this.currentUserIdSubject.next(u.id), error: () => {} });
   }
 
   private getHeaders(): HttpHeaders {
@@ -187,7 +251,183 @@ export class MicrosoftTeamsService {
     }
   }
 
-  // Helper method to get presence icon
+  // ─── Chat subjects ────────────────────────────────────────────────────────
+
+  private chatsSubject = new BehaviorSubject<TeamsChat[]>([]);
+  readonly chats$ = this.chatsSubject.asObservable();
+
+  private chatsLoadingSubject = new BehaviorSubject<boolean>(false);
+  readonly chatsLoading$ = this.chatsLoadingSubject.asObservable();
+
+  private chatsErrorSubject = new BehaviorSubject<string | null>(null);
+  readonly chatsError$ = this.chatsErrorSubject.asObservable();
+
+  // ─── Channel subjects ─────────────────────────────────────────────────────
+
+  private channelsSubject = new BehaviorSubject<TeamsChannel[]>([]);
+  readonly channels$ = this.channelsSubject.asObservable();
+
+  private channelsLoadingSubject = new BehaviorSubject<boolean>(false);
+  readonly channelsLoading$ = this.channelsLoadingSubject.asObservable();
+
+  private channelsErrorSubject = new BehaviorSubject<string | null>(null);
+  readonly channelsError$ = this.channelsErrorSubject.asObservable();
+
+  // ─── Chat API ─────────────────────────────────────────────────────────────
+
+  fetchChats(top = 20): Observable<TeamsChat[]> {
+    if (!this.accessTokenSubject.value) {
+      this.chatsErrorSubject.next('No access token configured');
+      return of([]);
+    }
+
+    this.chatsLoadingSubject.next(true);
+    this.chatsErrorSubject.next(null);
+
+    const url = `${this.GRAPH_API_URL}/me/chats?$top=${top}&$expand=lastMessagePreview,members`;
+
+    return this.http.get<{ value: TeamsChat[] }>(url, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        // meeting chats are old video-call threads — always exclude them
+        // $orderby cannot be combined with $expand on this endpoint — sort client-side
+        const chats = response.value.filter(c => c.chatType !== 'meeting').slice().sort((a, b) => {
+          const aTime = a.lastUpdatedDateTime ?? a.lastMessagePreview?.createdDateTime ?? '';
+          const bTime = b.lastUpdatedDateTime ?? b.lastMessagePreview?.createdDateTime ?? '';
+          return bTime.localeCompare(aTime);
+        });
+        this.chatsSubject.next(chats);
+        this.chatsLoadingSubject.next(false);
+        return chats;
+      }),
+      catchError(error => {
+        this.chatsLoadingSubject.next(false);
+        if (error.status === 401) {
+          this.clearAccessToken();
+          this.chatsErrorSubject.next('Token expired — reconnect in Connections');
+        } else {
+          this.chatsErrorSubject.next(error.message || 'Failed to load chats');
+        }
+        return of([]);
+      })
+    );
+  }
+
+  fetchChatMessages(chatId: string, top = 20): Observable<TeamsChatMessage[]> {
+    if (!this.accessTokenSubject.value) return of([]);
+
+    const url = `${this.GRAPH_API_URL}/me/chats/${encodeURIComponent(chatId)}/messages?$top=${top}&$orderby=createdDateTime desc`;
+
+    return this.http.get<{ value: TeamsChatMessage[] }>(url, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const messages = response.value.filter(m =>
+          m.messageType === 'message' && !m.deletedDateTime
+        );
+        // Update the cached chat object with its messages
+        const updated = this.chatsSubject.getValue().map(c =>
+          c.id === chatId ? { ...c, messages } : c
+        );
+        this.chatsSubject.next(updated);
+        return messages;
+      }),
+      catchError(() => of([]))
+    );
+  }
+
+  // ─── Channel API ──────────────────────────────────────────────────────────
+
+  fetchChannels(): Observable<TeamsChannel[]> {
+    if (!this.accessTokenSubject.value) {
+      this.channelsErrorSubject.next('No access token configured');
+      return of([]);
+    }
+
+    this.channelsLoadingSubject.next(true);
+    this.channelsErrorSubject.next(null);
+
+    return this.http.get<{ value: Array<{ id: string; displayName: string }> }>(
+      `${this.GRAPH_API_URL}/me/joinedTeams?$select=id,displayName`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      switchMap(teamsResp => {
+        const teams = teamsResp.value;
+        if (!teams.length) return of([] as TeamsChannel[]);
+        return forkJoin(
+          teams.map(team =>
+            this.http.get<{ value: Array<{ id: string; displayName: string; membershipType: string }> }>(
+              `${this.GRAPH_API_URL}/teams/${encodeURIComponent(team.id)}/channels?$select=id,displayName,membershipType`,
+              { headers: this.getHeaders() }
+            ).pipe(
+              map(resp => resp.value.map(ch => ({
+                id: ch.id,
+                displayName: ch.displayName,
+                membershipType: ch.membershipType as TeamsChannel['membershipType'],
+                teamId: team.id,
+                teamDisplayName: team.displayName,
+              }))),
+              catchError(() => of([] as TeamsChannel[]))
+            )
+          )
+        ).pipe(map(results => (results as TeamsChannel[][]).flat()));
+      }),
+      map(channels => {
+        // Preserve any already-loaded messages from the previous state
+        const prev = this.channelsSubject.getValue();
+        const merged = channels.map(ch => {
+          const existing = prev.find(p => p.id === ch.id && p.teamId === ch.teamId);
+          return existing?.messages ? { ...ch, messages: existing.messages } : ch;
+        });
+        this.channelsSubject.next(merged);
+        this.channelsLoadingSubject.next(false);
+        return merged;
+      }),
+      catchError(error => {
+        this.channelsLoadingSubject.next(false);
+        if (error.status === 401) {
+          this.clearAccessToken();
+          this.channelsErrorSubject.next('Token expired — reconnect in Connections');
+        } else {
+          this.channelsErrorSubject.next(error.message || 'Failed to load channels');
+        }
+        return of([]);
+      })
+    );
+  }
+
+  fetchChannelMessages(teamId: string, channelId: string, top = 20): Observable<TeamsChatMessage[]> {
+    if (!this.accessTokenSubject.value) return of([]);
+
+    // Note: $orderby is NOT supported on the channel messages endpoint — sort client-side
+    const url = `${this.GRAPH_API_URL}/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages?$top=${top}`;
+
+    return this.http.get<{ value: TeamsChatMessage[] }>(url, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const messages = response.value
+          .filter(m => m.messageType === 'message' && !m.deletedDateTime)
+          .sort((a, b) => b.createdDateTime.localeCompare(a.createdDateTime));
+        const updated = this.channelsSubject.getValue().map(c =>
+          c.id === channelId && c.teamId === teamId ? { ...c, messages } : c
+        );
+        this.channelsSubject.next(updated);
+        return messages;
+      }),
+      catchError(error => {
+        // Propagate error so component can surface it per-channel
+        const msg = error.status === 403
+          ? 'Missing ChannelMessage.Read.All permission'
+          : error.status === 401
+            ? 'Token expired'
+            : `Error ${error.status}: ${error.message ?? 'Failed to load messages'}`;
+        // Patch the channel with a sentinel so the template can show the error
+        const updated = this.channelsSubject.getValue().map(c =>
+          c.id === channelId && c.teamId === teamId ? { ...c, messages: [], loadError: msg } : c
+        );
+        this.channelsSubject.next(updated);
+        return of([]);
+      })
+    );
+  }
+
+  // ─── Presence icon ────────────────────────────────────────────────────────
   getPresenceIcon(availability: string): string {
     switch (availability) {
       case 'Available': return 'fa-circle';

@@ -1,0 +1,69 @@
+<div
+  class="modal-backdrop"
+  *ngIf="connectService.modalOpen$ | async"
+  (click)="close()"
+  (keydown.escape)="close()"
+  tabindex="-1"
+  role="presentation">
+
+  <div
+    class="modal-card"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ms-modal-title">
+
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <i class="fab fa-microsoft modal-ms-icon" aria-hidden="true"></i>
+        <h2 id="ms-modal-title" class="modal-title">Reconnect Microsoft</h2>
+      </div>
+      <button type="button" class="btn-close" (click)="close()" aria-label="Close dialog">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <p class="modal-subtitle">
+      Paste a fresh Microsoft Graph token below. It will be applied to
+      <strong>Outlook Calendar</strong>, <strong>Outlook Mail</strong>, and <strong>MS Teams</strong> at once.
+    </p>
+
+    <div class="modal-help">
+      <button type="button" class="btn-graph-explorer" (click)="openGraphExplorer()">
+        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+        Get token from Graph Explorer
+      </button>
+      <span class="scope-hint">
+        Sign in → consent scopes:
+        <code>Calendars.Read</code> <code>Mail.Read</code> <code>Presence.Read.All</code> <code>Chat.Read</code>
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label for="ms-token-input" class="form-label">Microsoft Graph Access Token</label>
+      <textarea
+        id="ms-token-input"
+        [(ngModel)]="token"
+        name="msToken"
+        placeholder="eyJ0eXAiOiJKV1QiLCJhbGci…"
+        rows="4"
+        class="token-textarea"
+        autocomplete="off"
+        spellcheck="false"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="connect()"
+        [disabled]="!token.trim()">
+        <i class="fas fa-plug" aria-hidden="true"></i> Connect
+      </button>
+      <button type="button" class="btn-secondary" (click)="close()">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>

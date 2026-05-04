@@ -3,12 +3,19 @@ import { Subject } from 'rxjs';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
+export interface ToastAction {
+  label: string;
+  handler: (id: number) => void;
+  style?: 'primary' | 'ghost';
+}
+
 export interface Toast {
   id: number;
   message: string;
   type: ToastType;
   title?: string;
   duration: number; // ms; 0 = persistent
+  actions?: ToastAction[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,15 +26,16 @@ export class ToastService {
 
   private active: Toast[] = [];
 
-  show(message: string, type: ToastType = 'info', title?: string, duration?: number): void {
+  show(message: string, type: ToastType = 'info', title?: string, duration?: number, actions?: ToastAction[]): number {
     const effectiveDuration = duration !== undefined ? duration : this.defaultDuration(type);
-    const toast: Toast = { id: ++this.idCounter, message, type, title, duration: effectiveDuration };
+    const toast: Toast = { id: ++this.idCounter, message, type, title, duration: effectiveDuration, actions };
     this.active = [...this.active, toast];
     this.toastsSubject.next(this.active);
 
     if (effectiveDuration > 0) {
       setTimeout(() => this.dismiss(toast.id), effectiveDuration);
     }
+    return toast.id;
   }
 
   private defaultDuration(type: ToastType): number {

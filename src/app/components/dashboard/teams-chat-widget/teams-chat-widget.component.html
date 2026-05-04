@@ -1,0 +1,369 @@
+<div class="teams-chat">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="widget-header">
+    <div class="widget-header-title">
+      <h2 class="widget-title">
+        <i class="fab fa-microsoft widget-icon" aria-hidden="true"></i>
+        Teams Chats
+      </h2>
+    </div>
+
+    <div class="widget-toolbar">
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        [class.active]="showUnreadOnly"
+        (click)="toggleShowUnreadOnly()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="showUnreadOnly ? 'Showing unread only' : 'Showing all chats'"
+        tooltipAlign="top"
+        [attr.aria-label]="showUnreadOnly ? 'Show all chats' : 'Show unread only'"
+        [attr.aria-pressed]="showUnreadOnly">
+        <i class="fas fa-envelope" aria-hidden="true"></i>
+        <span class="unread-badge" *ngIf="showUnreadOnly && unreadCount > 0">{{ unreadCount }}</span>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleItemVisibility()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="itemsHidden ? 'Show items' : 'Hide all'"
+        tooltipAlign="top"
+        [attr.aria-label]="itemsHidden ? 'Show items' : 'Hide all'">
+        <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="activeView === 'chats' ? loadChats() : loadChannels()"
+        [disabled]="(activeView === 'chats' ? loading : channelsLoading) || !isConfigured"
+        [appTouchTooltip]="'Refresh'"
+        tooltipAlign="top"
+        aria-label="Refresh">
+        <i class="fas"
+           [class.fa-spinner]="activeView === 'chats' ? loading : channelsLoading"
+           [class.fa-spin]="activeView === 'chats' ? loading : channelsLoading"
+           [class.fa-rotate]="activeView === 'chats' ? !loading : !channelsLoading"
+           aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        *ngIf="activeView === 'channels'"
+        [class.active]="showChannelSettings"
+        (click)="toggleChannelSettings()"
+        [disabled]="!isConfigured || channels.length === 0"
+        [appTouchTooltip]="'Filter teams'"
+        tooltipAlign="top"
+        aria-label="Filter teams">
+        <i class="fas fa-sliders" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── View tabs ───────────────────────────────────────────── -->
+  <div class="view-tabs" *ngIf="isConfigured">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeView === 'chats'"
+      (click)="switchView('chats')">
+      <i class="fas fa-comment" aria-hidden="true"></i> Chats
+      <span class="tab-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeView === 'channels'"
+      (click)="switchView('channels')">
+      <i class="fas fa-hashtag" aria-hidden="true"></i> Channels
+      <span class="tab-badge" *ngIf="unreadChannelCount > 0">{{ unreadChannelCount }}</span>
+    </button>
+  </div>
+
+  <!-- ── Not connected ──────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fab fa-microsoft"></i>
+    <p>Connect your Microsoft account to see your Teams chats and channels.</p>
+    <button type="button" class="btn-primary" (click)="goToConnections()">
+      <i class="fas fa-plug"></i> Connect Teams
+    </button>
+  </div>
+
+  <!-- ─────────────────── CHATS VIEW ─────────────────────────── -->
+  <ng-container *ngIf="activeView === 'chats'">
+
+  <!-- ── Error ──────────────────────────────────────────────── -->
+  <div class="error-banner" *ngIf="error && !loading && isConfigured">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ error }}</span>
+    <button type="button" class="btn-retry" (click)="loadChats()">
+      <i class="fas fa-rotate"></i> Retry
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ───────────────────────────────────── -->
+  <div class="skeleton-list" *ngIf="loading && chats.length === 0">
+    <div class="skeleton-row" *ngFor="let _ of [1,2,3,4]"></div>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!loading && isConfigured && filteredChats.length === 0 && !error">
+    <i class="fab fa-microsoft"></i>
+    <p *ngIf="showUnreadOnly && chats.length > 0">No unread chats. <button type="button" class="btn-link" (click)="toggleShowUnreadOnly()">Show all</button></p>
+    <p *ngIf="!showUnreadOnly || chats.length === 0">No recent chats.</p>
+  </div>
+
+  <!-- ── Chat list ──────────────────────────────────────────── -->
+  <div class="chat-list" *ngIf="isConfigured && filteredChats.length > 0 && !itemsHidden">
+    <div
+      *ngFor="let chat of filteredChats"
+      class="chat-item"
+      [class.expanded]="isChatExpanded(chat.id)">
+
+      <!-- ── Summary row ─────────────────────────────────────── -->
+      <div
+        class="chat-summary"
+        (click)="toggleChat(chat)"
+        (keydown.enter)="toggleChat(chat)"
+        (keydown.space)="toggleChat(chat); $event.preventDefault()"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isChatExpanded(chat.id)"
+        [attr.aria-label]="getChatName(chat)">
+
+        <!-- Icon -->
+        <span class="chat-type-icon" [class.is-dm]="chat.chatType === 'oneOnOne'" aria-hidden="true">
+          <i class="fas {{ getChatIcon(chat) }}"></i>
+        </span>
+
+        <!-- Name + preview + unread badge -->
+        <div class="chat-summary-content">
+          <span class="chat-name">
+            {{ getChatName(chat) }}
+            <span class="unread-count" *ngIf="(chat.viewpoint?.unreadMessageCount ?? 0) > 0">{{ chat.viewpoint!.unreadMessageCount }}</span>
+          </span>
+          <span class="chat-preview" *ngIf="getLastMessagePreview(chat)">{{ getLastMessagePreview(chat) }}</span>
+        </div>
+
+        <!-- Timestamp -->
+        <span class="chat-time" *ngIf="chat.lastMessagePreview">{{ formatTime(chat.lastMessagePreview.createdDateTime) }}</span>
+
+        <!-- Open in Teams -->
+        <button
+          type="button"
+          class="open-issue-btn"
+          (click)="openInTeams(chat); $event.stopPropagation()"
+          [attr.aria-label]="'Open ' + getChatName(chat) + ' in Teams'">
+          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+        </button>
+
+        <!-- Chevron -->
+        <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </div>
+
+      <!-- ── Expanded messages ───────────────────────────────── -->
+      <div class="chat-details" *ngIf="isChatExpanded(chat.id)">
+
+        <!-- Loading messages -->
+        <div class="messages-loading" *ngIf="isLoadingMessages(chat.id)">
+          <i class="fas fa-spinner fa-spin"></i> Loading messages…
+        </div>
+
+        <!-- No messages yet -->
+        <div class="messages-empty" *ngIf="!isLoadingMessages(chat.id) && chat.messages?.length === 0">
+          <i class="fas fa-comment-slash" aria-hidden="true"></i> No messages found.
+        </div>
+
+        <!-- Message bubbles (newest at top from API, show in reading order) -->
+        <div class="message-thread" *ngIf="!isLoadingMessages(chat.id) && chat.messages && chat.messages.length > 0">
+          <div
+            *ngFor="let msg of chat.messages.slice().reverse()"
+            class="message-bubble">
+            <div class="bubble-header">
+              <span class="bubble-sender">{{ getSenderName(msg) }}</span>
+              <span class="bubble-time" [title]="formatFullTime(msg.createdDateTime)">{{ formatTime(msg.createdDateTime) }}</span>
+            </div>
+            <div class="bubble-body" [innerHTML]="renderMessageBody(msg)"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  </ng-container><!-- /chats view -->
+
+  <!-- ─────────────────── CHANNELS VIEW ──────────────────────── -->
+  <ng-container *ngIf="activeView === 'channels'">
+
+  <!-- ── Error ──────────────────────────────────────────────── -->
+  <div class="error-banner" *ngIf="channelsError && !channelsLoading && isConfigured">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ channelsError }}</span>
+    <button type="button" class="btn-retry" (click)="loadChannels()">
+      <i class="fas fa-rotate"></i> Retry
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ───────────────────────────────────── -->
+  <div class="skeleton-list" *ngIf="channelsLoading && channels.length === 0">
+    <div class="skeleton-row" *ngFor="let _ of [1,2,3,4]"></div>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!channelsLoading && isConfigured && channels.length === 0 && !channelsError">
+    <i class="fas fa-hashtag"></i>
+    <p>No channels found. Make sure <code>Team.ReadBasic.All</code> and <code>ChannelMessage.Read.All</code> scopes are consented.</p>
+  </div>
+
+  <!-- ── Team filter settings panel ───────────────────────── -->
+  <div class="channel-settings-panel" *ngIf="showChannelSettings && channels.length > 0">
+    <div class="settings-panel-title">
+      <i class="fas fa-sliders" aria-hidden="true"></i>
+      {{ channelsConfigured ? 'Filter teams' : 'Choose which teams to show' }}
+    </div>
+    <p class="settings-panel-hint" *ngIf="!channelsConfigured">
+      These are all the Teams you're a member of. Uncheck any you don't want to see here, then click Done.
+    </p>
+    <label class="team-toggle-row team-toggle-all">
+      <input
+        type="checkbox"
+        [checked]="allTeamsSelected"
+        [indeterminate]="someTeamsSelected"
+        (change)="toggleAllTeams()"
+        aria-label="Select or deselect all teams" />
+      <span class="team-toggle-name"><strong>{{ allTeamsSelected ? 'Deselect all' : 'Select all' }}</strong></span>
+    </label>
+    <hr class="settings-divider" />
+    <div class="settings-team-group" *ngFor="let group of allTeamGroups">
+      <!-- Team row -->
+      <div class="settings-team-row">
+        <label class="team-toggle-row">
+          <input
+            type="checkbox"
+            [checked]="isTeamFullySelected(group)"
+            [indeterminate]="isTeamPartiallySelected(group)"
+            (change)="toggleTeamVisibility(group)"
+            [attr.aria-label]="'Show ' + group.teamName" />
+          <span class="team-toggle-name">{{ group.teamName }}</span>
+          <span class="team-channel-count">{{ group.channels.length }} ch.</span>
+        </label>
+        <button
+          type="button"
+          class="settings-expand-btn"
+          (click)="toggleSettingsTeamExpanded(group.teamId)"
+          [attr.aria-expanded]="isSettingsTeamExpanded(group.teamId)"
+          [attr.aria-label]="'Toggle channels for ' + group.teamName">
+          <i class="fas fa-chevron-down" [class.rotated]="isSettingsTeamExpanded(group.teamId)" aria-hidden="true"></i>
+        </button>
+      </div>
+      <!-- Per-channel rows -->
+      <div class="settings-channel-list" *ngIf="isSettingsTeamExpanded(group.teamId) && !hiddenTeamIds[group.teamId]">
+        <label class="team-toggle-row settings-channel-row" *ngFor="let ch of group.channels">
+          <input
+            type="checkbox"
+            [checked]="isChannelVisible(group.teamId, ch.id)"
+            (change)="toggleChannelVisibility(group.teamId, ch)"
+            [attr.aria-label]="'Show channel ' + ch.displayName" />
+          <span class="team-toggle-name">
+            <i class="fas fa-hashtag settings-ch-icon" aria-hidden="true"></i>{{ ch.displayName }}
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="settings-panel-actions">
+      <button type="button" class="btn-primary btn-sm" (click)="confirmChannelSettings()">
+        <i class="fas fa-check" aria-hidden="true"></i> Done
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Channel list grouped by team ──────────────────────── -->
+  <div class="channel-group-list" *ngIf="isConfigured && channelsByTeam.length > 0 && !itemsHidden && (!showChannelSettings || channelsConfigured)">
+    <div class="team-group" *ngFor="let group of channelsByTeam">
+
+      <div class="team-group-header">
+        <i class="fas fa-users" aria-hidden="true"></i>
+        {{ group.teamName }}
+      </div>
+
+      <div
+        *ngFor="let ch of group.channels"
+        class="chat-item"
+        [class.expanded]="isChannelExpanded(ch)">
+
+        <!-- Summary row -->
+        <div
+          class="chat-summary"
+          (click)="toggleChannel(ch)"
+          (keydown.enter)="toggleChannel(ch)"
+          (keydown.space)="toggleChannel(ch); $event.preventDefault()"
+          role="button"
+          tabindex="0"
+          [attr.aria-expanded]="isChannelExpanded(ch)"
+          [attr.aria-label]="ch.displayName">
+
+          <span class="chat-type-icon" aria-hidden="true">
+            <i class="fas fa-hashtag"></i>
+          </span>
+
+          <div class="chat-summary-content">
+            <span class="chat-name">
+              {{ ch.displayName }}
+              <span class="unread-count" *ngIf="isChannelUnread(ch)">new</span>
+            </span>
+            <span class="chat-preview" *ngIf="ch.messages?.length">
+              {{ ch.messages![0].from?.user?.displayName ?? 'Unknown' }}: {{ getLastChannelMessagePreview(ch) }}
+            </span>
+          </div>
+
+          <span class="chat-time" *ngIf="ch.messages?.length">
+            {{ formatTime(ch.messages![0].createdDateTime) }}
+          </span>
+
+          <button
+            type="button"
+            class="open-issue-btn"
+            (click)="openChannelInTeams(ch); $event.stopPropagation()"
+            [attr.aria-label]="'Open ' + ch.displayName + ' in Teams'">
+            <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          </button>
+
+          <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+        </div>
+
+        <!-- Expanded messages -->
+        <div class="chat-details" *ngIf="isChannelExpanded(ch)">
+          <div class="messages-loading" *ngIf="isChannelLoadingMessages(ch)">
+            <i class="fas fa-spinner fa-spin"></i> Loading messages…
+          </div>
+          <div class="error-banner inline-error" *ngIf="!isChannelLoadingMessages(ch) && ch.loadError">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ ch.loadError }}</span>
+            <button type="button" class="btn-retry" (click)="retryChannelMessages(ch)">
+              <i class="fas fa-rotate"></i> Retry
+            </button>
+          </div>
+          <div class="messages-empty" *ngIf="!isChannelLoadingMessages(ch) && !ch.loadError && ch.messages?.length === 0">
+            <i class="fas fa-comment-slash" aria-hidden="true"></i> No recent messages.
+          </div>
+          <div class="message-thread" *ngIf="!isChannelLoadingMessages(ch) && !ch.loadError && ch.messages && ch.messages.length > 0">
+            <div *ngFor="let msg of ch.messages.slice().reverse()" class="message-bubble">
+              <div class="bubble-header">
+                <span class="bubble-sender">{{ getSenderName(msg) }}</span>
+                <span class="bubble-time" [title]="formatFullTime(msg.createdDateTime)">{{ formatTime(msg.createdDateTime) }}</span>
+              </div>
+              <div class="bubble-body" [innerHTML]="renderMessageBody(msg)"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  </ng-container><!-- /channels view -->
+
+</div>

@@ -1,0 +1,597 @@
+// ─── Shared vars ─────────────────────────────────────────────────────────────
+$border-color: #e5e7eb;
+$radius: 12px;
+$teams-purple: #6264a7;
+$teams-purple-light: #e8e8f4;
+
+:host { display: block; }
+
+// ─── Toolbar active state + badge ────────────────────────────────────────────
+.btn-menu-toggle {
+  position: relative;
+
+  &.active {
+    background: $teams-purple-light;
+    color: $teams-purple;
+  }
+}
+
+.unread-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(40%, -40%);
+  background: $teams-purple;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  pointer-events: none;
+  line-height: 1;
+}
+
+// ─── Unread count pill on chat name ──────────────────────────────────────────
+.unread-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $teams-purple;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  padding: 0 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+// ─── Inline link button (empty state) ────────────────────────────────────────
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: $teams-purple;
+  font-size: inherit;
+  text-decoration: underline;
+  &:hover { opacity: 0.8; }
+}
+
+// ─── View tabs ────────────────────────────────────────────────────────────────
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  padding-bottom: 2px;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  position: relative;
+
+  &:hover { background: var(--saf-color-background-subtle); color: var(--saf-color-text-default); }
+
+  &.active {
+    background: $teams-purple-light;
+    color: $teams-purple;
+    border-bottom: 2px solid $teams-purple;
+    margin-bottom: -2px;
+  }
+}
+
+.tab-badge {
+  background: $teams-purple;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+// ─── Team group header ────────────────────────────────────────────────────────
+.channel-group-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }\n
+.team-group { display: flex; flex-direction: column; gap: 2px; }\n
+.team-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--saf-color-text-subtle);
+}
+
+// ─── Channel settings panel ───────────────────────────────────────────────────
+.channel-settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  background: var(--saf-color-background-subtle);
+  margin-bottom: 4px;
+}
+
+.settings-panel-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $teams-purple;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--saf-color-text-default);
+
+  input[type=checkbox] {
+    accent-color: $teams-purple;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  span:first-of-type { flex: 1; }
+}
+
+.settings-panel-hint {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--saf-color-text-subtle);
+  line-height: 1.4;
+}
+
+.settings-panel-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.team-toggle-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-toggle-all {
+  padding-bottom: 2px;
+}
+
+.settings-team-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-team-row {
+  display: flex;
+  align-items: center;
+
+  .team-toggle-row { flex: 1; }
+}
+
+.settings-expand-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: var(--saf-color-text-subtle);
+  border-radius: 4px;
+  transition: background 0.12s;
+
+  &:hover { background: var(--saf-color-background-subtle); }
+
+  i { font-size: 0.65rem; transition: transform 0.18s ease; }
+  i.rotated { transform: rotate(180deg); }
+}
+
+.settings-channel-list {
+  display: flex;
+  flex-direction: column;
+  padding-left: 24px;
+  border-left: 2px solid $teams-purple-light;
+  margin: 2px 0 4px 20px;
+}
+
+.settings-channel-row {
+  padding: 2px 0;
+}
+
+.settings-ch-icon {
+  font-size: 0.65rem;
+  color: var(--saf-color-text-subtle);
+  margin-right: 4px;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid $border-color;
+  margin: 2px 0 4px;
+}
+
+.team-channel-count {
+  font-size: 0.7rem;
+  color: var(--saf-color-text-subtle);
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.teams-chat {
+  border-radius: $radius;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.widget-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  padding-bottom: 8px;
+}
+
+.widget-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+  color: $teams-purple;
+
+  .widget-icon {
+    font-size: 1.1rem;
+    color: $teams-purple;
+  }
+}
+
+.widget-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// ─── Not configured ───────────────────────────────────────────────────────────
+.not-configured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  color: var(--saf-color-text-subtle);
+  text-align: center;
+
+  i { font-size: 2rem; color: $teams-purple; }
+  p { margin: 0; font-size: 0.9rem; }
+}
+
+.btn-primary {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $teams-purple;
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--saf-color-semantic-error-subtle);
+  color: var(--saf-color-semantic-error-strong);
+  font-size: 0.85rem;
+
+  .btn-retry {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+
+.skeleton-row {
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--saf-color-background-subtle) 25%,
+    var(--saf-color-line-subtle) 50%,
+    var(--saf-color-background-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.9rem;
+
+  i { font-size: 1.5rem; color: $teams-purple; }
+  p { margin: 0; }
+}
+
+// ─── Chat list ────────────────────────────────────────────────────────────────
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.chat-item {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.12s;
+
+  &:hover { border-color: $border-color; }
+
+  &.expanded {
+    border-color: $border-color;
+    background: var(--saf-color-background-subtle);
+
+    .summary-chevron { transform: rotate(180deg); }
+  }
+}
+
+// ─── Summary row ──────────────────────────────────────────────────────────────
+.chat-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-subtle);
+    outline: none;
+  }
+
+  .chat-item.expanded & { background: transparent; }
+}
+
+.chat-type-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: $teams-purple-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: $teams-purple;
+
+  &.is-dm {
+    background: lighten($teams-purple, 42%);
+  }
+}
+
+.chat-summary-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.chat-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--saf-color-text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-preview {
+  font-size: 0.74rem;
+  color: var(--saf-color-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-time {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+}
+
+.open-issue-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-color;
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  cursor: pointer;
+  transition: background 0.12s;
+
+  i { font-size: 14px; }
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-default);
+    outline: none;
+  }
+}
+
+.summary-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--saf-color-text-default);
+  transition: transform 0.18s ease;
+}
+
+// ─── Expanded chat details ─────────────────────────────────────────────────────
+.chat-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid $border-color;
+  background: $teams-purple-light;
+
+  .inline-error {
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+}
+
+.messages-loading,
+.messages-empty {
+  font-size: 0.8rem;
+  color: var(--saf-color-text-subtle);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+// ─── Message thread ───────────────────────────────────────────────────────────
+.message-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.message-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bubble-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bubble-sender {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $teams-purple;
+}
+
+.bubble-time {
+  font-size: 0.68rem;
+  color: var(--saf-color-text-subtle);
+}
+
+.bubble-body {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--saf-color-text-default);
+  background: var(--saf-color-background-default, #fff);
+  border-radius: 0 8px 8px 8px;
+  padding: 7px 10px;
+  border: 1px solid $border-color;
+  overflow-x: auto;
+
+  p   { margin: 0 0 0.4em; &:last-child { margin-bottom: 0; } }
+  a   { color: $teams-purple; }
+  img { max-width: 100%; border-radius: 4px; }
+  pre { font-size: 0.75rem; background: var(--saf-color-background-subtle); border-radius: 4px; padding: 6px 8px; overflow-x: auto; }
+  code { font-size: 0.75rem; background: var(--saf-color-background-subtle); border-radius: 3px; padding: 1px 4px; font-family: monospace; }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .chat-summary { padding: 6px 8px; }
+  .chat-name { font-size: 0.8rem; }
+}

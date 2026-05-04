@@ -14,7 +14,9 @@ import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
 import { AuthService } from './services/auth.service';
 import { NavigationService, AppView } from './services/navigation.service';
 import { ToastService } from './services/toast.service';
+import { MsGraphConnectService } from './services/ms-graph-connect.service';
 import { ToastComponent } from './components/toast/toast.component';
+import { MsGraphConnectModalComponent } from './components/ms-graph-connect-modal/ms-graph-connect-modal.component';
 import { TouchTooltipDirective } from './directives/touch-tooltip.directive';
 import { DropdownAlignDirective } from './directives/dropdown-align.directive';
 import { Subscription } from 'rxjs';
@@ -23,7 +25,7 @@ import { User } from '@angular/fire/auth';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, GoalsComponent, TasksComponent, IssuesComponent, SettingsComponent, OpenArenaChatComponent, CommonModule, ToastComponent, TouchTooltipDirective, DropdownAlignDirective],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, GoalsComponent, TasksComponent, IssuesComponent, SettingsComponent, OpenArenaChatComponent, CommonModule, ToastComponent, MsGraphConnectModalComponent, TouchTooltipDirective, DropdownAlignDirective],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -42,7 +44,8 @@ export class AppComponent implements OnInit, OnDestroy {
     public githubAIService: GitHubAIService,
     private authService: AuthService,
     private navigationService: NavigationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private msGraphConnectService: MsGraphConnectService
   ) {}
 
   ngOnInit() {
@@ -60,6 +63,38 @@ export class AppComponent implements OnInit, OnDestroy {
     // Handle navigation requests from child components
     this.subscriptions.add(
       this.navigationService.navigate$.subscribe(view => this.navigateTo(view))
+    );
+
+    // Show a reconnect toast whenever any MS Graph service loses its token
+    this.subscriptions.add(
+      this.msGraphConnectService.tokenExpired$.subscribe(() => {
+        const id = this.toastService.show(
+          'Your Microsoft token has expired.',
+          'warning',
+          'Microsoft Disconnected',
+          0, // persistent until dismissed
+          [
+            {
+              label: 'Connect',
+              style: 'primary',
+              handler: (toastId) => {
+                this.toastService.dismiss(toastId);
+                window.open(
+                  'https://developer.microsoft.com/en-us/graph/graph-explorer',
+                  '_blank',
+                  'noopener,noreferrer'
+                );
+                this.msGraphConnectService.openModal();
+              }
+            },
+            {
+              label: "Don't connect",
+              style: 'ghost',
+              handler: (toastId) => this.toastService.dismiss(toastId)
+            }
+          ]
+        );
+      })
     );
 
     // Subscribe to AI service configuration status

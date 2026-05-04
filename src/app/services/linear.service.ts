@@ -180,13 +180,26 @@ export class LinearService {
       tap(issues => {
         this.issuesSubject.next(issues);
         this.loadingSubject.next(false);
-        // Derive the active cycle from any issue that carries one
+        // Derive the active cycle from cycle fields on assigned issues.
+        // Multiple issues may reference different cycles (different teams,
+        // overlapping cadences). We collect all cycles whose date window
+        // contains today, deduplicate by id, then pick the one with the
+        // earliest startsAt so we always get the broadest/primary sprint
+        // rather than whichever cycle happened to be on the most-recently-
+        // updated issue (which caused the intermittent Apr 27 vs Apr 22 bug).
         const today = new Date();
-        const activeCycle = issues
-          .map(i => i.cycle)
-          .filter((c): c is NonNullable<LinearIssue['cycle']> => c !== null)
-          .find(c => new Date(c.startsAt) <= today && new Date(c.endsAt) >= today)
-          ?? null;
+        const seen = new Map<string, NonNullable<LinearIssue['cycle']>>();
+        for (const issue of issues) {
+          const c = issue.cycle;
+          if (c && !seen.has(c.id) && new Date(c.startsAt) <= today && new Date(c.endsAt) >= today) {
+            seen.set(c.id, c);
+          }
+        }
+        const activeCycles = [...seen.values()];
+        const activeCycle = activeCycles.length === 0 ? null
+          : activeCycles.reduce((best, c) =>
+              new Date(c.startsAt) < new Date(best.startsAt) ? c : best
+            );
         this.activeCycleSubject.next(activeCycle);
       }),
       catchError(err => {
@@ -268,11 +281,18 @@ export class LinearService {
     return this.gql<{ viewer: { assignedIssues: { nodes: { cycle: LinearIssue['cycle'] }[] } } }>(query).pipe(
       map(d => {
         const today = new Date();
-        return d.viewer.assignedIssues.nodes
-          .map(n => n.cycle)
-          .filter((c): c is NonNullable<LinearIssue['cycle']> => c !== null)
-          .find(c => new Date(c.startsAt) <= today && new Date(c.endsAt) >= today)
-          ?? null;
+        const seen = new Map<string, NonNullable<LinearIssue['cycle']>>();
+        for (const node of d.viewer.assignedIssues.nodes) {
+          const c = node.cycle;
+          if (c && !seen.has(c.id) && new Date(c.startsAt) <= today && new Date(c.endsAt) >= today) {
+            seen.set(c.id, c);
+          }
+        }
+        const activeCycles = [...seen.values()];
+        return activeCycles.length === 0 ? null
+          : activeCycles.reduce((best, c) =>
+              new Date(c.startsAt) < new Date(best.startsAt) ? c : best
+            );
       }),
       tap(cycle => this.activeCycleSubject.next(cycle)),
       catchError(() => of(this.activeCycleSubject.value))
