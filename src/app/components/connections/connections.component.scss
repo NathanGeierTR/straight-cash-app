@@ -501,13 +501,13 @@
   width: 40px;
   height: 22px;
   border-radius: 999px;
-  background: var(--saf-color-border-default, #ccc);
+  background: var(--saf-color-gray-200);
   flex-shrink: 0;
   cursor: pointer;
   transition: background 0.2s;
 
   &.on {
-    background: var(--saf-color-brand-racing-green-600, #1a5c3a);
+    background: var(--saf-color-green-300);
   }
 
   &:focus-visible {

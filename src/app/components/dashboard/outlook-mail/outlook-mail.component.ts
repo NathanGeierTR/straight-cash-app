@@ -90,11 +90,11 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
   toggleMessage(msg: MailMessage): void {
     if (this.expandedMessages.has(msg.id)) {
       this.expandedMessages.delete(msg.id);
-    } else {
-      this.expandedMessages.add(msg.id);
       if (!msg.isRead) {
         this.mailService.markAsRead(msg.id).subscribe();
       }
+    } else {
+      this.expandedMessages.add(msg.id);
     }
   }
 

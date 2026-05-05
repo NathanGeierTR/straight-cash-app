@@ -33,22 +33,22 @@
     </div>
 
     <!-- Linear Work Items Section -->
-    <div class="widget linear-widget">
+    <div class="widget linear-widget" *ngIf="showLinearWidget">
       <app-linear-work-items></app-linear-work-items>
     </div>
 
     <!-- Outlook Mail Section -->
-    <div class="widget mail-widget">
+    <div class="widget mail-widget" *ngIf="showMailWidget">
       <app-outlook-mail></app-outlook-mail>
     </div>
 
     <!-- Teams Chat Section -->
-    <div class="widget teams-chat-widget">
+    <div class="widget teams-chat-widget" *ngIf="showTeamsWidget">
       <app-teams-chat-widget></app-teams-chat-widget>
     </div>
 
     <!-- Slack Section -->
-    <div class="widget slack-widget">
+    <div class="widget slack-widget" *ngIf="showSlackWidget">
       <app-slack-widget></app-slack-widget>
     </div>
 

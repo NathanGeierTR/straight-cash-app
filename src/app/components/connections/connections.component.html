@@ -29,6 +29,16 @@
       </div>
 
       <div class="card-body">
+        <label class="widget-toggle-row" (click)="$event.stopPropagation()">
+          <div class="widget-toggle-label">
+            <i class="fas fa-table-columns"></i>
+            <span>Show Linear widget on dashboard</span>
+          </div>
+          <div class="toggle-switch" [class.on]="linearWidgetVisible" (click)="toggleLinearWidget()" role="switch" aria-label="Show Linear widget on dashboard" [attr.aria-checked]="linearWidgetVisible" tabindex="0" (keydown.enter)="toggleLinearWidget()" (keydown.space)="toggleLinearWidget(); $event.preventDefault()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </label>
+
         <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
           <i class="fas fa-circle-check verified-icon"></i>
           Signed in as <strong>{{ linearViewerName }}</strong>
@@ -205,6 +215,16 @@
       </div>
 
       <div class="card-body">
+        <label class="widget-toggle-row" (click)="$event.stopPropagation()">
+          <div class="widget-toggle-label">
+            <i class="fas fa-table-columns"></i>
+            <span>Show Outlook Mail widget on dashboard</span>
+          </div>
+          <div class="toggle-switch" [class.on]="mailWidgetVisible" (click)="toggleMailWidget()" role="switch" aria-label="Show Outlook Mail widget on dashboard" [attr.aria-checked]="mailWidgetVisible" tabindex="0" (keydown.enter)="toggleMailWidget()" (keydown.space)="toggleMailWidget(); $event.preventDefault()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </label>
+
         <div *ngIf="mailConnected && mailTokenExpiry" class="token-expiry-banner"
              [class.expiry-warning]="mailTokenExpiry.getTime() - now() < 15 * 60 * 1000"
              [class.expiry-expired]="mailTokenExpiry.getTime() < now()">
@@ -460,6 +480,16 @@
       </div>
 
       <div class="card-body">
+        <label class="widget-toggle-row" (click)="$event.stopPropagation()">
+          <div class="widget-toggle-label">
+            <i class="fas fa-table-columns"></i>
+            <span>Show Teams widget on dashboard</span>
+          </div>
+          <div class="toggle-switch" [class.on]="teamsWidgetVisible" (click)="toggleTeamsWidget()" role="switch" aria-label="Show Teams widget on dashboard" [attr.aria-checked]="teamsWidgetVisible" tabindex="0" (keydown.enter)="toggleTeamsWidget()" (keydown.space)="toggleTeamsWidget(); $event.preventDefault()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </label>
+
         <div class="help-link">
           <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
@@ -505,6 +535,16 @@
       </div>
 
       <div class="card-body">
+        <label class="widget-toggle-row" (click)="$event.stopPropagation()">
+          <div class="widget-toggle-label">
+            <i class="fas fa-table-columns"></i>
+            <span>Show Slack widget on dashboard</span>
+          </div>
+          <div class="toggle-switch" [class.on]="slackWidgetVisible" (click)="toggleSlackWidget()" role="switch" aria-label="Show Slack widget on dashboard" [attr.aria-checked]="slackWidgetVisible" tabindex="0" (keydown.enter)="toggleSlackWidget()" (keydown.space)="toggleSlackWidget(); $event.preventDefault()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </label>
+
         <div class="help-link">
           <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> Slack API Apps

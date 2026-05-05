@@ -57,6 +57,12 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   adoProjects: { organization: string; project: string }[] = [];
   adoWidgetVisible = true;
 
+  // Widget visibility toggles
+  linearWidgetVisible = true;
+  mailWidgetVisible = true;
+  teamsWidgetVisible = true;
+  slackWidgetVisible = true;
+
   // Slack
   slackToken = '';
   slackConnected = false;
@@ -154,6 +160,10 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
       this.adoProjects = [];
     }
     this.adoWidgetVisible = localStorage.getItem('ado-widget-visible') !== 'false';
+    this.linearWidgetVisible = localStorage.getItem('linear-widget-visible') !== 'false';
+    this.mailWidgetVisible = localStorage.getItem('mail-widget-visible') !== 'false';
+    this.teamsWidgetVisible = localStorage.getItem('teams-widget-visible') !== 'false';
+    this.slackWidgetVisible = localStorage.getItem('slack-widget-visible') !== 'false';
 
     // Slack
     this.slackToken = localStorage.getItem('slack-token') || '';
@@ -296,10 +306,30 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.githubPrService.verifyToken();
   }
 
-  // ADO widget visibility
+  // Widget visibility toggles
   toggleAdoWidget(): void {
     this.adoWidgetVisible = !this.adoWidgetVisible;
     localStorage.setItem('ado-widget-visible', String(this.adoWidgetVisible));
+  }
+
+  toggleLinearWidget(): void {
+    this.linearWidgetVisible = !this.linearWidgetVisible;
+    localStorage.setItem('linear-widget-visible', String(this.linearWidgetVisible));
+  }
+
+  toggleMailWidget(): void {
+    this.mailWidgetVisible = !this.mailWidgetVisible;
+    localStorage.setItem('mail-widget-visible', String(this.mailWidgetVisible));
+  }
+
+  toggleTeamsWidget(): void {
+    this.teamsWidgetVisible = !this.teamsWidgetVisible;
+    localStorage.setItem('teams-widget-visible', String(this.teamsWidgetVisible));
+  }
+
+  toggleSlackWidget(): void {
+    this.slackWidgetVisible = !this.slackWidgetVisible;
+    localStorage.setItem('slack-widget-visible', String(this.slackWidgetVisible));
   }
 
   // Linear
