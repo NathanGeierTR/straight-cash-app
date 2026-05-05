@@ -391,8 +391,10 @@ $unread-color: var(--saf-color-brand-sky-500, #0ea5e9);
   line-height: 1.6;
   color: var(--saf-color-text-default);
   overflow-x: auto;
-  max-height: 400px;
-  overflow-y: auto;
+  /* Do NOT use overflow-y: auto here — nested scroll containers on iOS
+     capture all touch events and break buttons elsewhere on the page.
+     Let the outer .message-list scroll the full content instead. */
+  touch-action: pan-y;
 
   // Scoped HTML element resets (for rendered email bodies)
   p       { margin: 0 0 0.5em; &:last-child { margin-bottom: 0; } }
