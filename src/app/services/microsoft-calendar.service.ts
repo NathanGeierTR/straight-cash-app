@@ -88,6 +88,7 @@ export class MicrosoftCalendarService {
     this.configuredSubject.next(true);
     this.tokenExpirySubject.next(this.parseExpiry(accessToken));
     this.saveConfiguration();
+    localStorage.setItem('ms-graph-ever-connected', 'true');
   }
 
   /**

@@ -6,10 +6,11 @@ import { MicrosoftMailService } from './microsoft-mail.service';
 import { MicrosoftTeamsService } from './microsoft-teams.service';
 
 /**
- * Keys we track to detect "was connected last session, but token was cleared"
- * (e.g. a 401 wiped localStorage mid-session and the user reloaded).
+ * Set the first time any MS Graph token is saved. Never cleared — even on
+ * token expiry or explicit disconnect — so we can reliably detect "user has
+ * connected before but is now disconnected" across any number of reloads.
  */
-const SENTINEL_KEY = 'ms-graph-was-connected';
+const EVER_CONNECTED_KEY = 'ms-graph-ever-connected';
 
 @Injectable({ providedIn: 'root' })
 export class MsGraphConnectService {
@@ -18,8 +19,8 @@ export class MsGraphConnectService {
 
   /**
    * Emits once whenever any MS Graph service transitions from connected → disconnected,
-   * OR when the app loads and the user was previously connected but the token is now absent
-   * (cleared by a prior 401). One emission per page-load, collapsed via debounceTime.
+   * OR on startup when the user has connected before but no token is present now.
+   * Multiple simultaneous drops are collapsed via debounceTime.
    */
   readonly tokenExpired$: Observable<unknown>;
 
@@ -41,38 +42,20 @@ export class MsGraphConnectService {
       )
     ).pipe(debounceTime(100));
 
-    // Fired once on startup if the user was previously connected but all tokens are now gone
+    // Fired once on startup when the user has connected before but all tokens are now gone
     const startupExpiry$ = new Subject<void>();
     this.tokenExpired$ = merge(liveExpiry$, startupExpiry$);
 
-    // Check after services have initialised (they run synchronously in their constructors)
-    const wasConnected = localStorage.getItem(SENTINEL_KEY) === 'true';
+    const everConnected = localStorage.getItem(EVER_CONNECTED_KEY) === 'true';
     const anyConnectedNow =
       calendarService.isConfigured() ||
       mailService.isConfigured() ||
       !!localStorage.getItem('ms-teams-token');
 
-    if (wasConnected && !anyConnectedNow) {
-      // Emit asynchronously so subscribers in app.component.ts have time to subscribe
+    if (everConnected && !anyConnectedNow) {
+      // Defer so subscribers in app.component.ts have time to subscribe first
       Promise.resolve().then(() => startupExpiry$.next());
     }
-
-    // Keep the sentinel in sync: set when connected, clear when fully disconnected
-    merge(
-      calendarService.isConfigured$,
-      mailService.isConfigured$,
-      teamsService.isAuthenticated$
-    ).subscribe(() => {
-      const connected =
-        calendarService.isConfigured() ||
-        mailService.isConfigured() ||
-        !!localStorage.getItem('ms-teams-token');
-      if (connected) {
-        localStorage.setItem(SENTINEL_KEY, 'true');
-      } else {
-        localStorage.removeItem(SENTINEL_KEY);
-      }
-    });
   }
 
   openModal(): void {
@@ -85,14 +68,13 @@ export class MsGraphConnectService {
 
   /**
    * Apply one MS Graph token to all three MS services at once.
-   * Each service stores it independently under its own localStorage key,
-   * so they can also be managed individually on the Connections page.
    */
   applyToken(token: string): void {
     const t = token.trim();
     this.calendarService.initialize(t);
     this.mailService.initialize(t);
     this.teamsService.setAccessToken(t);
+    localStorage.setItem(EVER_CONNECTED_KEY, 'true');
     this.closeModal();
   }
 }

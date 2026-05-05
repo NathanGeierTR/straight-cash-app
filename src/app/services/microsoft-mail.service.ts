@@ -76,6 +76,7 @@ export class MicrosoftMailService {
     this.configuredSubject.next(true);
     this.tokenExpirySubject.next(this.parseExpiry(accessToken));
     localStorage.setItem(this.STORAGE_KEY, accessToken);
+    localStorage.setItem('ms-graph-ever-connected', 'true');
   }
 
   clearConfiguration(): void {

@@ -83,6 +83,14 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
+button,
+a,
+[role="button"] {
+  /* Eliminates the 300ms tap delay and prevents scroll-vs-tap
+     ambiguity when the button is inside an overflow-y: auto container */
+  touch-action: manipulation;
+}
+
 button {
   font-family: "Kanit", sans-serif;
   font-weight: 500;

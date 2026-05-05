@@ -36,7 +36,13 @@ export class TouchTooltipDirective implements OnDestroy {
   @HostListener('touchend', ['$event'])
   onTouchEnd(event: TouchEvent): void {
     if (this.label) {
-      this.service.showOnTap(this.getRect(), this.label, this.resolveAlign());
+      // Defer tooltip DOM work until after the synthetic click event fires.
+      // On iOS Safari, synchronous DOM mutation during touchend cancels the
+      // pending click, breaking all button/expand-row handlers.
+      const rect = this.getRect();
+      const align = this.resolveAlign();
+      const label = this.label;
+      setTimeout(() => this.service.showOnTap(rect, label, align), 0);
     }
   }
 

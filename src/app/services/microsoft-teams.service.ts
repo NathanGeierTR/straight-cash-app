@@ -100,6 +100,7 @@ export class MicrosoftTeamsService {
 
   setAccessToken(token: string): void {
     localStorage.setItem(this.TOKEN_STORAGE_KEY, token);
+    localStorage.setItem('ms-graph-ever-connected', 'true');
     this.accessTokenSubject.next(token);
     this.isAuthenticatedSubject.next(true);
     this.fetchCurrentUserId();
