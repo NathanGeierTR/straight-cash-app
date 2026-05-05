@@ -76,7 +76,7 @@
   <!-- ── Message list ───────────────────────────────────────── -->
   <div class="message-list" *ngIf="isConfigured && filteredMessages.length > 0 && !itemsHidden">
     <div
-      *ngFor="let msg of filteredMessages"
+      *ngFor="let msg of filteredMessages; trackBy: trackById"
       class="message-item"
       [class.is-unread]="!msg.isRead"
       [class.expanded]="isMessageExpanded(msg.id)">

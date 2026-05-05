@@ -17,6 +17,7 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class OutlookMailComponent implements OnInit, OnDestroy {
   messages: MailMessage[] = [];
+  filteredMessages: MailMessage[] = [];
   loading = false;
   error: string | null = null;
   isConfigured = false;
@@ -24,6 +25,7 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
   itemsHidden = false;
   showUnreadOnly = localStorage.getItem('mail-show-unread-only') === 'true';
   expandedMessages = new Set<string>();
+  private renderedBodies = new Map<string, SafeHtml>();
 
   private destroy$ = new Subject<void>();
 
@@ -49,7 +51,10 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
 
     this.mailService.messages$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(messages => this.messages = messages);
+      .subscribe(messages => {
+        this.messages = messages;
+        this.rebuildFiltered();
+      });
 
     this.mailService.loading$
       .pipe(takeUntil(this.destroy$))
@@ -64,6 +69,14 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  private rebuildFiltered(): void {
+    this.filteredMessages = this.showUnreadOnly
+      ? this.messages.filter(m => !m.isRead)
+      : this.messages;
+  }
+
+  trackById(_: number, msg: MailMessage): string { return msg.id; }
 
   loadMessages(): void {
     this.mailService.fetchInbox(20, this.showUnreadOnly).subscribe();
@@ -80,17 +93,16 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
   toggleShowUnreadOnly(): void {
     this.showUnreadOnly = !this.showUnreadOnly;
     localStorage.setItem('mail-show-unread-only', String(this.showUnreadOnly));
+    this.rebuildFiltered();
     this.loadMessages();
-  }
-
-  get filteredMessages(): MailMessage[] {
-    return this.showUnreadOnly ? this.messages.filter(m => !m.isRead) : this.messages;
   }
 
   toggleMessage(msg: MailMessage): void {
     if (this.expandedMessages.has(msg.id)) {
       this.expandedMessages.delete(msg.id);
       if (!msg.isRead) {
+        msg.isRead = true; // patch immediately so the unread indicator clears
+        this.rebuildFiltered();
         this.mailService.markAsRead(msg.id).subscribe();
       }
     } else {
@@ -103,6 +115,9 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
   }
 
   renderBody(msg: MailMessage): SafeHtml {
+    const cached = this.renderedBodies.get(msg.id);
+    if (cached) return cached;
+
     let raw: string;
     if (!msg.body) {
       raw = msg.bodyPreview;
@@ -120,15 +135,45 @@ export class OutlookMailComponent implements OnInit, OnDestroy {
     // Sanitize first (strips scripts, event handlers, etc.)
     const sanitized = this.sanitizer.sanitize(SecurityContext.HTML, raw) ?? '';
 
-    // Parse the sanitized HTML and force all links to open in a new tab.
-    // Using bypassSecurityTrustHtml here is safe because the content has
-    // already been through Angular's sanitizer above.
+    // Parse the sanitized HTML and neutralize anything that can create
+    // invisible overlays or bleed styles outside the widget.
     const doc = new DOMParser().parseFromString(sanitized, 'text/html');
+
+    // Remove <style> blocks — they can't be scoped and often set
+    // body/html/div rules that affect the whole page.
+    doc.querySelectorAll('style').forEach(el => el.remove());
+
+    // Walk every element and sanitize inline styles:
+    // - Remove position: fixed / absolute (invisible overlays)
+    // - Remove top/left/right/bottom/z-index/width/height when paired
+    //   with fixed/absolute (prevents full-viewport ghost divs)
+    doc.querySelectorAll<HTMLElement>('[style]').forEach(el => {
+      const s = el.style;
+      const pos = s.position;
+      if (pos === 'fixed' || pos === 'absolute') {
+        s.removeProperty('position');
+        s.removeProperty('top');
+        s.removeProperty('left');
+        s.removeProperty('right');
+        s.removeProperty('bottom');
+        s.removeProperty('z-index');
+        s.removeProperty('width');
+        s.removeProperty('height');
+      }
+      // Also strip any explicit width/height: 100vw/100vh regardless of position
+      if (s.width === '100vw' || s.width === '100%') s.removeProperty('width');
+      if (s.height === '100vh' || s.height === '100%') s.removeProperty('height');
+    });
+
+    // Force all links to open in a new tab
     doc.querySelectorAll('a').forEach(a => {
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener noreferrer');
     });
-    return this.sanitizer.bypassSecurityTrustHtml(doc.body.innerHTML);
+
+    const result = this.sanitizer.bypassSecurityTrustHtml(doc.body.innerHTML);
+    this.renderedBodies.set(msg.id, result);
+    return result;
   }
 
   formatTime(dateTimeStr: string): string {
