@@ -165,6 +165,11 @@ $unread-color: var(--saf-color-brand-sky-500, #0ea5e9);
 }
 
 // ─── Message list ─────────────────────────────────────────────────────────────
+::ng-deep .message-body * { // Fix for MS Graph's weirdly formatted email bodies that include inline styles with max-width: 100% which break our layout
+    max-width: 100%;
+    display: block;
+}
+
 .message-list {
   display: flex;
   flex-direction: column;
