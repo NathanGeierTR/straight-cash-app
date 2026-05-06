@@ -92,11 +92,15 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
     }
     this.retryCount = 0;
     this.error = null;
+    const parseLocalDate = (iso: string) => {
+      const [y, m, d] = iso.substring(0, 10).split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
     this.currentSprint = {
       number: cycle.number,
       name: cycle.name || `Cycle ${cycle.number}`,
-      startDate: new Date(cycle.startsAt),
-      endDate: new Date(cycle.endsAt),
+      startDate: parseLocalDate(cycle.startsAt),
+      endDate: parseLocalDate(cycle.endsAt),
     };
     this.calendarDays = [];
     this.generateMonthCalendar();
